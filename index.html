@@ -270,8 +270,32 @@
     font-weight:600;font-size:19px;padding:3px 0}
   .tsRow b{color:var(--magenta)}
 
-  .sound{position:fixed;top:12px;right:12px;z-index:5;background:#ffffff1a;border:none;
-    width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;color:#fff}
+  .topBtn{position:fixed;top:12px;z-index:5;background:#ffffff1a;border:none;
+    height:42px;border-radius:22px;font-size:15px;cursor:pointer;color:#fff;
+    font-family:'Nunito',sans-serif;font-weight:800;padding:0 14px;max-width:46vw;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #loginBtn{left:12px}
+  #setBtn{right:12px;width:42px;padding:0;font-size:19px}
+
+  .setCard{background:var(--card);color:var(--ink);border-radius:20px;padding:16px 18px;
+    box-shadow:0 10px 0 #00000030}
+  .setRow{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;
+    font-weight:900;font-size:15px}
+  .tog{border:none;border-radius:99px;padding:8px 18px;font-family:'Nunito',sans-serif;
+    font-weight:900;font-size:13px;cursor:pointer;background:#e7e1f5;color:#8a7fb5}
+  .tog.on{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f}
+  .setCard input{width:100%;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;
+    padding:12px 14px;border:2px solid #d9d0ef;border-radius:14px;color:var(--ink);
+    outline:none;background:#faf7ff;margin-top:8px}
+  .setCard input:focus{border-color:var(--cyan)}
+  .setLbl{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;
+    letter-spacing:.5px;margin-top:14px}
+  .accMsg{font-size:13px;font-weight:800;margin-top:10px;text-align:center;min-height:18px}
+  .accMsg.err{color:#e23b52}
+  .accMsg.ok{color:#1fa85a}
+  .linkBtn{background:none;border:none;color:#6c5fa8;font-family:'Nunito',sans-serif;
+    font-weight:900;font-size:13px;cursor:pointer;text-decoration:underline;
+    display:block;margin:10px auto 0}
   @media (max-width:380px){
     .brand .logo{font-size:44px}.eq{font-size:48px}.key{font-size:24px;padding:14px 0}
   }
@@ -279,7 +303,8 @@
 </style>
 </head>
 <body>
-<button class="sound" id="soundBtn" title="Bunyi">🔊</button>
+<button class="topBtn" id="loginBtn">👤 Log Masuk</button>
+<button class="topBtn" id="setBtn" title="Tetapan">⚙️</button>
 <div class="toast" id="toast"></div>
 
 <div class="stage">
@@ -335,6 +360,52 @@
     <p class="hint">3 betul = 1 streak <b style="color:var(--yellow)">+3 saat</b> · 3 streak = <b style="color:#a5ecff">❄️ beku 5 saat</b><br>3 kali beku = <b style="color:var(--yellow)">🌟 masa penuh semula!</b></p>
     <div class="actions">
       <button class="btn ghost" id="ttBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- LOG MASUK / AKAUN -->
+  <section class="screen" id="loginScreen">
+    <div class="brand">
+      <div class="logo">👤</div>
+      <div class="tag">Akaun Sifir Juara</div>
+    </div>
+    <div class="setCard">
+      <div id="accInfo" style="display:none;text-align:center;font-weight:900;padding:6px 0 2px" ></div>
+      <div id="accForm">
+        <input id="accEmail" type="email" placeholder="Email" autocomplete="off">
+        <input id="accPass" type="password" inputmode="numeric" maxlength="4" placeholder="PIN (4 angka)">
+        <div class="actions">
+          <button class="btn ghost" id="doReg">Daftar</button>
+          <button class="btn primary" id="doLogin">Log Masuk</button>
+        </div>
+        <button class="linkBtn" id="doReset">Lupa PIN? Hantar ke email saya</button>
+      </div>
+      <button class="btn ghost" id="doLogout" style="display:none;width:100%;margin-top:10px">Log Keluar</button>
+      <p class="accMsg" id="accMsg"></p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="loginBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- TETAPAN -->
+  <section class="screen" id="setScreen">
+    <div class="brand">
+      <div class="logo">⚙️</div>
+      <div class="tag">Tetapan</div>
+    </div>
+    <div class="setCard">
+      <div class="setRow"><span>🔊 Bunyi</span><button class="tog" id="togSound">ON</button></div>
+      <div class="setRow"><span>📳 Getaran</span><button class="tog" id="togVib">ON</button></div>
+      <div class="setLbl">Nickname (nama untuk papan markah)</div>
+      <input id="setNick" maxlength="14" placeholder="cth: Adam" autocomplete="off">
+      <div class="setLbl">Kelas</div>
+      <input id="setKelas" maxlength="14" placeholder="cth: 3 Bijak" autocomplete="off">
+      <button class="btn primary" id="setSave" style="width:100%;margin-top:16px">Simpan Tetapan</button>
+      <p class="accMsg" id="setMsg"></p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="setBack">Kembali</button>
     </div>
   </section>
 
@@ -494,12 +565,20 @@
   // ===== Konfigurasi Google Sheets (Apps Script Web App) =====
   // Letakkan URL Web App di sini selepas setup (lihat PANDUAN.md)
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbwVIiBDzbK61Tcr_A6Krx2EFmn74uNYYKCbNq_nNiMPW96eC-6ZqdHx9ViIIL0EMz9CKg/exec";
-  function sendToSheets(rec){
-    if(!SHEETS_URL) return;
+  function api(payload, cb){
+    cb = cb || function(){};
+    if(!SHEETS_URL){ cb({ok:false, err:"Tiada sambungan"}); return; }
     try{
-      fetch(SHEETS_URL, {method:"POST", mode:"no-cors",
-        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(rec)});
-    }catch(e){}
+      fetch(SHEETS_URL, {method:"POST",
+        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)})
+        .then(function(r){ return r.json(); })
+        .then(cb)
+        .catch(function(){ cb({ok:false, err:"Masalah rangkaian"}); });
+    }catch(e){ cb({ok:false, err:"Masalah rangkaian"}); }
+  }
+  function sendToSheets(rec){
+    rec.action = "score";
+    api(rec);
   }
 
   // ===== PWA =====
@@ -509,10 +588,13 @@
 
   // ===== Getaran =====
   function vib(p){
+    if(!vibOn) return;
     if(navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} }
   }
 
   var state = null;
+  var setts = null;   // {sound, vib} - dimuat selepas loadJSON tersedia
+  var vibOn = true;
 
   // ----- papan markah (disimpan dalam pelayar, ikut mode) -----
   var LB_KEY = "sifirJuaraLB";
@@ -576,7 +658,8 @@
   // ----- elements -----
   var $ = function(id){ return document.getElementById(id); };
   var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
-    badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"), result:$("resultScreen")};
+    badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
+    result:$("resultScreen"), login:$("loginScreen"), set:$("setScreen")};
   function show(name){
     for(var k in screens) screens[k].classList.toggle("on", k===name);
   }
@@ -917,13 +1000,17 @@
     stats.modes[state.mode] = true;
     saveMeta();
     evalBadges();
+    syncUp();
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
       $("saveScore").innerHTML = state.score + "<small>Markah</small>";
+      var pn = "", pk = "";
       try{
-        $("nameInput").value = localStorage.getItem("sifirJuaraName") || "";
-        $("classInput").value = localStorage.getItem("sifirJuaraClass") || "";
+        pn = localStorage.getItem("sifirJuaraName") || "";
+        pk = localStorage.getItem("sifirJuaraClass") || "";
       }catch(e){}
+      $("nameInput").value = profile.nickname || pn;
+      $("classInput").value = profile.kelas || pk;
       show("save");
     } else {
       show("result");
@@ -1037,6 +1124,46 @@
       localStorage.setItem("sifirJuaraStats", JSON.stringify(stats));
     }catch(e){}
   }
+  var profile = loadJSON("sifirJuaraProfile", {nickname:"", kelas:""});
+  function saveProfile(){
+    try{ localStorage.setItem("sifirJuaraProfile", JSON.stringify(profile)); }catch(e){}
+  }
+  var account = loadJSON("sifirJuaraAcc", null);
+  function saveAccount(){
+    try{
+      if(account) localStorage.setItem("sifirJuaraAcc", JSON.stringify(account));
+      else localStorage.removeItem("sifirJuaraAcc");
+    }catch(e){}
+  }
+  setts = loadJSON("sifirJuaraSet", {sound:true, vib:true});
+  soundOn = setts.sound !== false;
+  vibOn = setts.vib !== false;
+  function saveSetts(){
+    try{ localStorage.setItem("sifirJuaraSet", JSON.stringify(setts)); }catch(e){}
+  }
+
+  // hantar profil (lencana+statistik+nickname) ke Sheets
+  function syncUp(){
+    if(!account) return;
+    api({action:"sync", email:account.email, pass:account.pass,
+      nickname:profile.nickname||"", kelas:profile.kelas||"",
+      badges:badgeState, stats:stats});
+  }
+  // gabung profil dari Sheets dengan data peranti ini
+  function applyRemote(p){
+    var rb = p.badges || {};
+    for(var k in rb){ if(rb[k]) badgeState[k] = true; }
+    var rs = p.stats || {};
+    stats.games = Math.max(stats.games||0, rs.games||0);
+    stats.totalCorrect = Math.max(stats.totalCorrect||0, rs.totalCorrect||0);
+    if(rs.modes){ for(var m in rs.modes){ if(rs.modes[m]) stats.modes[m] = true; } }
+    if(p.nickname && !profile.nickname) profile.nickname = p.nickname;
+    else if(p.nickname) profile.nickname = p.nickname;
+    if(p.kelas) profile.kelas = p.kelas;
+    saveMeta(); saveProfile();
+    syncUp();
+  }
+
   var toastQ = [], toastBusy = false;
   function queueToast(txt){ toastQ.push(txt); runToast(); }
   function runToast(){
@@ -1141,6 +1268,9 @@
     }catch(e){}
     var rank = addScore(state.mode, state.score, name, kelas);
     state.saved = true;
+    if(!profile.nickname){ profile.nickname = name; }
+    if(kelas){ profile.kelas = kelas; }
+    saveProfile(); syncUp();
     sendToSheets({
       nama: name, kelas: kelas, mod: state.cfg.label,
       markah: state.score, betul: state.correct, salah: state.wrong,
@@ -1237,10 +1367,102 @@
   $("resLbBtn").addEventListener("click", function(){ renderLB(state && !state.practice ? state.mode : "easy"); show("lb"); });
   $("lbBack").addEventListener("click", function(){ show("start"); });
 
-  $("soundBtn").addEventListener("click", function(){
-    soundOn = !soundOn;
-    $("soundBtn").textContent = soundOn ? "🔊" : "🔇";
+  // ----- UI akaun -----
+  function accMsg(txt, ok){
+    var m = $("accMsg");
+    m.textContent = txt || "";
+    m.className = "accMsg" + (txt ? (ok ? " ok" : " err") : "");
+  }
+  function updateAccUI(){
+    if(account){
+      $("loginBtn").textContent = "👤 " + (profile.nickname || account.email.split("@")[0]);
+      $("accForm").style.display = "none";
+      $("doLogout").style.display = "";
+      $("accInfo").style.display = "";
+      $("accInfo").textContent = "Log masuk sebagai: " + account.email;
+    } else {
+      $("loginBtn").textContent = "👤 Log Masuk";
+      $("accForm").style.display = "";
+      $("doLogout").style.display = "none";
+      $("accInfo").style.display = "none";
+    }
+  }
+  $("loginBtn").addEventListener("click", function(){ accMsg(""); updateAccUI(); show("login"); });
+  $("loginBack").addEventListener("click", function(){ show("start"); });
+
+  function readAccInput(){
+    var email = $("accEmail").value.trim().toLowerCase();
+    var pass = $("accPass").value.trim();
+    if(!/^\S+@\S+\.\S+$/.test(email)){ accMsg("Email tidak sah"); return null; }
+    return {email:email, pass:pass};
+  }
+  $("doReg").addEventListener("click", function(){
+    var a = readAccInput(); if(!a) return;
+    if(!/^\d{4}$/.test(a.pass)){ accMsg("PIN mesti 4 angka"); return; }
+    accMsg("Mendaftar...", true);
+    api({action:"register", email:a.email, pass:a.pass}, function(r){
+      if(!r.ok){ accMsg(r.err || "Gagal mendaftar"); return; }
+      account = {email:a.email, pass:a.pass};
+      saveAccount(); syncUp(); updateAccUI();
+      accMsg("Berjaya didaftarkan! ✅", true);
+    });
   });
+  $("doLogin").addEventListener("click", function(){
+    var a = readAccInput(); if(!a) return;
+    if(!/^\d{4}$/.test(a.pass)){ accMsg("PIN mesti 4 angka"); return; }
+    accMsg("Log masuk...", true);
+    api({action:"login", email:a.email, pass:a.pass}, function(r){
+      if(!r.ok){ accMsg(r.err || "Gagal log masuk"); return; }
+      account = {email:a.email, pass:a.pass};
+      saveAccount();
+      applyRemote(r);
+      updateAccUI();
+      accMsg("Berjaya log masuk! Lencana anda telah dipulihkan ✅", true);
+    });
+  });
+  $("doReset").addEventListener("click", function(){
+    var email = $("accEmail").value.trim().toLowerCase();
+    if(!/^\S+@\S+\.\S+$/.test(email)){ accMsg("Taip email anda dahulu"); return; }
+    accMsg("Menghantar...", true);
+    api({action:"reset", email:email}, function(r){
+      if(!r.ok){ accMsg(r.err || "Gagal menghantar"); return; }
+      accMsg("PIN telah dihantar ke email anda 📧", true);
+    });
+  });
+  $("doLogout").addEventListener("click", function(){
+    account = null;
+    saveAccount(); updateAccUI();
+    accMsg("Telah log keluar", true);
+  });
+
+  // ----- UI tetapan -----
+  function drawSetts(){
+    $("togSound").textContent = soundOn ? "ON" : "OFF";
+    $("togSound").classList.toggle("on", soundOn);
+    $("togVib").textContent = vibOn ? "ON" : "OFF";
+    $("togVib").classList.toggle("on", vibOn);
+    $("setNick").value = profile.nickname || "";
+    $("setKelas").value = profile.kelas || "";
+  }
+  $("setBtn").addEventListener("click", function(){ $("setMsg").textContent=""; drawSetts(); show("set"); });
+  $("setBack").addEventListener("click", function(){ show("start"); });
+  $("togSound").addEventListener("click", function(){
+    soundOn = !soundOn; setts.sound = soundOn; saveSetts(); drawSetts();
+    if(soundOn) sndGood();
+  });
+  $("togVib").addEventListener("click", function(){
+    vibOn = !vibOn; setts.vib = vibOn; saveSetts(); drawSetts();
+    if(vibOn) vib(40);
+  });
+  $("setSave").addEventListener("click", function(){
+    profile.nickname = $("setNick").value.trim();
+    profile.kelas = $("setKelas").value.trim();
+    saveProfile(); syncUp();
+    var m = $("setMsg");
+    m.textContent = "Tetapan disimpan ✅";
+    m.className = "accMsg ok";
+  });
+  updateAccUI();
 
 })();
 </script>
