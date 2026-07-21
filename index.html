@@ -252,10 +252,14 @@
 
   /* avatar bulatan di menu utama */
   .menuAva{display:flex;justify-content:center;margin-bottom:6px}
+  .menuAvaWrap{position:relative}
   .menuAvaCircle{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
     font-size:40px;cursor:pointer;border:3px solid #ffffff40;box-shadow:0 5px 0 #00000030;
     transition:transform .12s}
   .menuAvaCircle:active{transform:scale(.94)}
+  .menuLvl{position:absolute;top:-4px;right:-8px;background:linear-gradient(180deg,#ff5aa8,#ff3d97);
+    color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;letter-spacing:.3px;
+    padding:2px 7px;border-radius:99px;box-shadow:0 2px 0 #b31e63;pointer-events:none}
 
   /* pemilih avatar dalam profil */
   .avaPick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -358,7 +362,10 @@
   <!-- START -->
   <section class="screen on" id="startScreen">
     <div class="menuAva" id="menuAva" style="display:none">
-      <div class="menuAvaCircle" id="menuAvaCircle">🦊</div>
+      <div class="menuAvaWrap">
+        <div class="menuAvaCircle" id="menuAvaCircle">🦊</div>
+        <span class="menuLvl" id="menuLvl">Lv 1</span>
+      </div>
     </div>
     <div class="brand">
       <div class="logo">Sifir <span class="x">×</span> Juara</div>
@@ -484,7 +491,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.8</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.9</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -664,7 +671,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.8";
+  var APP_VERSION = "1.9";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1473,9 +1480,13 @@
     var h = hashStr(name.toUpperCase());
     return { emoji: AVATARS[h % AVATARS.length], bg: AVA_BG[(h>>3) % AVA_BG.length] };
   }
-  // XP = jumlah betul terkumpul; 5 avatar percuma, seterusnya +40 XP setiap satu
-  function avatarUnlockXP(i){ return i < 5 ? 0 : (i - 4) * 40; }
+  // XP = jumlah betul terkumpul; 100 XP = 1 level; maksimum 20 level
+  var MAX_LEVEL = 20, XP_PER_LEVEL = 100;
   function myXP(){ return (stats && stats.totalCorrect) || 0; }
+  function levelOf(xp){ return Math.min(MAX_LEVEL, Math.floor((xp||0) / XP_PER_LEVEL) + 1); }
+  // 5 avatar percuma (Level 1); 15 lagi tersebar merata dari Level 2 hingga 20
+  function avatarUnlockLevel(i){ return i < 5 ? 1 : (2 + Math.round((i - 5) * 18 / 14)); }
+  function avatarUnlockXP(i){ return (avatarUnlockLevel(i) - 1) * XP_PER_LEVEL; }
   function myAvatarIdx(){
     var a = (stats && typeof stats.avatar === "number") ? stats.avatar : 0;
     return (a >= 0 && a < AVATARS.length) ? a : 0;
@@ -1487,6 +1498,7 @@
       var idx = myAvatarIdx();
       $("menuAvaCircle").textContent = AVATARS[idx];
       $("menuAvaCircle").style.background = avatarFor(profile.nickname || account.email).bg;
+      $("menuLvl").textContent = "Lv " + levelOf(myXP());
     } else {
       m.style.display = "none";
     }
@@ -1523,7 +1535,8 @@
   }
   function renderProfile(r){
     $("pfName").textContent = (r.nickname||"").toUpperCase();
-    $("pfKelas").textContent = (r.kelas||"") ? ("Kelas " + r.kelas) : "";
+    var lvl = levelOf((r.stats && r.stats.totalCorrect) || 0);
+    $("pfKelas").textContent = "Level " + lvl + ((r.kelas||"") ? (" · Kelas " + r.kelas) : "");
     // avatar: sendiri guna pilihan tempatan; orang lain guna pilihan dari pelayan (jika ada)
     var avaIdx = pfIsOwn ? myAvatarIdx()
       : (r.stats && typeof r.stats.avatar === "number" ? r.stats.avatar : -1);
@@ -1565,15 +1578,16 @@
     if(got === 0) bg.innerHTML = "<p class='pfEmpty' style='grid-column:1/-1'>Belum ada lencana</p>";
   }
   function renderAvatarPicker(){
-    var xp = myXP(), cur = myAvatarIdx();
-    var nextLocked = -1;
-    for(var n=0;n<AVATARS.length;n++){ if(xp < avatarUnlockXP(n)){ nextLocked = n; break; } }
-    $("pfXp").innerHTML = "XP: <b>" + xp + "</b>" +
-      (nextLocked >= 0 ? "  ·  avatar seterusnya pada <b>" + avatarUnlockXP(nextLocked) + " XP</b>" : "  ·  semua avatar dibuka! 🎉");
+    var xp = myXP(), cur = myAvatarIdx(), lvl = levelOf(xp);
+    var intoLevel = xp % XP_PER_LEVEL;
+    var msg = "Level <b>" + lvl + "</b>";
+    if(lvl < MAX_LEVEL) msg += "  ·  <b>" + intoLevel + "/" + XP_PER_LEVEL + " XP</b> ke Level " + (lvl + 1);
+    else msg += "  ·  Level maksimum! 🎉";
+    $("pfXp").innerHTML = msg;
     var g = $("pfAvaPick"); g.innerHTML = "";
     AVATARS.forEach(function(em, i){
-      var need = avatarUnlockXP(i);
-      var unlocked = xp >= need;
+      var needLvl = avatarUnlockLevel(i);
+      var unlocked = lvl >= needLvl;
       var c = document.createElement("div");
       c.className = "avaCell" + (i === cur ? " sel" : "") + (unlocked ? "" : " lock");
       if(unlocked){
@@ -1588,7 +1602,7 @@
         });
       } else {
         c.textContent = "🔒";
-        var x = document.createElement("div"); x.className = "xp"; x.textContent = need + " XP";
+        var x = document.createElement("div"); x.className = "xp"; x.textContent = "Lvl " + needLvl;
         c.appendChild(x);
       }
       g.appendChild(c);

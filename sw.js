@@ -1,5 +1,5 @@
 // Service worker Sifir Juara — cache untuk main offline
-var CACHE = "sifir-juara-v27";
+var CACHE = "sifir-juara-v28";
 var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){
