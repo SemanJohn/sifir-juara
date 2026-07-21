@@ -84,10 +84,15 @@
   .mode.hard{border-color:#ff5a6e55}
   .mode.prac{border-color:#25d9e855}
   .mode.vs{border-color:#ff3d9755;position:relative}
-  .vsBadge{position:absolute;top:-9px;right:-9px;background:#26de81;color:#04351f;
-    font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;min-width:24px;height:24px;
-    border-radius:99px;display:grid;place-items:center;padding:0 6px;
+  .vsBadges{position:absolute;top:-9px;right:-9px;display:flex;gap:4px}
+  .vsBadge{font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;min-width:24px;height:24px;
+    border-radius:99px;display:grid;place-items:center;padding:0 7px;
     border:2px solid #1b1650;box-shadow:0 2px 4px #00000055}
+  .vsBadge.inv{background:#26de81;color:#04351f}
+  .vsBadge.swd{background:#ff4757;color:#fff}
+  .vsRow.win{background:#e9fbef;border:2px solid #37e29a}
+  .vsRow.lose{background:#ffeaec;border:2px solid #ff5a6e}
+  .vsRow.draw{background:#fff6e0;border:2px solid #ffcf3f}
   .vsRow{display:flex;align-items:center;gap:12px;background:var(--card);color:var(--ink);
     border-radius:16px;padding:12px 14px;margin-bottom:10px}
   .vsRow .av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;background:#fff}
@@ -411,7 +416,10 @@
       <button class="mode vs" data-go="vs">
         <span class="emoji">⚔️</span>
         <span class="txt"><b>Lawan (VS)</b><span id="vsSub">Cabar pemain lain</span></span>
-        <span class="vsBadge" id="vsBadge" style="display:none">0</span>
+        <span class="vsBadges" id="vsBadges">
+        <span class="vsBadge inv" id="vsBadgeInvite" style="display:none">0</span>
+        <span class="vsBadge swd" id="vsBadgeSword" style="display:none">⚔️0</span>
+      </span>
       </button>
     </div>
     <p class="hint">Guna numpad atau taip nombor + <kbd>Enter</kbd>.</p>
@@ -524,7 +532,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.6</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.7</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -766,7 +774,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.6";
+  var APP_VERSION = "2.7";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1857,7 +1865,7 @@
     show("vsHub");
     api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
       if(!r || !r.ok){ $("vsHubList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat sambungan")+"</p>"; return; }
-      renderVsHub(r); setVsBadge(r.incoming ? r.incoming.length : 0);
+      renderVsHub(r); setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r));
     });
   }
   function renderVsHub(r){
@@ -1881,8 +1889,11 @@
         L.appendChild(it.d); }); }
     if(r.recent && r.recent.length){ any=true; vsSect(L,"Keputusan Terkini");
       r.recent.slice().reverse().forEach(function(m){
-        var res = m.myScore>m.oppScore?"Menang 👑":(m.myScore<m.oppScore?"Kalah":"Seri 🤝");
-        var it=vsMiniRow(m, res+" ("+m.myScore+" vs "+m.oppScore+")"); L.appendChild(it.d); }); }
+        var win = m.myScore>m.oppScore, lose = m.myScore<m.oppScore;
+        var res = win?"Menang 👑":(lose?"Kalah":"Seri 🤝");
+        var it=vsMiniRow(m, res+" ("+m.myScore+" vs "+m.oppScore+")"+(m.date?(" · "+m.date):""));
+        it.d.classList.add(win?"win":(lose?"lose":"draw"));
+        L.appendChild(it.d); }); }
     if(!any) L.innerHTML="<p class='vsEmpty'>Tiada perlawanan lagi. Tekan '➕ Jemput Lawan' untuk mula!</p>";
   }
   function vsAct(action, id){
@@ -1942,17 +1953,21 @@
     });
   }
 
-  function setVsBadge(n){
-    var b=$("vsBadge");
-    if(n>0){ b.style.display=""; b.textContent=n; } else b.style.display="none";
+  function vsSwordCount(r){
+    return (r.active||[]).filter(function(m){ return m.oppScore>=0 && m.myScore<0; }).length;
+  }
+  function setVsBadges(inv, swd){
+    var bi=$("vsBadgeInvite"), bs=$("vsBadgeSword");
+    if(inv>0){ bi.style.display=""; bi.textContent=inv; } else bi.style.display="none";
+    if(swd>0){ bs.style.display=""; bs.textContent="⚔️"+swd; } else bs.style.display="none";
   }
   var vsBadgePoll=0;
   function refreshVsBadge(){
-    if(!account) { setVsBadge(0); return; }
+    if(!account){ setVsBadges(0,0); return; }
     if(Date.now()-vsBadgePoll < 20000) return;
     vsBadgePoll=Date.now();
     api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
-      if(r && r.ok) setVsBadge(r.incoming ? r.incoming.length : 0);
+      if(r && r.ok) setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r));
     });
   }
 
