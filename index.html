@@ -532,7 +532,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.7</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.8</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -774,7 +774,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.7";
+  var APP_VERSION = "2.8";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1997,6 +1997,7 @@
     return t;
   }
   function refreshLB(){
+    if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
     if(!SHEETS_URL || lbFetching) return;
     lbFetching = true;
     fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
@@ -2027,12 +2028,12 @@
   }
   function stars(n){ return n>0 ? ("★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n)) : ""; }
   function rankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
-  function drawVsBoardInLb(){
-    var L = $("lbList"); L.innerHTML = "";
+  function drawVsBoardInLb(silent){
+    var L = $("lbList");
     if(!account){ L.innerHTML = "<p class='lbEmpty'>Log masuk untuk papan markah VS.</p>"; return; }
-    L.innerHTML = "<p class='lbEmpty'>Memuatkan…</p>";
+    if(!silent) L.innerHTML = "<p class='lbEmpty'>Memuatkan…</p>";
     api({action:"vs_board", email:account.email, pass:account.pass}, function(r){
-      if($("lbScreen").className.indexOf("on") < 0) return;
+      if(lbMode !== "vs" || $("lbScreen").className.indexOf("on") < 0) return;
       L.innerHTML = "";
       if(!r || !r.ok){ L.innerHTML = "<p class='lbEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
       var board = r.board || [];
@@ -2052,6 +2053,7 @@
     });
   }
   function drawLB(){
+    if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
     var list = $("lbList");
     list.innerHTML = "";
     // sedang muat: papar "Memuatkan…" sahaja (jangan tunjuk data separa/tempatan)
