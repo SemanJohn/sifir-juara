@@ -230,8 +230,8 @@
   .pfCard{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;
     box-shadow:0 14px 0 #00000030,0 24px 48px #00000055;
     max-height:min(70vh,620px);overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .pfAva{width:92px;height:92px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;
-    font-size:48px;box-shadow:0 6px 0 #0000002e}
+  .pfAva{width:92px;height:92px;border-radius:50%;margin:0 auto 10px;overflow:hidden;
+    box-shadow:0 6px 0 #0000002e;background:#fff}
   .pfName{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;text-align:center;line-height:1.1}
   .pfKelas{text-align:center;font-weight:800;color:#8a7fb5;font-size:14px;margin-top:2px}
   .pfSection{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;letter-spacing:.6px;
@@ -253,9 +253,8 @@
   /* avatar bulatan di menu utama */
   .menuAva{display:flex;justify-content:center;margin-bottom:6px}
   .menuAvaWrap{position:relative}
-  .menuAvaCircle{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
-    font-size:40px;cursor:pointer;border:3px solid #ffffff40;box-shadow:0 5px 0 #00000030;
-    transition:transform .12s}
+  .menuAvaCircle{width:74px;height:74px;border-radius:50%;overflow:hidden;cursor:pointer;
+    border:3px solid #ffffff40;box-shadow:0 5px 0 #00000030;transition:transform .12s;background:#fff}
   .menuAvaCircle:active{transform:scale(.94)}
   .menuLvl{position:absolute;top:-4px;right:-8px;background:linear-gradient(180deg,#ff5aa8,#ff3d97);
     color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:10px;letter-spacing:.3px;
@@ -263,8 +262,9 @@
 
   /* pemilih avatar dalam profil */
   .avaPick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-  .avaCell{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;font-size:24px;
+  .avaCell{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;font-size:22px;overflow:hidden;
     background:#f0ecfa;cursor:pointer;position:relative;border:2px solid transparent}
+  .avaCell svg{width:100%;height:100%;display:block}
   .avaCell.sel{border-color:var(--cyan);background:#e0fbff}
   .avaCell.lock{opacity:.5;cursor:default}
   .avaCell .xp{position:absolute;bottom:2px;left:0;right:0;font-size:8.5px;font-weight:900;color:#8a7fb5}
@@ -491,7 +491,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.9</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.0</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -671,7 +671,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.9";
+  var APP_VERSION = "2.0";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1472,14 +1472,38 @@
     if(e.key === "Enter") saveScore();
   });
 
-  // ----- avatar automatik ikut nama -----
-  var AVATARS = ["🦊","🐼","🐯","🦁","🐨","🐵","🐸","🐧","🦉","🐬","🦄","🐙","🐮","🐷","🐰","🐻","🐲","🦖","🐢","🐝"];
-  var AVA_BG = ["#ffe0ec","#e0f0ff","#e6ffe9","#fff4d6","#f0e6ff","#ffe9d6","#e0fbff","#ffe0e0"];
+  // ----- avatar SVG watak comel (bukan emoji) -----
+  var AVA_COUNT = 20;
+  var AVA_BODY = ["#ff6b6b","#22c1c3","#7c5cff","#ff9f43","#26de81","#fd79a8","#4b7bec","#f7b731","#eb3b5a","#2bcbba","#5f27cd","#a3cb38","#e84393","#54a0ff","#1dd1a1","#feca57","#a55eea","#ff6b81","#00d2d3","#8854d0"];
+  var AVA_BG2  = ["#ffe3e3","#d7f7f7","#ece6ff","#ffeede","#dcffe9","#ffe1ef","#e0eaff","#fff2d6","#ffe0e6","#d9f7f4","#e7e1ff","#eef7d8","#ffe0f0","#e2eeff","#d8f7ee","#fff2d9","#eee2ff","#ffe2e7","#d6f7f7","#e8e0f7"];
   function hashStr(str){ var h=0; str=String(str||""); for(var i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; } return h; }
-  function avatarFor(name){
-    var h = hashStr(name.toUpperCase());
-    return { emoji: AVATARS[h % AVATARS.length], bg: AVA_BG[(h>>3) % AVA_BG.length] };
+  function shadeHex(hex, amt){
+    var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    r=Math.max(0,Math.min(255,r+amt)); g=Math.max(0,Math.min(255,g+amt)); b=Math.max(0,Math.min(255,b+amt));
+    return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
   }
+  function avatarSVG(i){
+    i=((i%AVA_COUNT)+AVA_COUNT)%AVA_COUNT;
+    var body=AVA_BODY[i], bg=AVA_BG2[i], horn=shadeHex(body,-34);
+    var eyes=(i%7===4)?1:((i%7===2)?3:2);
+    var hasHorn=(i%2===0);
+    var mouth=["smile","fang","o"][i%3];
+    var s='<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">';
+    s+='<circle cx="50" cy="50" r="50" fill="'+bg+'"/>';
+    if(hasHorn){ s+='<path d="M30 33 L37 13 L45 33 Z" fill="'+horn+'"/><path d="M70 33 L63 13 L55 33 Z" fill="'+horn+'"/>'; }
+    else { s+='<circle cx="30" cy="28" r="9" fill="'+horn+'"/><circle cx="70" cy="28" r="9" fill="'+horn+'"/>'; }
+    s+='<circle cx="50" cy="57" r="30" fill="'+body+'"/>';
+    if(eyes===1){ s+='<circle cx="50" cy="53" r="12" fill="#fff"/><circle cx="50" cy="55" r="5.5" fill="#241a52"/><circle cx="46" cy="50" r="2" fill="#fff"/>'; }
+    else if(eyes===3){ s+='<circle cx="38" cy="51" r="7" fill="#fff"/><circle cx="38" cy="53" r="3.2" fill="#241a52"/><circle cx="62" cy="51" r="7" fill="#fff"/><circle cx="62" cy="53" r="3.2" fill="#241a52"/><circle cx="50" cy="64" r="6" fill="#fff"/><circle cx="50" cy="65" r="2.8" fill="#241a52"/>'; }
+    else { s+='<circle cx="40" cy="53" r="8" fill="#fff"/><circle cx="41" cy="55" r="3.6" fill="#241a52"/><circle cx="60" cy="53" r="8" fill="#fff"/><circle cx="59" cy="55" r="3.6" fill="#241a52"/>'; }
+    if(mouth==="smile") s+='<path d="M40 67 Q50 76 60 67" stroke="#241a52" stroke-width="3" fill="none" stroke-linecap="round"/>';
+    else if(mouth==="o") s+='<circle cx="50" cy="70" r="4.5" fill="#241a52"/>';
+    else s+='<path d="M42 67 h16 l-4 6 -4 -5 -4 5 Z" fill="#fff" stroke="#241a52" stroke-width="1.4" stroke-linejoin="round"/>';
+    s+='<circle cx="33" cy="64" r="3.5" fill="#ffffff66"/><circle cx="67" cy="64" r="3.5" fill="#ffffff66"/>';
+    s+='</svg>';
+    return s;
+  }
+  function avatarIdxFor(name){ return hashStr(String(name).toUpperCase()) % AVA_COUNT; }
   // XP = jumlah betul terkumpul; 100 XP = 1 level; maksimum 20 level
   var MAX_LEVEL = 20, XP_PER_LEVEL = 100;
   function myXP(){ return (stats && stats.totalCorrect) || 0; }
@@ -1489,15 +1513,13 @@
   function avatarUnlockXP(i){ return (avatarUnlockLevel(i) - 1) * XP_PER_LEVEL; }
   function myAvatarIdx(){
     var a = (stats && typeof stats.avatar === "number") ? stats.avatar : 0;
-    return (a >= 0 && a < AVATARS.length) ? a : 0;
+    return (a >= 0 && a < AVA_COUNT) ? a : 0;
   }
   function updateMenuAva(){
     var m = $("menuAva");
     if(account){
       m.style.display = "";
-      var idx = myAvatarIdx();
-      $("menuAvaCircle").textContent = AVATARS[idx];
-      $("menuAvaCircle").style.background = avatarFor(profile.nickname || account.email).bg;
+      $("menuAvaCircle").innerHTML = avatarSVG(myAvatarIdx());
       $("menuLvl").textContent = "Lv " + levelOf(myXP());
     } else {
       m.style.display = "none";
@@ -1515,9 +1537,7 @@
     if(!nick) return;
     pfIsOwn = !!(isOwn && account && nick.toUpperCase() === (profile.nickname||"").toUpperCase());
     // avatar & nama serta-merta
-    var av = avatarFor(nick);
-    $("pfAva").textContent = pfIsOwn ? AVATARS[myAvatarIdx()] : av.emoji;
-    $("pfAva").style.background = av.bg;
+    $("pfAva").innerHTML = avatarSVG(pfIsOwn ? myAvatarIdx() : 0);
     $("pfName").textContent = nick.toUpperCase();
     $("pfKelas").textContent = "";
     $("pfHighs").innerHTML = "<p class='pfEmpty'>Memuatkan…</p>";
@@ -1539,9 +1559,9 @@
     $("pfKelas").textContent = "Level " + lvl + ((r.kelas||"") ? (" · Kelas " + r.kelas) : "");
     // avatar: sendiri guna pilihan tempatan; orang lain guna pilihan dari pelayan (jika ada)
     var avaIdx = pfIsOwn ? myAvatarIdx()
-      : (r.stats && typeof r.stats.avatar === "number" ? r.stats.avatar : -1);
-    if(avaIdx >= 0 && avaIdx < AVATARS.length){
-      $("pfAva").textContent = AVATARS[avaIdx];
+      : (r.stats && typeof r.stats.avatar === "number" ? r.stats.avatar : 0);
+    if(avaIdx >= 0 && avaIdx < AVA_COUNT){
+      $("pfAva").innerHTML = avatarSVG(avaIdx);
     }
     // pemilih avatar (pengguna berdaftar, profil sendiri sahaja)
     if(pfIsOwn){ $("pfAvaPickWrap").style.display = ""; renderAvatarPicker(); }
@@ -1585,28 +1605,30 @@
     else msg += "  ·  Level maksimum! 🎉";
     $("pfXp").innerHTML = msg;
     var g = $("pfAvaPick"); g.innerHTML = "";
-    AVATARS.forEach(function(em, i){
-      var needLvl = avatarUnlockLevel(i);
-      var unlocked = lvl >= needLvl;
-      var c = document.createElement("div");
-      c.className = "avaCell" + (i === cur ? " sel" : "") + (unlocked ? "" : " lock");
-      if(unlocked){
-        c.textContent = em;
-        c.addEventListener("click", function(){
-          if(!stats) return;
-          stats.avatar = i;
-          saveMeta(); syncUp();
-          $("pfAva").textContent = em;
-          updateMenuAva();
-          renderAvatarPicker();
-        });
-      } else {
-        c.textContent = "🔒";
-        var x = document.createElement("div"); x.className = "xp"; x.textContent = "Lvl " + needLvl;
-        c.appendChild(x);
-      }
-      g.appendChild(c);
-    });
+    for(var i=0;i<AVA_COUNT;i++){
+      (function(i){
+        var needLvl = avatarUnlockLevel(i);
+        var unlocked = lvl >= needLvl;
+        var c = document.createElement("div");
+        c.className = "avaCell" + (i === cur ? " sel" : "") + (unlocked ? "" : " lock");
+        if(unlocked){
+          c.innerHTML = avatarSVG(i);
+          c.addEventListener("click", function(){
+            if(!stats) return;
+            stats.avatar = i;
+            saveMeta(); syncUp();
+            $("pfAva").innerHTML = avatarSVG(i);
+            updateMenuAva();
+            renderAvatarPicker();
+          });
+        } else {
+          c.textContent = "🔒";
+          var x = document.createElement("div"); x.className = "xp"; x.textContent = "Lvl " + needLvl;
+          c.appendChild(x);
+        }
+        g.appendChild(c);
+      })(i);
+    }
   }
   $("pfBack").addEventListener("click", function(){ show(pfIsOwn ? "start" : "lb"); });
 
