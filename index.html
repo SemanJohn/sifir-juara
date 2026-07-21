@@ -374,10 +374,8 @@
       <div id="accForm">
         <input id="accEmail" type="email" placeholder="Email" autocomplete="off">
         <input id="accPass" type="password" inputmode="numeric" maxlength="4" placeholder="PIN (4 angka)">
-        <div class="actions">
-          <button class="btn ghost" id="doReg">Daftar</button>
-          <button class="btn primary" id="doLogin">Log Masuk</button>
-        </div>
+        <button class="btn primary" id="doLogin" style="width:100%;margin-top:12px">Log Masuk</button>
+        <button class="linkBtn" id="doReg">Belum ada akaun? Daftar di sini</button>
         <button class="linkBtn" id="doReset">Lupa PIN? Hantar ke email saya</button>
       </div>
       <button class="btn ghost" id="doLogout" style="display:none;width:100%;margin-top:10px">Log Keluar</button>
@@ -385,6 +383,25 @@
     </div>
     <div class="actions">
       <button class="btn ghost" id="loginBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- DAFTAR AKAUN -->
+  <section class="screen" id="regScreen">
+    <div class="brand">
+      <div class="logo">📝</div>
+      <div class="tag">Daftar Akaun Baharu</div>
+    </div>
+    <div class="setCard">
+      <input id="regEmail" type="email" placeholder="Email" autocomplete="off">
+      <input id="regPass" type="password" inputmode="numeric" maxlength="4" placeholder="PIN (4 angka)">
+      <input id="regNick" maxlength="14" placeholder="Nickname (unik)" autocomplete="off">
+      <input id="regKelas" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
+      <button class="btn primary" id="regGo" style="width:100%;margin-top:14px">Daftar</button>
+      <p class="accMsg" id="regMsg"></p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="regBack">Kembali</button>
     </div>
   </section>
 
@@ -659,7 +676,7 @@
   var $ = function(id){ return document.getElementById(id); };
   var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
     badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
-    result:$("resultScreen"), login:$("loginScreen"), set:$("setScreen")};
+    result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen")};
   function show(name){
     for(var k in screens) screens[k].classList.toggle("on", k===name);
   }
@@ -1405,14 +1422,34 @@
     return {email:email, pass:pass};
   }
   $("doReg").addEventListener("click", function(){
-    var a = readAccInput(); if(!a) return;
-    if(!/^\d{4}$/.test(a.pass)){ accMsg("PIN mesti 4 angka"); return; }
-    accMsg("Mendaftar...", true);
-    api({action:"register", email:a.email, pass:a.pass}, function(r){
-      if(!r.ok){ accMsg(r.err || "Gagal mendaftar"); return; }
-      account = {email:a.email, pass:a.pass};
-      saveAccount(); syncUp(); updateAccUI();
-      accMsg("Berjaya didaftarkan! ✅", true);
+    $("regMsg").textContent = "";
+    $("regEmail").value = $("accEmail").value;
+    show("reg");
+  });
+  $("regBack").addEventListener("click", function(){ show("login"); });
+  function regMsg(txt, ok){
+    var m = $("regMsg");
+    m.textContent = txt || "";
+    m.className = "accMsg" + (txt ? (ok ? " ok" : " err") : "");
+  }
+  $("regGo").addEventListener("click", function(){
+    var email = $("regEmail").value.trim().toLowerCase();
+    var pass = $("regPass").value.trim();
+    var nick = $("regNick").value.trim();
+    var kelas = $("regKelas").value.trim();
+    if(!/^\S+@\S+\.\S+$/.test(email)){ regMsg("Email tidak sah"); return; }
+    if(!/^\d{4}$/.test(pass)){ regMsg("PIN mesti 4 angka"); return; }
+    if(!nick){ regMsg("Nickname diperlukan"); return; }
+    if(!kelas){ regMsg("Kelas diperlukan"); return; }
+    regMsg("Mendaftar...", true);
+    api({action:"register", email:email, pass:pass, nickname:nick, kelas:kelas}, function(r){
+      if(!r.ok){ regMsg(r.err || "Gagal mendaftar"); return; }
+      account = {email:email, pass:pass};
+      profile.nickname = nick;
+      profile.kelas = kelas;
+      saveAccount(); saveProfile(); syncUp(); updateAccUI();
+      regMsg("Berjaya didaftarkan! ✅", true);
+      setTimeout(function(){ accMsg("Selamat datang, "+nick+"! ✅", true); updateAccUI(); show("login"); }, 900);
     });
   });
   $("doLogin").addEventListener("click", function(){
