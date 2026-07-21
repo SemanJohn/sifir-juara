@@ -83,6 +83,28 @@
   .mode.mid{border-color:#ffcf3f55}
   .mode.hard{border-color:#ff5a6e55}
   .mode.prac{border-color:#25d9e855}
+  .mode.vs{border-color:#ff3d9755}
+  .vsBadge{background:var(--magenta);color:#fff;font-family:'Nunito',sans-serif;font-weight:900;
+    font-size:12px;min-width:22px;height:22px;border-radius:99px;display:grid;place-items:center;
+    padding:0 6px;flex:none}
+  .vsRow{display:flex;align-items:center;gap:12px;background:var(--card);color:var(--ink);
+    border-radius:16px;padding:12px 14px;margin-bottom:10px}
+  .vsRow .av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;background:#fff}
+  .vsRow .info{flex:1;min-width:0}
+  .vsRow .info b{font-weight:900;font-size:15px;display:block}
+  .vsRow .info span{font-size:12px;color:#8a7fb5;font-weight:800}
+  .vsRow .lvl{font-size:10px;font-weight:900;color:#fff;background:#ff3d97;border-radius:99px;padding:2px 7px}
+  .vsBtn{border:none;border-radius:12px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:14px;
+    padding:9px 14px;cursor:pointer;flex:none}
+  .vsBtn.go{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;box-shadow:0 4px 0 #128a55}
+  .vsBtn.no{background:#eee7fa;color:#6c5fa8}
+  .vsBtn.red{background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 4px 0 #a51328}
+  .vsSect{font-size:12px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;
+    margin:14px 0 8px}
+  .vsEmpty{color:var(--muted);font-weight:800;font-size:13px;text-align:center;padding:6px 0}
+  .vsList{max-height:min(52vh,460px);overflow-y:auto}
+  #vsTargetBar{background:#fff3f7;color:#d63a56;font-weight:900;border-radius:14px;padding:8px 12px;
+    text-align:center;margin-bottom:12px;font-size:14px}
   .mode.tt{border-color:#ffcf3f55}
   .mode.hero{border-color:#b388ff88}
 
@@ -384,6 +406,11 @@
         <span class="emoji">🧘</span>
         <span class="txt"><b>Latihan</b><span>Pilih sifir sendiri · Tiada had masa</span></span>
       </button>
+      <button class="mode vs" data-go="vs">
+        <span class="emoji">⚔️</span>
+        <span class="txt"><b>Lawan (VS)</b><span id="vsSub">Cabar pemain lain</span></span>
+        <span class="vsBadge" id="vsBadge" style="display:none">0</span>
+      </button>
     </div>
     <p class="hint">Guna numpad atau taip nombor + <kbd>Enter</kbd>.</p>
     <button class="btn ghost" id="lbBtn" style="width:100%;margin-top:14px">🏆 Papan Markah</button>
@@ -495,7 +522,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.3</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.4</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -525,6 +552,60 @@
     </div>
     <div class="actions">
       <button class="btn ghost" id="pfBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- VS HUB -->
+  <section class="screen" id="vsHubScreen">
+    <div class="brand"><div class="logo">⚔️</div><div class="tag">Lawan (VS)</div></div>
+    <div class="actions" style="margin-bottom:6px">
+      <button class="btn primary" id="vsInviteBtn">➕ Jemput Lawan</button>
+      <button class="btn ghost" id="vsBoardBtn">🏆 Papan Markah VS</button>
+    </div>
+    <div class="vsList" id="vsHubList"></div>
+    <div class="actions"><button class="btn ghost" id="vsBack">Kembali</button></div>
+  </section>
+
+  <!-- JEMPUT LAWAN -->
+  <section class="screen" id="vsInviteScreen">
+    <div class="brand"><div class="logo">➕</div><div class="tag">Pilih Lawan</div></div>
+    <input id="vsSearch" placeholder="Cari nama..." autocomplete="off"
+      style="width:100%;font-family:'Nunito';font-weight:800;font-size:15px;padding:12px 14px;
+      border:2px solid #ffffff2f;border-radius:14px;background:#ffffff12;color:#fff;outline:none;margin-bottom:10px">
+    <div class="vsList" id="vsPlayerList"></div>
+    <div class="actions"><button class="btn ghost" id="vsInviteBack">Kembali</button></div>
+  </section>
+
+  <!-- PAPAN MARKAH VS -->
+  <section class="screen" id="vsBoardScreen">
+    <div class="brand"><div class="logo">🏆</div><div class="tag">Papan Markah VS</div></div>
+    <div class="lbList" id="vsBoardList" style="max-height:min(60vh,520px);overflow-y:auto"></div>
+    <div class="actions"><button class="btn ghost" id="vsBoardBack">Kembali</button></div>
+  </section>
+
+  <!-- KEPUTUSAN VS -->
+  <section class="screen" id="vsResultScreen">
+    <div class="result">
+      <div class="medal" id="vsMedal">⚔️</div>
+      <h2 id="vsResultTitle">Keputusan</h2>
+      <div style="display:flex;justify-content:space-around;align-items:center;margin:16px 0">
+        <div style="text-align:center">
+          <div class="vsRes-av" id="vsMeAva" style="width:64px;height:64px;border-radius:50%;overflow:hidden;margin:0 auto 4px;background:#f0ecfa"></div>
+          <div style="font-weight:900;font-size:13px" id="vsMeName">Anda</div>
+          <div style="font-family:'Fredoka';font-weight:700;font-size:30px;color:var(--magenta)" id="vsMeScore">0</div>
+        </div>
+        <div style="font-family:'Fredoka';font-weight:700;font-size:22px;color:#8a7fb5">VS</div>
+        <div style="text-align:center">
+          <div class="vsRes-av" id="vsOpAva" style="width:64px;height:64px;border-radius:50%;overflow:hidden;margin:0 auto 4px;background:#f0ecfa"></div>
+          <div style="font-weight:900;font-size:13px" id="vsOpName">Lawan</div>
+          <div style="font-family:'Fredoka';font-weight:700;font-size:30px;color:var(--ink)" id="vsOpScore">0</div>
+        </div>
+      </div>
+      <div class="best" id="vsPoints"></div>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn ghost" id="vsResMenu">Menu</button>
+        <button class="btn primary" id="vsResBack">Kembali ke VS</button>
+      </div>
     </div>
   </section>
 
@@ -596,6 +677,7 @@
     </div>
     <div class="timerWrap"><div class="timerBar" id="timerBar"></div></div>
 
+    <div id="vsTargetBar" style="display:none"></div>
     <div class="card" id="card">
       <div class="combo" id="combo">COMBO!</div>
       <div class="floatPts" id="floatPts">+10</div>
@@ -678,7 +760,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.3";
+  var APP_VERSION = "2.4";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -813,7 +895,8 @@
   var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
     badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
     result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen"),
-    profile:$("profileScreen")};
+    profile:$("profileScreen"), vsHub:$("vsHubScreen"), vsInvite:$("vsInviteScreen"),
+    vsBoard:$("vsBoardScreen"), vsResult:$("vsResultScreen")};
   var lbPoll = null;
   var curScreen = "start";
   var setReturn = "start";
@@ -823,7 +906,7 @@
     // butang log masuk hanya boleh ditekan di menu utama
     if($("loginBtn")) $("loginBtn").style.display = (name === "start") ? "" : "none";
     // kemas kini avatar & level di menu setiap kali menu dibuka
-    if(name === "start") updateMenuAva();
+    if(name === "start"){ updateMenuAva(); refreshVsBadge(); }
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
     if(name === "lb"){ lbPoll = setInterval(function(){ onlineLB=null; refreshLB(); }, 10000); }
   }
@@ -832,6 +915,7 @@
   document.querySelectorAll(".mode").forEach(function(b){
     b.addEventListener("click", function(){
       if(b.dataset.go === "timetrial"){ show("tt"); }
+      else if(b.dataset.go === "vs"){ openVs(); }
       else if(b.dataset.mode === "practice"){ buildPicker(); show("pick"); }
       else if(b.dataset.mode){ startGame(b.dataset.mode); }
     });
@@ -985,30 +1069,36 @@
 
   function newQuestion(){
     var c = state.cfg;
-    // sifir di tengah: pengganda x sifir (cth: sifir 2 -> 3 x 2)
-    // nombor 1 jarang keluar (nisbah ~1:30); soalan sama tidak diulang dalam 10 soalan
-    var sifir, mult, key, tries = 0;
-    do{
-      // hanya 1 dalam 30 soalan melibatkan nombor 1 (x1 ATAU 1x)
-      var useOne = Math.random() < 1/30;
-      if(state.tables){
-        sifir = state.tables[Math.floor(Math.random()*state.tables.length)];
-        mult = useOne ? 1 : rnd(2, 12);
-      } else if(useOne){
-        if(Math.random() < 0.5){ sifir = 1; mult = rnd(2, 12); }
-        else { sifir = rnd(c.min, c.max); mult = 1; }
-      } else {
-        sifir = rnd(c.min, c.max);
-        mult = rnd(2, 12);
-      }
-      key = mult + "x" + sifir;
-      tries++;
-    }while(state.recent.indexOf(key) >= 0 && tries < 60);
-    state.recent.push(key);
-    if(state.recent.length > 10) state.recent.shift();
+    var sifir, mult;
+    if(state.vs){
+      // VS: soalan sama untuk kedua-dua pemain (benih), beransur susah
+      var vq = vsQuestion(state.vsSeed, state.qIndex++);
+      sifir = vq.sifir; mult = vq.mult;
+    } else {
+      // sifir di tengah: pengganda x sifir (cth: sifir 2 -> 3 x 2)
+      // nombor 1 jarang keluar (nisbah ~1:30); soalan sama tidak diulang dalam 10 soalan
+      var key, tries = 0;
+      do{
+        var useOne = Math.random() < 1/30;
+        if(state.tables){
+          sifir = state.tables[Math.floor(Math.random()*state.tables.length)];
+          mult = useOne ? 1 : rnd(2, 12);
+        } else if(useOne){
+          if(Math.random() < 0.5){ sifir = 1; mult = rnd(2, 12); }
+          else { sifir = rnd(c.min, c.max); mult = 1; }
+        } else {
+          sifir = rnd(c.min, c.max);
+          mult = rnd(2, 12);
+        }
+        key = mult + "x" + sifir;
+        tries++;
+      }while(state.recent.indexOf(key) >= 0 && tries < 60);
+      state.recent.push(key);
+      if(state.recent.length > 10) state.recent.shift();
+    }
     var a = mult, b = sifir;
     // hero: sembunyikan salah satu operan; biasa: sembunyikan hasil darab
-    var hide = c.reverse ? (Math.random() < 0.5 ? "a" : "b") : "c";
+    var hide = (c.reverse && !state.vs) ? (Math.random() < 0.5 ? "a" : "b") : "c";
     state.current = {a:a, b:b, hide:hide,
       ans: hide==="a" ? a : (hide==="b" ? b : a*b)};
     state.input = "";
@@ -1135,7 +1225,10 @@
   }
 
   function nextIfPlaying(){
-    if(state && (state.practice || state.time > 0)) newQuestion();
+    if(!state) return;
+    // VS: menang serta-merta bila markah melepasi sasaran lawan
+    if(state.vs && state.vsTarget >= 0 && state.score > state.vsTarget){ endGame(); return; }
+    if(state.practice || state.time > 0) newQuestion();
   }
 
   function floatPts(txt){
@@ -1167,6 +1260,7 @@
     saveMeta();
     evalBadges();
     syncUp();
+    if(state.vs){ vsFinish(); return; }
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
       $("saveScore").innerHTML = state.score + "<small>Markah</small>";
@@ -1655,6 +1749,204 @@
     }
   }
   $("pfBack").addEventListener("click", function(){ show(pfIsOwn ? "start" : "lb"); });
+
+  /* ================= MOD VS ================= */
+  // penjana soalan berbenih (sama untuk kedua-dua pemain), beransur susah
+  function vsRand(seed, n){
+    var t = (seed + n * 0x6D2B79F5) >>> 0;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function vsQuestion(seed, idx){
+    var r1 = vsRand(seed, idx*2+1), r2 = vsRand(seed, idx*2+2);
+    var lo, hi;
+    if(idx < 5){ lo=2; hi=5; } else if(idx < 10){ lo=2; hi=9; } else { lo=1; hi=12; }
+    return { sifir: lo + Math.floor(r1*(hi-lo+1)), mult: 2 + Math.floor(r2*11) };
+  }
+
+  function startVS(match){
+    state = {
+      mode:"vs", practice:false, vs:match,
+      vsSeed:Number(match.seed)||0,
+      vsTarget:(typeof match.oppScore==="number" && match.oppScore>=0) ? match.oppScore : -1,
+      qIndex:0, cfg:{time:60,label:"VS"}, tables:null,
+      score:0, run:0, streak:0, bestStreak:0, correct:0, wrong:0, total:0,
+      time:60, input:"", current:null, locked:false, freeze:0, freezeCount:0, refilled:false,
+      recent:[], tblTry:{}, tblWrong:{}
+    };
+    $("score").textContent="0"; $("streak").textContent="0";
+    document.querySelector(".timerWrap").classList.remove("frozen");
+    document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("frozenChip"); });
+    document.querySelector(".timerWrap").style.display="";
+    $("endBtn").style.display="none";
+    var tb=$("vsTargetBar"); tb.style.display="";
+    tb.textContent = state.vsTarget>=0
+      ? ("🎯 Kalahkan " + state.vsTarget + " markah — lawan " + match.oppNick)
+      : ("🚩 Main dahulu — tetapkan markah untuk " + match.oppNick + " kejar!");
+    updateTimer();
+    show("game");
+    newQuestion();
+    if(timerId){ clearInterval(timerId); timerId=null; }
+    timerId=setInterval(tick,1000);
+  }
+
+  function vsFinish(){
+    $("vsTargetBar").style.display="none";
+    var match=state.vs, myScore=state.score;
+    state=null;
+    api({action:"vs_submit", email:account.email, pass:account.pass, matchId:match.id, score:myScore},
+      function(r){ showVsResult(match, myScore, r); });
+  }
+
+  function showVsResult(match, myScore, r){
+    var oppScore = (r && r.ok && r.done) ? r.oppScore : (match.oppScore>=0 ? match.oppScore : -1);
+    $("vsMeAva").innerHTML = avatarSVG(myAvatarIdx());
+    $("vsMeName").textContent = (profile.nickname||"Anda").toUpperCase();
+    $("vsMeScore").textContent = myScore;
+    $("vsOpAva").innerHTML = avatarSVG(match.oppAvatar||0);
+    $("vsOpName").textContent = (match.oppNick||"Lawan");
+    $("vsOpScore").textContent = (oppScore>=0? oppScore : "—");
+    var medal="⚔️", title="Markah dihantar", pt=$("vsPoints");
+    if(r && r.ok && r.done){
+      if(r.result==="win"){ medal="👑"; title="Kamu Menang!"; pt.textContent="+10 mata VS 🎉"; pt.className="best"; }
+      else if(r.result==="lose"){ medal="😢"; title="Kamu Kalah"; pt.textContent="+2 mata penyertaan"; pt.className="best dark"; }
+      else { medal="🤝"; title="Seri!"; pt.textContent="+5 mata"; pt.className="best dark"; }
+    } else if(r && r.ok){
+      medal="⏳"; title="Markah disimpan"; pt.textContent="Menunggu "+(match.oppNick||"lawan")+" bermain…"; pt.className="best dark";
+    } else {
+      medal="⚠️"; title="Ralat"; pt.textContent=(r&&r.err)||"Gagal hantar markah"; pt.className="best dark";
+    }
+    $("vsMedal").textContent=medal; $("vsResultTitle").textContent=title;
+    show("vsResult");
+  }
+
+  // ----- UI VS -----
+  function vsBtn(cls,label,fn){ var b=document.createElement("button"); b.className="vsBtn "+cls; b.textContent=label; b.addEventListener("click",fn); return b; }
+  function vsSect(L,txt){ var d=document.createElement("div"); d.className="vsSect"; d.textContent=txt; L.appendChild(d); }
+  function vsMiniRow(m, sub){
+    var d=document.createElement("div"); d.className="vsRow";
+    d.innerHTML='<div class="av">'+avatarSVG(m.oppAvatar||0)+'</div><div class="info"><b>'+(m.oppNick||"—")+'</b><span>'+sub+'</span></div>';
+    var w=document.createElement("div"); w.style.display="flex"; w.style.gap="6px"; w.style.flex="none";
+    d.appendChild(w); return {d:d,w:w};
+  }
+
+  function openVs(){
+    if(!account){ accMsg("Log masuk dahulu untuk main VS", false); show("login"); return; }
+    loadVsHub();
+  }
+  function loadVsHub(){
+    $("vsHubList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
+    show("vsHub");
+    api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
+      if(!r || !r.ok){ $("vsHubList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat sambungan")+"</p>"; return; }
+      renderVsHub(r); setVsBadge(r.incoming ? r.incoming.length : 0);
+    });
+  }
+  function renderVsHub(r){
+    var L=$("vsHubList"); L.innerHTML="";
+    var any=false;
+    if(r.incoming && r.incoming.length){ any=true; vsSect(L,"Jemputan Masuk");
+      r.incoming.forEach(function(m){ var it=vsMiniRow(m,"Lv "+m.oppLevel+" · mahu lawan kamu");
+        it.w.appendChild(vsBtn("go","Terima",function(){ vsAct("vs_accept",m.id); }));
+        it.w.appendChild(vsBtn("no","Tolak",function(){ vsAct("vs_decline",m.id); }));
+        L.appendChild(it.d); }); }
+    if(r.active && r.active.length){ any=true; vsSect(L,"Perlawanan Aktif");
+      r.active.forEach(function(m){ var played=m.myScore>=0;
+        var sub = played ? ("Markah kamu "+m.myScore+" · tunggu lawan")
+          : (m.oppScore>=0 ? ("🎯 Kalahkan "+m.oppScore+"!") : "Giliran kamu — main dahulu");
+        var it=vsMiniRow(m,"Lv "+m.oppLevel+" · "+sub);
+        if(!played) it.w.appendChild(vsBtn("go","Main",function(){ startVS(m); }));
+        L.appendChild(it.d); }); }
+    if(r.sent && r.sent.length){ any=true; vsSect(L,"Jemputan Dihantar");
+      r.sent.forEach(function(m){ var it=vsMiniRow(m,"Menunggu diterima");
+        it.w.appendChild(vsBtn("no","Batal",function(){ vsAct("vs_cancel",m.id); }));
+        L.appendChild(it.d); }); }
+    if(r.recent && r.recent.length){ any=true; vsSect(L,"Keputusan Terkini");
+      r.recent.slice().reverse().forEach(function(m){
+        var res = m.myScore>m.oppScore?"Menang 👑":(m.myScore<m.oppScore?"Kalah":"Seri 🤝");
+        var it=vsMiniRow(m, res+" ("+m.myScore+" vs "+m.oppScore+")"); L.appendChild(it.d); }); }
+    if(!any) L.innerHTML="<p class='vsEmpty'>Tiada perlawanan lagi. Tekan '➕ Jemput Lawan' untuk mula!</p>";
+  }
+  function vsAct(action, id){
+    api({action:action, email:account.email, pass:account.pass, matchId:id}, function(r){
+      if(r && !r.ok) queueToast("⚠️ "+(r.err||"Ralat"));
+      loadVsHub();
+    });
+  }
+
+  var vsAllPlayers=[];
+  function loadPlayers(){
+    $("vsSearch").value=""; $("vsPlayerList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
+    show("vsInvite");
+    api({action:"vs_players", email:account.email, pass:account.pass}, function(r){
+      if(!r || !r.ok){ $("vsPlayerList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
+      vsAllPlayers=r.players||[]; drawPlayers("");
+    });
+  }
+  function drawPlayers(q){
+    q=(q||"").toUpperCase(); var L=$("vsPlayerList"); L.innerHTML="";
+    var list=vsAllPlayers.filter(function(p){ return p.nick.indexOf(q)>=0 || (p.kelas||"").indexOf(q)>=0; });
+    if(!list.length){ L.innerHTML="<p class='vsEmpty'>Tiada pemain sepadan.</p>"; return; }
+    list.forEach(function(p){
+      var d=document.createElement("div"); d.className="vsRow";
+      d.innerHTML='<div class="av">'+avatarSVG(p.avatar||0)+'</div><div class="info"><b>'+p.nick+'</b><span>Lv '+p.level+(p.kelas?(" · "+p.kelas):"")+'</span></div>';
+      var w=document.createElement("div"); w.style.flex="none";
+      w.appendChild(vsBtn("go","Jemput",function(){ sendVsInvite(p.email, p.nick); }));
+      d.appendChild(w); L.appendChild(d);
+    });
+  }
+  function sendVsInvite(email, nick){
+    api({action:"vs_invite", email:account.email, pass:account.pass, targetEmail:email}, function(r){
+      if(r && r.ok){ queueToast("✅ Jemputan dihantar ke "+nick); loadVsHub(); }
+      else queueToast("⚠️ "+((r&&r.err)||"Gagal menghantar"));
+    });
+  }
+
+  function loadVsBoard(){
+    $("vsBoardList").innerHTML="<p class='lbEmpty'>Memuatkan…</p>"; show("vsBoard");
+    api({action:"vs_board", email:account.email, pass:account.pass}, function(r){
+      if(!r || !r.ok){ $("vsBoardList").innerHTML="<p class='lbEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
+      renderVsBoard(r.board||[]);
+    });
+  }
+  function renderVsBoard(board){
+    var L=$("vsBoardList"); L.innerHTML="";
+    if(!board.length){ L.innerHTML="<p class='lbEmpty'>Belum ada perlawanan VS.</p>"; return; }
+    board.forEach(function(e,i){
+      var row=document.createElement("div"); row.className="lbRow";
+      var rk=document.createElement("span"); rk.className="lbRank"; rk.textContent=(i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".");
+      var av=document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML=avatarSVG(e.avatar||0);
+      var nm=document.createElement("span"); nm.className="lbName";
+      nm.innerHTML='<div>'+(e.nick||"")+'</div><div class="lbClass">Lv '+e.level+" · "+e.menang+"M "+e.kalah+"K</div>";
+      var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=e.mata;
+      row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+      L.appendChild(row);
+    });
+  }
+
+  function setVsBadge(n){
+    var b=$("vsBadge");
+    if(n>0){ b.style.display=""; b.textContent=n; } else b.style.display="none";
+  }
+  var vsBadgePoll=0;
+  function refreshVsBadge(){
+    if(!account) { setVsBadge(0); return; }
+    if(Date.now()-vsBadgePoll < 20000) return;
+    vsBadgePoll=Date.now();
+    api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
+      if(r && r.ok) setVsBadge(r.incoming ? r.incoming.length : 0);
+    });
+  }
+
+  $("vsBack").addEventListener("click", function(){ show("start"); });
+  $("vsInviteBtn").addEventListener("click", loadPlayers);
+  $("vsInviteBack").addEventListener("click", loadVsHub);
+  $("vsBoardBtn").addEventListener("click", loadVsBoard);
+  $("vsBoardBack").addEventListener("click", loadVsHub);
+  $("vsResBack").addEventListener("click", loadVsHub);
+  $("vsResMenu").addEventListener("click", function(){ show("start"); });
+  $("vsSearch").addEventListener("input", function(){ drawPlayers(this.value); });
 
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
   var onlineLB = null;
