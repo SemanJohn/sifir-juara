@@ -525,11 +525,16 @@
       <div class="medal">📝</div>
       <h2>Syabas! Simpan markah kamu</h2>
       <div class="bigscore" id="saveScore">0<small>Markah</small></div>
+      <div id="saveWho" style="display:none;text-align:center;font-weight:900;margin:10px 0 2px">
+        <div id="saveWhoName" style="font-size:20px;color:var(--ink)"></div>
+        <div id="saveWhoClass" style="font-size:13px;color:#8a7fb5"></div>
+      </div>
       <div class="saveForm">
         <input id="nameInput" maxlength="14" placeholder="Nama kamu" autocomplete="off">
         <input id="classInput" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
         <button class="btn primary" id="saveScoreBtn">Simpan</button>
       </div>
+      <p style="text-align:center;font-size:11.5px;color:#8a7fb5;font-weight:800;margin-top:8px" id="guestNote"></p>
     </div>
   </section>
 
@@ -678,8 +683,11 @@
   var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
     badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
     result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen")};
+  var lbPoll = null;
   function show(name){
     for(var k in screens) screens[k].classList.toggle("on", k===name);
+    if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
+    if(name === "lb"){ lbPoll = setInterval(function(){ onlineLB=null; refreshLB(); }, 10000); }
   }
 
   // ----- start -----
@@ -1022,13 +1030,28 @@
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
       $("saveScore").innerHTML = state.score + "<small>Markah</small>";
-      var pn = "", pk = "";
-      try{
-        pn = localStorage.getItem("sifirJuaraName") || "";
-        pk = localStorage.getItem("sifirJuaraClass") || "";
-      }catch(e){}
-      $("nameInput").value = profile.nickname || pn;
-      $("classInput").value = profile.kelas || pk;
+      if(account){
+        // pengguna login: nama & kelas tetap, tidak boleh edit
+        $("saveWho").style.display = "";
+        $("saveWhoName").textContent = (profile.nickname||"").toUpperCase();
+        $("saveWhoClass").textContent = (profile.kelas||"").toUpperCase();
+        $("nameInput").style.display = "none";
+        $("classInput").style.display = "none";
+        $("guestNote").textContent = "";
+      } else {
+        // guest: boleh taip nama & kelas; disimpan 24 jam sahaja
+        $("saveWho").style.display = "none";
+        $("nameInput").style.display = "";
+        $("classInput").style.display = "";
+        var pn = "", pk = "";
+        try{
+          pn = localStorage.getItem("sifirJuaraName") || "";
+          pk = localStorage.getItem("sifirJuaraClass") || "";
+        }catch(e){}
+        $("nameInput").value = pn;
+        $("classInput").value = pk;
+        $("guestNote").textContent = "Bermain sebagai tetamu — markah disimpan 24 jam sahaja. Log masuk untuk kekalkannya.";
+      }
       show("save");
     } else {
       show("result");
@@ -1278,35 +1301,46 @@
   // ----- simpan markah dengan nama & kelas -----
   function saveScore(){
     if(!state || state.saved) return;
-    var name = $("nameInput").value.trim() || "Tanpa Nama";
-    var kelas = $("classInput").value.trim();
-    try{
-      localStorage.setItem("sifirJuaraName", name);
-      localStorage.setItem("sifirJuaraClass", kelas);
-    }catch(e){}
-    var rank = addScore(state.mode, state.score, name, kelas);
+    var name, kelas;
+    if(account){
+      name = (profile.nickname || "").toUpperCase();
+      kelas = (profile.kelas || "").toUpperCase();
+    } else {
+      name = (($("nameInput").value.trim()) || "Tanpa Nama").toUpperCase();
+      kelas = $("classInput").value.trim().toUpperCase();
+      try{
+        localStorage.setItem("sifirJuaraName", $("nameInput").value.trim());
+        localStorage.setItem("sifirJuaraClass", $("classInput").value.trim());
+      }catch(e){}
+    }
     state.saved = true;
-    var oldNick = profile.nickname;
-    if(!profile.nickname){ profile.nickname = name; }
-    if(kelas){ profile.kelas = kelas; }
-    saveProfile();
-    syncUp(function(r){
-      if(r && r.ok === false && r.err){
-        profile.nickname = oldNick;
-        saveProfile();
-        queueToast("⚠️ " + r.err);
-      }
-    });
-    sendToSheets({
+    addScore(state.mode, state.score, name, kelas);  // simpanan tempatan (offline)
+
+    var bl = $("bestLine");
+    bl.textContent = "Menyimpan markah...";
+    bl.className = "best dark";
+
+    api({action:"score",
+      email: account ? account.email : "",
+      pass:  account ? account.pass  : "",
       nama: name, kelas: kelas, mod: state.cfg.label,
       markah: state.score, betul: state.correct, salah: state.wrong,
-      streak: state.bestStreak, tarikh: new Date().toISOString()
+      streak: state.bestStreak
+    }, function(r){
+      onlineLB = null;   // paksa muat semula papan markah
+      if(r && r.ok && r.saved){
+        bl.textContent = r.first
+          ? "🎉 "+name+" — markah pertama disimpan!"
+          : "🎉 "+name+" — markah tertinggi baharu!";
+        bl.className = "best";
+      } else if(r && r.ok){
+        bl.textContent = "Markah terbaik anda kekal: "+r.best+" (kali ini "+state.score+")";
+        bl.className = "best dark";
+      } else {
+        bl.textContent = (r && r.err) ? ("⚠️ "+r.err) : "Markah disimpan setempat (luar talian)";
+        bl.className = "best dark";
+      }
     });
-    onlineLB = null;   // muat semula dari Sheets kali seterusnya
-    var bl = $("bestLine");
-    if(rank === 0){ bl.textContent = "🎉 "+name+" — Rekod baharu "+state.cfg.label+"!"; bl.className="best"; }
-    else if(rank > 0){ bl.textContent = "🏅 "+name+" — Tempat #"+(rank+1)+" papan markah "+state.cfg.label+"!"; bl.className="best"; }
-    else { bl.textContent = name+" — tak masuk top 10 kali ini. Cuba lagi!"; bl.className="best dark"; }
     show("result");
   }
   $("saveScoreBtn").addEventListener("click", saveScore);
@@ -1370,9 +1404,9 @@
       row.className = "lbRow";
       var r = document.createElement("span"); r.className="lbRank"; r.textContent = rankLabel(i);
       var nm = document.createElement("span"); nm.className="lbName";
-      var n1 = document.createElement("div"); n1.textContent = e.n || "Tanpa Nama";
+      var n1 = document.createElement("div"); n1.textContent = (e.n || "Tanpa Nama").toUpperCase();
       nm.appendChild(n1);
-      if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = e.k; nm.appendChild(n2); }
+      if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = (e.k||"").toUpperCase(); nm.appendChild(n2); }
       var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.s;
       var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = fmtDate(e.d);
       row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
@@ -1401,7 +1435,7 @@
   }
   function updateAccUI(){
     if(account){
-      $("loginBtn").textContent = "👤 " + (profile.nickname || account.email.split("@")[0]);
+      $("loginBtn").textContent = "👤 " + ((profile.nickname || account.email.split("@")[0]) || "").toUpperCase();
       $("accForm").style.display = "none";
       $("doLogout").style.display = "";
       $("accInfo").style.display = "";
@@ -1436,8 +1470,8 @@
   $("regGo").addEventListener("click", function(){
     var email = $("regEmail").value.trim().toLowerCase();
     var pass = $("regPass").value.trim();
-    var nick = $("regNick").value.trim();
-    var kelas = $("regKelas").value.trim();
+    var nick = $("regNick").value.trim().toUpperCase();
+    var kelas = $("regKelas").value.trim().toUpperCase();
     if(!/^\S+@\S+\.\S+$/.test(email)){ regMsg("Email tidak sah"); return; }
     if(!/^\d{4}$/.test(pass)){ regMsg("PIN mesti 4 angka"); return; }
     if($("regPass2").value.trim() !== pass){ regMsg("PIN tidak sama — taip semula kedua-duanya"); return; }
@@ -1447,8 +1481,8 @@
     api({action:"register", email:email, pass:pass, nickname:nick, kelas:kelas}, function(r){
       if(!r.ok){ regMsg(r.err || "Gagal mendaftar"); return; }
       account = {email:email, pass:pass};
-      profile.nickname = nick;
-      profile.kelas = kelas;
+      profile.nickname = nick.toUpperCase();
+      profile.kelas = kelas.toUpperCase();
       saveAccount(); saveProfile(); syncUp(); updateAccUI();
       regMsg("Berjaya didaftarkan! ✅", true);
       setTimeout(function(){ accMsg("Selamat datang, "+nick+"! ✅", true); updateAccUI(); show("login"); }, 900);
@@ -1503,8 +1537,8 @@
   });
   $("setSave").addEventListener("click", function(){
     var oldNick = profile.nickname;
-    profile.nickname = $("setNick").value.trim();
-    profile.kelas = $("setKelas").value.trim();
+    profile.nickname = $("setNick").value.trim().toUpperCase();
+    profile.kelas = $("setKelas").value.trim().toUpperCase();
     var m = $("setMsg");
     m.textContent = "Menyimpan...";
     m.className = "accMsg ok";
