@@ -464,7 +464,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.5</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.6</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -638,7 +638,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.5";
+  var APP_VERSION = "1.6";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1512,6 +1512,7 @@
   var lbMode = "easy";
   var lbExpanded = false;
   var lbFetching = false;
+  var lbLoadFailed = false;
   function rankLabel(i){
     return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+".";
   }
@@ -1528,12 +1529,13 @@
     lbFetching = true;
     fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
       lbFetching = false;
-      if(d && typeof d === "object"){ onlineLB = d; drawLB(); }
-    }).catch(function(){ lbFetching = false; drawLB(); });
+      if(d && typeof d === "object"){ onlineLB = d; lbLoadFailed = false; drawLB(); }
+    }).catch(function(){ lbFetching = false; lbLoadFailed = true; drawLB(); });
   }
   function renderLB(mode){
     lbMode = mode;
     lbExpanded = false;
+    lbLoadFailed = false;
     document.querySelectorAll(".lbTab").forEach(function(t){
       t.classList.toggle("sel", t.dataset.lb === mode);
     });
@@ -1543,6 +1545,14 @@
   function drawLB(){
     var list = $("lbList");
     list.innerHTML = "";
+    // sedang muat: papar "Memuatkan…" sahaja (jangan tunjuk data separa/tempatan)
+    if(SHEETS_URL && !onlineLB && !lbLoadFailed){
+      var lp = document.createElement("p");
+      lp.className = "lbEmpty";
+      lp.textContent = "Memuatkan papan markah…";
+      list.appendChild(lp);
+      return;
+    }
     var raw = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
     // ringkaskan: satu markah tertinggi sahaja per pemain (nama+kelas)
     var byKey = {};
@@ -1556,8 +1566,8 @@
     if(arr.length === 0){
       var p = document.createElement("p");
       p.className = "lbEmpty";
-      p.textContent = (SHEETS_URL && !onlineLB && lbFetching)
-        ? "Memuatkan papan markah..."
+      p.textContent = lbLoadFailed
+        ? "Tiada sambungan — cuba lagi."
         : "Belum ada markah — jadilah yang pertama!";
       list.appendChild(p);
       return;
