@@ -250,6 +250,23 @@
   .pfBadge.lock{opacity:.25}
   .pfEmpty{color:#8a7fb5;font-weight:800;font-size:13px;text-align:center;padding:8px 0}
 
+  /* avatar bulatan di menu utama */
+  .menuAva{display:flex;justify-content:center;margin-bottom:6px}
+  .menuAvaCircle{width:74px;height:74px;border-radius:50%;display:grid;place-items:center;
+    font-size:40px;cursor:pointer;border:3px solid #ffffff40;box-shadow:0 5px 0 #00000030;
+    transition:transform .12s}
+  .menuAvaCircle:active{transform:scale(.94)}
+
+  /* pemilih avatar dalam profil */
+  .avaPick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .avaCell{aspect-ratio:1;border-radius:14px;display:grid;place-items:center;font-size:24px;
+    background:#f0ecfa;cursor:pointer;position:relative;border:2px solid transparent}
+  .avaCell.sel{border-color:var(--cyan);background:#e0fbff}
+  .avaCell.lock{opacity:.5;cursor:default}
+  .avaCell .xp{position:absolute;bottom:2px;left:0;right:0;font-size:8.5px;font-weight:900;color:#8a7fb5}
+  .xpBar{font-size:12px;font-weight:900;color:#8a7fb5;text-align:center;margin-bottom:8px}
+  .xpBar b{color:var(--magenta)}
+
   .saveForm{display:flex;flex-direction:column;gap:10px;margin-top:18px}
   .saveForm input{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;
     padding:13px 15px;border:2px solid #d9d0ef;border-radius:14px;color:var(--ink);
@@ -340,6 +357,9 @@
 
   <!-- START -->
   <section class="screen on" id="startScreen">
+    <div class="menuAva" id="menuAva" style="display:none">
+      <div class="menuAvaCircle" id="menuAvaCircle">🦊</div>
+    </div>
     <div class="brand">
       <div class="logo">Sifir <span class="x">×</span> Juara</div>
       <div class="tag">Latih sifir, jadi juara! 🔥</div>
@@ -464,7 +484,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.7</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.8</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -482,6 +502,12 @@
 
       <div class="pfSection">Lencana Diperolehi</div>
       <div class="pfBadges" id="pfBadges"></div>
+
+      <div id="pfAvaPickWrap" style="display:none">
+        <div class="pfSection">Pilih Avatar</div>
+        <div class="xpBar" id="pfXp"></div>
+        <div class="avaPick" id="pfAvaPick"></div>
+      </div>
     </div>
     <div class="actions">
       <button class="btn ghost" id="pfBack">Kembali</button>
@@ -638,7 +664,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.7";
+  var APP_VERSION = "1.8";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1447,21 +1473,45 @@
     var h = hashStr(name.toUpperCase());
     return { emoji: AVATARS[h % AVATARS.length], bg: AVA_BG[(h>>3) % AVA_BG.length] };
   }
+  // XP = jumlah betul terkumpul; 5 avatar percuma, seterusnya +40 XP setiap satu
+  function avatarUnlockXP(i){ return i < 5 ? 0 : (i - 4) * 40; }
+  function myXP(){ return (stats && stats.totalCorrect) || 0; }
+  function myAvatarIdx(){
+    var a = (stats && typeof stats.avatar === "number") ? stats.avatar : 0;
+    return (a >= 0 && a < AVATARS.length) ? a : 0;
+  }
+  function updateMenuAva(){
+    var m = $("menuAva");
+    if(account){
+      m.style.display = "";
+      var idx = myAvatarIdx();
+      $("menuAvaCircle").textContent = AVATARS[idx];
+      $("menuAvaCircle").style.background = avatarFor(profile.nickname || account.email).bg;
+    } else {
+      m.style.display = "none";
+    }
+  }
+  $("menuAvaCircle").addEventListener("click", function(){
+    if(account && profile.nickname) openProfile(profile.nickname, true);
+  });
 
   // ----- profil pengguna -----
   var MODE_LABEL = { easy:"🌱 Mudah", mid:"⚡ Sederhana", hard:"🔥 Sukar", hero:"🦸 Hero" };
-  function openProfile(nick){
+  var pfIsOwn = false;
+  function openProfile(nick, isOwn){
     nick = (nick||"").trim();
     if(!nick) return;
+    pfIsOwn = !!(isOwn && account && nick.toUpperCase() === (profile.nickname||"").toUpperCase());
     // avatar & nama serta-merta
     var av = avatarFor(nick);
-    $("pfAva").textContent = av.emoji;
+    $("pfAva").textContent = pfIsOwn ? AVATARS[myAvatarIdx()] : av.emoji;
     $("pfAva").style.background = av.bg;
     $("pfName").textContent = nick.toUpperCase();
     $("pfKelas").textContent = "";
     $("pfHighs").innerHTML = "<p class='pfEmpty'>Memuatkan…</p>";
     $("pfStats").innerHTML = "";
     $("pfBadges").innerHTML = "";
+    $("pfAvaPickWrap").style.display = "none";
     show("profile");
     api({action:"profile", nickname:nick}, function(r){
       if(!r || !r.ok){
@@ -1474,6 +1524,15 @@
   function renderProfile(r){
     $("pfName").textContent = (r.nickname||"").toUpperCase();
     $("pfKelas").textContent = (r.kelas||"") ? ("Kelas " + r.kelas) : "";
+    // avatar: sendiri guna pilihan tempatan; orang lain guna pilihan dari pelayan (jika ada)
+    var avaIdx = pfIsOwn ? myAvatarIdx()
+      : (r.stats && typeof r.stats.avatar === "number" ? r.stats.avatar : -1);
+    if(avaIdx >= 0 && avaIdx < AVATARS.length){
+      $("pfAva").textContent = AVATARS[avaIdx];
+    }
+    // pemilih avatar (pengguna berdaftar, profil sendiri sahaja)
+    if(pfIsOwn){ $("pfAvaPickWrap").style.display = ""; renderAvatarPicker(); }
+    else { $("pfAvaPickWrap").style.display = "none"; }
     // markah tertinggi
     var hg = $("pfHighs"); hg.innerHTML = "";
     ["easy","mid","hard","hero"].forEach(function(m){
@@ -1505,7 +1564,37 @@
     });
     if(got === 0) bg.innerHTML = "<p class='pfEmpty' style='grid-column:1/-1'>Belum ada lencana</p>";
   }
-  $("pfBack").addEventListener("click", function(){ show("lb"); });
+  function renderAvatarPicker(){
+    var xp = myXP(), cur = myAvatarIdx();
+    var nextLocked = -1;
+    for(var n=0;n<AVATARS.length;n++){ if(xp < avatarUnlockXP(n)){ nextLocked = n; break; } }
+    $("pfXp").innerHTML = "XP: <b>" + xp + "</b>" +
+      (nextLocked >= 0 ? "  ·  avatar seterusnya pada <b>" + avatarUnlockXP(nextLocked) + " XP</b>" : "  ·  semua avatar dibuka! 🎉");
+    var g = $("pfAvaPick"); g.innerHTML = "";
+    AVATARS.forEach(function(em, i){
+      var need = avatarUnlockXP(i);
+      var unlocked = xp >= need;
+      var c = document.createElement("div");
+      c.className = "avaCell" + (i === cur ? " sel" : "") + (unlocked ? "" : " lock");
+      if(unlocked){
+        c.textContent = em;
+        c.addEventListener("click", function(){
+          if(!stats) return;
+          stats.avatar = i;
+          saveMeta(); syncUp();
+          $("pfAva").textContent = em;
+          updateMenuAva();
+          renderAvatarPicker();
+        });
+      } else {
+        c.textContent = "🔒";
+        var x = document.createElement("div"); x.className = "xp"; x.textContent = need + " XP";
+        c.appendChild(x);
+      }
+      g.appendChild(c);
+    });
+  }
+  $("pfBack").addEventListener("click", function(){ show(pfIsOwn ? "start" : "lb"); });
 
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
   var onlineLB = null;
@@ -1582,7 +1671,7 @@
       var n1 = document.createElement("div"); n1.textContent = (e.n || "Tanpa Nama").toUpperCase();
       nm.appendChild(n1);
       if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = (e.k||"").toUpperCase(); nm.appendChild(n2); }
-      (function(nick){ nm.addEventListener("click", function(){ openProfile(nick); }); })(e.n || "");
+      (function(nick){ nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.n || "");
       var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.s;
       var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = fmtDate(e.d);
       row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
@@ -1612,12 +1701,14 @@
   function updateAccUI(){
     if(account){
       $("loginBtn").textContent = "👤 " + ((profile.nickname || account.email.split("@")[0]) || "").toUpperCase();
+      updateMenuAva();
       $("accForm").style.display = "none";
       $("doLogout").style.display = "";
       $("accInfo").style.display = "";
       $("accInfo").textContent = "Log masuk sebagai: " + account.email;
     } else {
       $("loginBtn").textContent = "👤 Log Masuk";
+      updateMenuAva();
       $("accForm").style.display = "";
       $("doLogout").style.display = "none";
       $("accInfo").style.display = "none";
