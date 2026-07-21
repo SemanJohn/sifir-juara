@@ -464,7 +464,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.4</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.5</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -638,7 +638,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.4";
+  var APP_VERSION = "1.5";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -651,15 +651,27 @@
   // ===== Konfigurasi Google Sheets (Apps Script Web App) =====
   // Letakkan URL Web App di sini selepas setup (lihat PANDUAN.md)
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbwVIiBDzbK61Tcr_A6Krx2EFmn74uNYYKCbNq_nNiMPW96eC-6ZqdHx9ViIIL0EMz9CKg/exec";
+  // fetch dengan tamat-masa supaya app tak tergantung bila pelayan lambat
+  function fetchTimeout(url, opts, ms){
+    opts = opts || {};
+    if(typeof AbortController !== "undefined"){
+      var ctrl = new AbortController();
+      opts.signal = ctrl.signal;
+      var timer = setTimeout(function(){ ctrl.abort(); }, ms || 12000);
+      return fetch(url, opts).finally(function(){ clearTimeout(timer); });
+    }
+    return fetch(url, opts);
+  }
+
   function api(payload, cb){
     cb = cb || function(){};
     if(!SHEETS_URL){ cb({ok:false, err:"Tiada sambungan"}); return; }
     try{
-      fetch(SHEETS_URL, {method:"POST",
-        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)})
+      fetchTimeout(SHEETS_URL, {method:"POST",
+        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)}, 12000)
         .then(function(r){ return r.json(); })
         .then(cb)
-        .catch(function(){ cb({ok:false, err:"Masalah rangkaian"}); });
+        .catch(function(){ cb({ok:false, err:"Sambungan lambat / masalah rangkaian"}); });
     }catch(e){ cb({ok:false, err:"Masalah rangkaian"}); }
   }
   function sendToSheets(rec){
@@ -1514,7 +1526,7 @@
   function refreshLB(){
     if(!SHEETS_URL || lbFetching) return;
     lbFetching = true;
-    fetch(SHEETS_URL).then(function(r){ return r.json(); }).then(function(d){
+    fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
       lbFetching = false;
       if(d && typeof d === "object"){ onlineLB = d; drawLB(); }
     }).catch(function(){ lbFetching = false; drawLB(); });
