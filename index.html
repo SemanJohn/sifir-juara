@@ -464,7 +464,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.6</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.7</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -638,7 +638,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.6";
+  var APP_VERSION = "1.7";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1510,7 +1510,7 @@
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
   var onlineLB = null;
   var lbMode = "easy";
-  var lbExpanded = false;
+  var lbShown = 10;
   var lbFetching = false;
   var lbLoadFailed = false;
   function rankLabel(i){
@@ -1534,7 +1534,7 @@
   }
   function renderLB(mode){
     lbMode = mode;
-    lbExpanded = false;
+    lbShown = 10;
     lbLoadFailed = false;
     document.querySelectorAll(".lbTab").forEach(function(t){
       t.classList.toggle("sel", t.dataset.lb === mode);
@@ -1572,7 +1572,7 @@
       list.appendChild(p);
       return;
     }
-    var showN = lbExpanded ? arr.length : Math.min(10, arr.length);
+    var showN = Math.min(lbShown, arr.length);
     for(var i=0; i<showN; i++){
       var e = arr[i];
       var row = document.createElement("div");
@@ -1588,11 +1588,11 @@
       row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
       list.appendChild(row);
     }
-    if(arr.length > 10){
+    if(arr.length > showN){
       var btn = document.createElement("button");
       btn.className = "lbMore";
-      btn.textContent = lbExpanded ? "Tutup" : "Lihat semua (" + arr.length + ")";
-      btn.addEventListener("click", function(){ lbExpanded = !lbExpanded; drawLB(); });
+      btn.textContent = "Seterusnya";
+      btn.addEventListener("click", function(){ lbShown += 10; drawLB(); });
       list.appendChild(btn);
     }
   }
