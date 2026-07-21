@@ -616,9 +616,24 @@
     api(rec);
   }
 
-  // ===== PWA =====
+  // ===== PWA + auto kemas kini =====
   if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
+    // bila service worker baharu mengambil alih, muat semula sekali supaya
+    // app dipasang di telefon sentiasa dapat versi terkini
+    var swReloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", function(){
+      if(swReloaded) return;
+      swReloaded = true;
+      location.reload();
+    });
+    navigator.serviceWorker.register("sw.js").then(function(reg){
+      reg.update();
+      // semak versi baharu setiap jam dan setiap kali app difokus semula
+      setInterval(function(){ reg.update(); }, 60*60*1000);
+      document.addEventListener("visibilitychange", function(){
+        if(document.visibilityState === "visible") reg.update();
+      });
+    }).catch(function(){});
   }
 
   // ===== Getaran =====
