@@ -221,7 +221,31 @@
   .lbScore{font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;flex:1}
   .lbDate{color:#8a7fb5;font-weight:800;font-size:12px}
   .lbEmpty{color:#8a7fb5;font-weight:800;text-align:center;padding:48px 0;font-size:14px}
-  .lbName{flex:1;font-weight:900;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbName{flex:1;font-weight:900;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .lbName:hover>div:first-child{text-decoration:underline}
+
+  /* ---------- PROFIL ---------- */
+  .pfCard{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;
+    box-shadow:0 14px 0 #00000030,0 24px 48px #00000055}
+  .pfAva{width:92px;height:92px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;
+    font-size:48px;box-shadow:0 6px 0 #0000002e}
+  .pfName{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;text-align:center;line-height:1.1}
+  .pfKelas{text-align:center;font-weight:800;color:#8a7fb5;font-size:14px;margin-top:2px}
+  .pfSection{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;letter-spacing:.6px;
+    margin:18px 0 8px}
+  .pfHighs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .pfHigh{background:#f0ecfa;border-radius:14px;padding:10px 12px;display:flex;align-items:center;
+    justify-content:space-between}
+  .pfHigh .m{font-weight:900;font-size:13px}
+  .pfHigh .v{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--magenta)}
+  .pfStats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .pfStat{background:#f0ecfa;border-radius:14px;padding:10px 6px;text-align:center}
+  .pfStat .v{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px}
+  .pfStat .k{font-size:10px;font-weight:800;color:#8a7fb5;text-transform:uppercase;margin-top:2px}
+  .pfBadges{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .pfBadge{font-size:24px;text-align:center;background:#f0ecfa;border-radius:12px;padding:8px 0}
+  .pfBadge.lock{opacity:.25}
+  .pfEmpty{color:#8a7fb5;font-weight:800;font-size:13px;text-align:center;padding:8px 0}
 
   .saveForm{display:flex;flex-direction:column;gap:10px;margin-top:18px}
   .saveForm input{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;
@@ -437,7 +461,28 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.2</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.3</p>
+  </section>
+
+  <!-- PROFIL PENGGUNA -->
+  <section class="screen" id="profileScreen">
+    <div class="pfCard">
+      <div class="pfAva" id="pfAva">🦊</div>
+      <div class="pfName" id="pfName">—</div>
+      <div class="pfKelas" id="pfKelas"></div>
+
+      <div class="pfSection">Markah Tertinggi</div>
+      <div class="pfHighs" id="pfHighs"></div>
+
+      <div class="pfSection">Statistik</div>
+      <div class="pfStats" id="pfStats"></div>
+
+      <div class="pfSection">Lencana Diperolehi</div>
+      <div class="pfBadges" id="pfBadges"></div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="pfBack">Kembali</button>
+    </div>
   </section>
 
   <!-- LENCANA -->
@@ -590,7 +635,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "1.2";
+  var APP_VERSION = "1.3";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -712,7 +757,8 @@
   var $ = function(id){ return document.getElementById(id); };
   var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
     badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
-    result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen")};
+    result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen"),
+    profile:$("profileScreen")};
   var lbPoll = null;
   var curScreen = "start";
   var setReturn = "start";
@@ -1058,6 +1104,8 @@
     // statistik & lencana
     stats.games++;
     stats.totalCorrect += state.correct;
+    stats.totalWrong = (stats.totalWrong||0) + state.wrong;
+    stats.bestStreak = Math.max(stats.bestStreak||0, state.bestStreak);
     stats.modes[state.mode] = true;
     saveMeta();
     evalBadges();
@@ -1180,7 +1228,7 @@
     return def;
   }
   var badgeState = loadJSON("sifirJuaraBadges", {});
-  var stats = loadJSON("sifirJuaraStats", {games:0, totalCorrect:0, modes:{}});
+  var stats = loadJSON("sifirJuaraStats", {games:0, totalCorrect:0, totalWrong:0, bestStreak:0, modes:{}});
   function saveMeta(){
     try{
       localStorage.setItem("sifirJuaraBadges", JSON.stringify(badgeState));
@@ -1230,6 +1278,8 @@
     var rs = p.stats || {};
     stats.games = Math.max(stats.games||0, rs.games||0);
     stats.totalCorrect = Math.max(stats.totalCorrect||0, rs.totalCorrect||0);
+    stats.totalWrong = Math.max(stats.totalWrong||0, rs.totalWrong||0);
+    stats.bestStreak = Math.max(stats.bestStreak||0, rs.bestStreak||0);
     if(rs.modes){ for(var m in rs.modes){ if(rs.modes[m]) stats.modes[m] = true; } }
     if(p.nickname && !profile.nickname) profile.nickname = p.nickname;
     else if(p.nickname) profile.nickname = p.nickname;
@@ -1374,6 +1424,74 @@
     if(e.key === "Enter") saveScore();
   });
 
+  // ----- avatar automatik ikut nama -----
+  var AVATARS = ["🦊","🐼","🐯","🦁","🐨","🐵","🐸","🐧","🦉","🐬","🦄","🐙","🐮","🐷","🐰","🐻","🐲","🦖","🐢","🐝"];
+  var AVA_BG = ["#ffe0ec","#e0f0ff","#e6ffe9","#fff4d6","#f0e6ff","#ffe9d6","#e0fbff","#ffe0e0"];
+  function hashStr(str){ var h=0; str=String(str||""); for(var i=0;i<str.length;i++){ h=(h*31 + str.charCodeAt(i))>>>0; } return h; }
+  function avatarFor(name){
+    var h = hashStr(name.toUpperCase());
+    return { emoji: AVATARS[h % AVATARS.length], bg: AVA_BG[(h>>3) % AVA_BG.length] };
+  }
+
+  // ----- profil pengguna -----
+  var MODE_LABEL = { easy:"🌱 Mudah", mid:"⚡ Sederhana", hard:"🔥 Sukar", hero:"🦸 Hero" };
+  function openProfile(nick){
+    nick = (nick||"").trim();
+    if(!nick) return;
+    // avatar & nama serta-merta
+    var av = avatarFor(nick);
+    $("pfAva").textContent = av.emoji;
+    $("pfAva").style.background = av.bg;
+    $("pfName").textContent = nick.toUpperCase();
+    $("pfKelas").textContent = "";
+    $("pfHighs").innerHTML = "<p class='pfEmpty'>Memuatkan…</p>";
+    $("pfStats").innerHTML = "";
+    $("pfBadges").innerHTML = "";
+    show("profile");
+    api({action:"profile", nickname:nick}, function(r){
+      if(!r || !r.ok){
+        $("pfHighs").innerHTML = "<p class='pfEmpty'>" + ((r&&r.err)||"Profil tidak dijumpai") + "</p>";
+        return;
+      }
+      renderProfile(r);
+    });
+  }
+  function renderProfile(r){
+    $("pfName").textContent = (r.nickname||"").toUpperCase();
+    $("pfKelas").textContent = (r.kelas||"") ? ("Kelas " + r.kelas) : "";
+    // markah tertinggi
+    var hg = $("pfHighs"); hg.innerHTML = "";
+    ["easy","mid","hard","hero"].forEach(function(m){
+      var d = document.createElement("div"); d.className = "pfHigh";
+      var mm = document.createElement("span"); mm.className="m"; mm.textContent = MODE_LABEL[m];
+      var vv = document.createElement("span"); vv.className="v"; vv.textContent = (r.highs && r.highs[m]) || 0;
+      d.appendChild(mm); d.appendChild(vv); hg.appendChild(d);
+    });
+    // statistik
+    var st = r.stats || {};
+    var sg = $("pfStats"); sg.innerHTML = "";
+    [["Betul", st.totalCorrect||0],["Silap", st.totalWrong||0],["Streak", st.bestStreak||0]].forEach(function(p){
+      var d = document.createElement("div"); d.className="pfStat";
+      var v = document.createElement("div"); v.className="v"; v.textContent = p[1];
+      var k = document.createElement("div"); k.className="k"; k.textContent = p[0];
+      d.appendChild(v); d.appendChild(k); sg.appendChild(d);
+    });
+    // lencana
+    var bg = $("pfBadges"); bg.innerHTML = "";
+    var got = 0;
+    BADGES.forEach(function(b){
+      var un = !!(r.badges && r.badges[b.id]);
+      if(un) got++;
+      var d = document.createElement("div");
+      d.className = "pfBadge" + (un ? "" : " lock");
+      d.textContent = un ? b.ic : "🔒";
+      d.title = b.nm;
+      bg.appendChild(d);
+    });
+    if(got === 0) bg.innerHTML = "<p class='pfEmpty' style='grid-column:1/-1'>Belum ada lencana</p>";
+  }
+  $("pfBack").addEventListener("click", function(){ show("lb"); });
+
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
   var onlineLB = null;
   var lbMode = "easy";
@@ -1439,6 +1557,7 @@
       var n1 = document.createElement("div"); n1.textContent = (e.n || "Tanpa Nama").toUpperCase();
       nm.appendChild(n1);
       if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = (e.k||"").toUpperCase(); nm.appendChild(n2); }
+      (function(nick){ nm.addEventListener("click", function(){ openProfile(nick); }); })(e.n || "");
       var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.s;
       var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = fmtDate(e.d);
       row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
