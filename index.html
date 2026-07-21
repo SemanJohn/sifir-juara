@@ -527,9 +527,10 @@
   function saveLB(){
     try{ localStorage.setItem(LB_KEY, JSON.stringify(lb)); }catch(e){}
   }
+  var BULAN = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","Dis"];
   function dateStr(){
     var d = new Date();
-    return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
+    return d.getDate()+" "+BULAN[d.getMonth()]+" "+d.getFullYear();
   }
   // masukkan markah; pulangkan kedudukan (0 = tempat pertama, -1 = tak masuk top 10)
   function addScore(mode, score, name, kelas){
