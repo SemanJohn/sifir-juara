@@ -1143,11 +1143,11 @@
   }
 
   // hantar profil (lencana+statistik+nickname) ke Sheets
-  function syncUp(){
-    if(!account) return;
+  function syncUp(cb){
+    if(!account){ if(cb) cb({ok:true, offline:true}); return; }
     api({action:"sync", email:account.email, pass:account.pass,
       nickname:profile.nickname||"", kelas:profile.kelas||"",
-      badges:badgeState, stats:stats});
+      badges:badgeState, stats:stats}, function(r){ if(cb) cb(r); });
   }
   // gabung profil dari Sheets dengan data peranti ini
   function applyRemote(p){
@@ -1268,9 +1268,17 @@
     }catch(e){}
     var rank = addScore(state.mode, state.score, name, kelas);
     state.saved = true;
+    var oldNick = profile.nickname;
     if(!profile.nickname){ profile.nickname = name; }
     if(kelas){ profile.kelas = kelas; }
-    saveProfile(); syncUp();
+    saveProfile();
+    syncUp(function(r){
+      if(r && r.ok === false && r.err){
+        profile.nickname = oldNick;
+        saveProfile();
+        queueToast("⚠️ " + r.err);
+      }
+    });
     sendToSheets({
       nama: name, kelas: kelas, mod: state.cfg.label,
       markah: state.score, betul: state.correct, salah: state.wrong,
@@ -1455,12 +1463,25 @@
     if(vibOn) vib(40);
   });
   $("setSave").addEventListener("click", function(){
+    var oldNick = profile.nickname;
     profile.nickname = $("setNick").value.trim();
     profile.kelas = $("setKelas").value.trim();
-    saveProfile(); syncUp();
     var m = $("setMsg");
-    m.textContent = "Tetapan disimpan ✅";
+    m.textContent = "Menyimpan...";
     m.className = "accMsg ok";
+    syncUp(function(r){
+      if(r && r.ok === false){
+        profile.nickname = oldNick;   // batalkan nickname yang ditolak
+        drawSetts();
+        m.textContent = (r.err || "Gagal menyimpan") + " — pilih nickname lain";
+        m.className = "accMsg err";
+        return;
+      }
+      saveProfile();
+      m.textContent = "Tetapan disimpan ✅";
+      m.className = "accMsg ok";
+    });
+    saveProfile();
   });
   updateAccUI();
 
