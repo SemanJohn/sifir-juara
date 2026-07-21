@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sifir Juara</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b1650">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#1b1650;        /* deep indigo night */
+    --bg2:#2a1a5e;        /* violet */
+    --card:#fef9ff;       /* soft white card */
+    --ink:#241a52;        /* dark ink on cards */
+    --cyan:#25d9e8;       /* primary action */
+    --cyan-d:#0fb4c4;
+    --magenta:#ff3d97;    /* the "?" + accents */
+    --yellow:#ffcf3f;     /* streak / coins */
+    --lime:#48e08a;       /* correct */
+    --red:#ff5a6e;        /* wrong / time low */
+    --muted:#9b93c9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #3a2380 0%, transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    color:#fff;
+    min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;
+    padding:14px;
+    overflow:hidden;
+    position:relative;
+  }
+  /* faint star dots */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, #ffffff55, transparent),
+      radial-gradient(2px 2px at 80% 20%, #ffffff44, transparent),
+      radial-gradient(1.5px 1.5px at 65% 65%, #ffffff33, transparent),
+      radial-gradient(1.5px 1.5px at 30% 80%, #ffffff33, transparent),
+      radial-gradient(2px 2px at 90% 75%, #ffffff44, transparent);
+  }
+  .stage{width:100%;max-width:440px;position:relative;z-index:1}
+
+  .screen{display:none;animation:pop .35s cubic-bezier(.2,.9,.3,1.3)}
+  .screen.on{display:block}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+
+  /* ---------- START ---------- */
+  .brand{text-align:center;margin-bottom:22px}
+  .brand .logo{
+    font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;line-height:1;
+    letter-spacing:-1px;
+    background:linear-gradient(180deg,#fff,var(--yellow));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 4px 0 #00000030);
+  }
+  .brand .logo .x{color:var(--magenta);-webkit-text-fill-color:var(--magenta)}
+  .brand .tag{color:var(--muted);font-weight:800;margin-top:6px;font-size:15px}
+
+  .modes{display:flex;flex-direction:column;gap:12px}
+  .mode{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(180deg,#ffffff12,#ffffff08);
+    border:2px solid #ffffff1f;border-radius:20px;padding:16px 18px;
+    cursor:pointer;transition:transform .12s, border-color .12s, background .12s;
+    text-align:left;color:#fff;width:100%;font-family:inherit;
+  }
+  .mode:hover,.mode:focus-visible{transform:translateY(-2px);border-color:var(--cyan);outline:none}
+  .mode:active{transform:translateY(0) scale(.99)}
+  .mode .emoji{font-size:30px;width:48px;height:48px;display:grid;place-items:center;
+    background:#00000026;border-radius:14px;flex:none}
+  .mode .txt b{font-family:'Fredoka',sans-serif;font-weight:600;font-size:20px;display:block}
+  .mode .txt span{color:var(--muted);font-weight:700;font-size:13px}
+  .mode.easy{border-color:#48e08a55}
+  .mode.mid{border-color:#ffcf3f55}
+  .mode.hard{border-color:#ff5a6e55}
+  .mode.prac{border-color:#25d9e855}
+  .mode.tt{border-color:#ffcf3f55}
+  .mode.hero{border-color:#b388ff88}
+
+  /* masa beku */
+  .timerWrap.frozen{border-color:#8ee9ff;box-shadow:0 0 14px #59d7ff99}
+  .timerWrap.frozen .timerBar{
+    background:linear-gradient(90deg,#59d7ff,#a5ecff) !important;
+    animation:icePulse .8s infinite;
+  }
+  @keyframes icePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.45)}}
+  .chip.frozenChip{background:#59d7ff33;box-shadow:0 0 10px #59d7ff66}
+  .chip.frozenChip .val{color:#a5ecff}
+  .flake{position:fixed;top:-40px;pointer-events:none;z-index:9;opacity:.95;
+    animation-name:fall;animation-timing-function:linear;animation-fill-mode:forwards}
+  @keyframes fall{to{transform:translateY(112vh) rotate(360deg)}}
+
+  .hint{margin-top:18px;text-align:center;color:var(--muted);font-size:13px;font-weight:700;line-height:1.5}
+  .hint kbd{background:#ffffff1a;border-radius:6px;padding:1px 7px;font-family:inherit;font-weight:800;color:#fff}
+
+  /* ---------- GAME ---------- */
+  .hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+  .chip{background:#ffffff14;border-radius:14px;padding:8px 12px;min-width:82px;text-align:center}
+  .chip .lbl{font-size:10px;letter-spacing:1px;color:var(--muted);font-weight:800;text-transform:uppercase}
+  .chip .val{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;line-height:1.1}
+  .chip.streak .val{color:var(--yellow)}
+  .streakFlame{transition:transform .2s}
+  .streakFlame.hot{transform:scale(1.15)}
+
+  .timerWrap{height:14px;border-radius:99px;background:#00000033;overflow:hidden;margin-bottom:18px;
+    border:1px solid #ffffff14}
+  .timerBar{height:100%;width:100%;border-radius:99px;background:var(--lime);
+    transition:width .25s linear, background .4s}
+
+  .card{
+    background:var(--card);color:var(--ink);border-radius:28px;
+    padding:34px 20px;text-align:center;position:relative;
+    box-shadow:0 18px 0 #00000030, 0 30px 60px #00000055;
+    margin-bottom:16px;overflow:hidden;
+  }
+  .card.correct{animation:flashGood .5s}
+  .card.wrong{animation:shake .4s}
+  @keyframes flashGood{0%,100%{background:var(--card)}30%{background:#d6ffe6}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+
+  .eq{font-family:'Fredoka',sans-serif;font-weight:600;font-size:58px;letter-spacing:-1px;line-height:1}
+  .eq .op{color:var(--magenta);margin:0 4px}
+  .eq .ans{
+    display:inline-block;min-width:96px;border-bottom:5px solid var(--cyan);
+    margin-left:6px;color:var(--cyan-d);
+  }
+  .eq .ans.empty{color:#c9c2e0}
+  .feedback{margin-top:14px;font-weight:900;font-size:16px;min-height:22px}
+  .feedback.good{color:#1fa85a}
+  .feedback.bad{color:#e23b52}
+
+  .floatPts{position:absolute;left:50%;top:30%;transform:translateX(-50%);
+    font-family:'Fredoka',sans-serif;font-weight:700;font-size:34px;color:var(--lime);
+    pointer-events:none;opacity:0}
+  .floatPts.go{animation:rise 1s ease-out}
+  @keyframes rise{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-70px)}}
+
+  .combo{position:absolute;left:50%;top:-4px;transform:translateX(-50%) translateY(-20px);
+    background:var(--yellow);color:#5a3d00;font-family:'Fredoka',sans-serif;font-weight:700;
+    padding:6px 16px;border-radius:0 0 16px 16px;font-size:15px;opacity:0;white-space:nowrap}
+  .combo.go{animation:combo 1.3s ease}
+  @keyframes combo{0%{opacity:0;transform:translateX(-50%) translateY(-20px)}
+    15%,70%{opacity:1;transform:translateX(-50%) translateY(0)}
+    100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}
+
+  /* numpad */
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .key{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:28px;color:#fff;
+    background:linear-gradient(180deg,#3b2c86,#2f2270);
+    border:none;border-radius:18px;padding:16px 0;cursor:pointer;
+    box-shadow:0 5px 0 #1c1550;transition:transform .06s, box-shadow .06s;
+    font-family:'Fredoka',sans-serif;
+  }
+  .key:active{transform:translateY(4px);box-shadow:0 1px 0 #1c1550}
+  .key.act{background:linear-gradient(180deg,#ff5aa8,#ff3d97);box-shadow:0 5px 0 #b31e63}
+  .key.go{background:linear-gradient(180deg,#37e29a,#22c67f);box-shadow:0 5px 0 #128a55;color:#04351f}
+  .key:focus-visible{outline:3px solid #fff}
+
+  /* ---------- RESULT ---------- */
+  .result{background:var(--card);color:var(--ink);border-radius:28px;padding:26px 22px;
+    box-shadow:0 18px 0 #00000030,0 30px 60px #00000055}
+  .result h2{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;text-align:center}
+  .medal{font-size:60px;text-align:center;line-height:1;margin:2px 0 6px}
+  .bigscore{font-family:'Fredoka',sans-serif;font-weight:700;font-size:64px;text-align:center;
+    line-height:1;color:var(--magenta)}
+  .bigscore small{display:block;font-family:'Nunito';font-weight:800;font-size:13px;color:var(--muted);
+    letter-spacing:1px;text-transform:uppercase}
+  .best{text-align:center;font-weight:800;color:var(--yellow);margin-top:2px;font-size:14px}
+  .best.dark{color:#c99a00}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+  .stat{background:#f0ecfa;border-radius:16px;padding:12px;text-align:center}
+  .stat .v{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;color:var(--ink)}
+  .stat .k{font-size:11px;font-weight:800;color:#8a7fb5;text-transform:uppercase;letter-spacing:.5px}
+
+  .accWrap{margin:8px 0 4px}
+  .accLbl{font-size:12px;font-weight:800;color:#8a7fb5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .accBar{height:20px;background:#e7e1f5;border-radius:99px;overflow:hidden}
+  .accFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#ff3d97,#48e08a);
+    width:0;transition:width 1s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;
+    justify-content:flex-end;padding-right:8px;color:#fff;font-weight:900;font-size:12px}
+
+  .weak{background:#fff4f6;border:1.5px solid #ffd0da;border-radius:16px;padding:12px 14px;margin-top:14px}
+  .weak b{color:#d63a56;font-weight:900}
+  .weak.ok{background:#eefcf3;border-color:#c3f0d4}
+  .weak.ok b{color:#1fa85a}
+  .weak p{font-size:13.5px;font-weight:700;color:#4b4370;line-height:1.5;margin-top:2px}
+
+  .actions{display:flex;gap:10px;margin-top:18px}
+  .btn{flex:1;font-family:'Fredoka',sans-serif;font-weight:600;font-size:18px;border:none;
+    border-radius:16px;padding:14px;cursor:pointer;transition:transform .1s}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;box-shadow:0 5px 0 #128a55}
+  .btn.ghost{background:#eee7fa;color:var(--ink);box-shadow:0 5px 0 #cfc4ec}
+
+  /* ---------- LEADERBOARD ---------- */
+  .lbTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .lbTab{font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:#fff;
+    background:#ffffff12;border:2px solid #ffffff1f;border-radius:12px;padding:10px 2px;cursor:pointer;
+    transition:background .12s}
+  .lbTab.sel{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;border-color:transparent}
+  .lbList{background:var(--card);border-radius:20px;padding:8px 18px;min-height:170px;
+    box-shadow:0 10px 0 #00000030}
+  .lbRow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1.5px solid #eee7fa;color:var(--ink)}
+  .lbRow:last-child{border-bottom:none}
+  .lbRank{font-size:20px;width:38px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
+  .lbScore{font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;flex:1}
+  .lbDate{color:#8a7fb5;font-weight:800;font-size:12px}
+  .lbEmpty{color:#8a7fb5;font-weight:800;text-align:center;padding:48px 0;font-size:14px}
+  .lbName{flex:1;font-weight:900;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .saveForm{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+  .saveForm input{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;
+    padding:13px 15px;border:2px solid #d9d0ef;border-radius:14px;color:var(--ink);
+    outline:none;background:#faf7ff;width:100%}
+  .saveForm input:focus{border-color:var(--cyan)}
+  .saveForm .btn{margin-top:4px}
+  .lbClass{font-size:11px;color:#8a7fb5;font-weight:800}
+
+  /* ---------- PICKER SIFIR ---------- */
+  .tblGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .tbl{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:22px;color:#fff;
+    background:linear-gradient(180deg,#ffffff12,#ffffff08);
+    border:2px solid #ffffff1f;border-radius:16px;padding:14px 0;cursor:pointer;
+    transition:transform .1s, background .12s, border-color .12s;
+  }
+  .tbl:active{transform:scale(.95)}
+  .tbl.sel{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;border-color:transparent;
+    box-shadow:0 4px 0 #128a55}
+  .pickHint{text-align:center;color:var(--muted);font-weight:800;font-size:13px;margin:14px 0 4px}
+
+  /* toast lencana */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(90px);
+    background:linear-gradient(180deg,#ffcf3f,#ffb52e);color:#5a3d00;
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;
+    padding:12px 20px;border-radius:16px;z-index:30;opacity:0;white-space:nowrap;
+    transition:all .4s cubic-bezier(.2,.9,.3,1.3);box-shadow:0 8px 24px #00000066}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* lencana */
+  .bdGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .bd{background:var(--card);border-radius:16px;padding:12px 6px;text-align:center;color:var(--ink)}
+  .bd .ic{font-size:30px;line-height:1.2}
+  .bd .nm{font-weight:900;font-size:11.5px;margin-top:4px}
+  .bd .ds{font-size:10px;color:#8a7fb5;font-weight:800;margin-top:2px;line-height:1.3}
+  .bd.lock{opacity:.4;filter:grayscale(1)}
+  .bdCount{text-align:center;color:var(--muted);font-weight:800;font-size:13px;margin-bottom:12px}
+
+  /* jadual sifir */
+  .tsList{background:var(--card);border-radius:20px;padding:14px 18px;color:var(--ink);margin-top:14px}
+  .tsRow{display:flex;justify-content:center;gap:6px;font-family:'Fredoka',sans-serif;
+    font-weight:600;font-size:19px;padding:3px 0}
+  .tsRow b{color:var(--magenta)}
+
+  .sound{position:fixed;top:12px;right:12px;z-index:5;background:#ffffff1a;border:none;
+    width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;color:#fff}
+  @media (max-width:380px){
+    .brand .logo{font-size:44px}.eq{font-size:48px}.key{font-size:24px;padding:14px 0}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important}}
+</style>
+</head>
+<body>
+<button class="sound" id="soundBtn" title="Bunyi">🔊</button>
+<div class="toast" id="toast"></div>
+
+<div class="stage">
+
+  <!-- START -->
+  <section class="screen on" id="startScreen">
+    <div class="brand">
+      <div class="logo">Sifir <span class="x">×</span> Juara</div>
+      <div class="tag">Latih sifir, kejar streak! 🔥</div>
+    </div>
+    <div class="modes">
+      <button class="mode tt" data-go="timetrial">
+        <span class="emoji">⏱️</span>
+        <span class="txt"><b>Time Trial</b><span>Mudah · Sederhana · Sukar — 60 saat</span></span>
+      </button>
+      <button class="mode prac" data-mode="practice">
+        <span class="emoji">🧘</span>
+        <span class="txt"><b>Latihan</b><span>Pilih sifir sendiri · Tiada had masa</span></span>
+      </button>
+    </div>
+    <p class="hint">Guna numpad atau taip nombor + <kbd>Enter</kbd>.</p>
+    <button class="btn ghost" id="lbBtn" style="width:100%;margin-top:14px">🏆 Papan Markah</button>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn ghost" id="badgeBtn">🎖️ Lencana</button>
+      <button class="btn ghost" id="tableBtn">📖 Jadual Sifir</button>
+    </div>
+  </section>
+
+  <!-- PILIH TAHAP TIME TRIAL -->
+  <section class="screen" id="ttScreen">
+    <div class="brand">
+      <div class="logo">⏱️</div>
+      <div class="tag">Pilih tahap Time Trial</div>
+    </div>
+    <div class="modes">
+      <button class="mode easy" data-mode="easy">
+        <span class="emoji">🌱</span>
+        <span class="txt"><b>Mudah</b><span>Sifir ×1 hingga ×5 · 60 saat</span></span>
+      </button>
+      <button class="mode mid" data-mode="mid">
+        <span class="emoji">⚡</span>
+        <span class="txt"><b>Sederhana</b><span>Sifir ×1 hingga ×9 · 60 saat</span></span>
+      </button>
+      <button class="mode hard" data-mode="hard">
+        <span class="emoji">🔥</span>
+        <span class="txt"><b>Sukar</b><span>Sifir ×1 hingga ×12 · 60 saat</span></span>
+      </button>
+      <button class="mode hero" data-mode="hero">
+        <span class="emoji">🦸</span>
+        <span class="txt"><b>Hero</b><span>Soalan terbalik: ? × 7 = 21 · Sifir ×1–×12 · 60 saat</span></span>
+      </button>
+    </div>
+    <p class="hint">3 betul = 1 streak <b style="color:var(--yellow)">+3 saat</b> · 3 streak = <b style="color:#a5ecff">❄️ beku 5 saat</b><br>3 kali beku = <b style="color:var(--yellow)">🌟 masa penuh semula!</b></p>
+    <div class="actions">
+      <button class="btn ghost" id="ttBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- LENCANA -->
+  <section class="screen" id="badgeScreen">
+    <div class="brand">
+      <div class="logo">🎖️</div>
+      <div class="tag">Koleksi Lencana</div>
+    </div>
+    <div class="bdCount" id="bdCount"></div>
+    <div class="bdGrid" id="bdGrid"></div>
+    <div class="actions">
+      <button class="btn ghost" id="badgeBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- JADUAL SIFIR -->
+  <section class="screen" id="tsScreen">
+    <div class="brand">
+      <div class="logo">📖</div>
+      <div class="tag">Jadual Sifir</div>
+    </div>
+    <div class="tblGrid" id="tsPick"></div>
+    <div class="tsList" id="tsList"></div>
+    <div class="actions">
+      <button class="btn ghost" id="tsBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- LEADERBOARD -->
+  <section class="screen" id="lbScreen">
+    <div class="brand">
+      <div class="logo">🏆</div>
+      <div class="tag">Papan Markah</div>
+    </div>
+    <div class="lbTabs">
+      <button class="lbTab" data-lb="easy">🌱 Mudah</button>
+      <button class="lbTab" data-lb="mid">⚡ Sederhana</button>
+      <button class="lbTab" data-lb="hard">🔥 Sukar</button>
+      <button class="lbTab" data-lb="hero">🦸 Hero</button>
+    </div>
+    <div class="lbList" id="lbList"></div>
+    <div class="actions">
+      <button class="btn ghost" id="lbBack">Kembali</button>
+    </div>
+  </section>
+
+  <!-- PILIH SIFIR (LATIHAN) -->
+  <section class="screen" id="pickScreen">
+    <div class="brand">
+      <div class="logo">🧘</div>
+      <div class="tag">Pilih sifir untuk berlatih</div>
+    </div>
+    <div class="tblGrid" id="tblGrid"></div>
+    <p class="pickHint" id="pickHint">Tiada pilihan = semua sifir ×1 hingga ×12</p>
+    <div class="actions">
+      <button class="btn ghost" id="pickBack">Kembali</button>
+      <button class="btn primary" id="pickStart">Mula</button>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section class="screen" id="gameScreen">
+    <div class="hud">
+      <div class="chip"><div class="lbl">Markah</div><div class="val" id="score">0</div></div>
+      <div class="chip streak"><div class="lbl">Streak</div>
+        <div class="val"><span class="streakFlame" id="flame">🔥</span> <span id="streak">0</span></div></div>
+      <div class="chip"><div class="lbl">Masa</div><div class="val" id="timeVal">30</div></div>
+    </div>
+    <div class="timerWrap"><div class="timerBar" id="timerBar"></div></div>
+
+    <div class="card" id="card">
+      <div class="combo" id="combo">COMBO!</div>
+      <div class="floatPts" id="floatPts">+10</div>
+      <div class="eq" id="eq"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="pad" id="pad">
+      <button class="key" data-k="1">1</button>
+      <button class="key" data-k="2">2</button>
+      <button class="key" data-k="3">3</button>
+      <button class="key" data-k="4">4</button>
+      <button class="key" data-k="5">5</button>
+      <button class="key" data-k="6">6</button>
+      <button class="key" data-k="7">7</button>
+      <button class="key" data-k="8">8</button>
+      <button class="key" data-k="9">9</button>
+      <button class="key act" data-k="clear">⌫</button>
+      <button class="key" data-k="0">0</button>
+      <button class="key go" data-k="enter">✓</button>
+    </div>
+    <button class="btn ghost" id="endBtn" style="display:none;width:100%;margin-top:12px;box-shadow:0 5px 0 #00000040">Tamat sesi</button>
+  </section>
+
+  <!-- SIMPAN MARKAH (NAMA & KELAS) -->
+  <section class="screen" id="saveScreen">
+    <div class="result">
+      <div class="medal">📝</div>
+      <h2>Syabas! Simpan markah kamu</h2>
+      <div class="bigscore" id="saveScore">0<small>Markah</small></div>
+      <div class="saveForm">
+        <input id="nameInput" maxlength="14" placeholder="Nama kamu" autocomplete="off">
+        <input id="classInput" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
+        <button class="btn primary" id="saveScoreBtn">Simpan</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="resultScreen">
+    <div class="result">
+      <div class="medal" id="medal">🏆</div>
+      <h2 id="resultTitle">Tamat!</h2>
+      <div class="bigscore" id="finalScore">0<small>Markah</small></div>
+      <div class="best" id="bestLine"></div>
+
+      <div class="stats">
+        <div class="stat"><div class="v" id="stCorrect">0</div><div class="k">Betul</div></div>
+        <div class="stat"><div class="v" id="stWrong">0</div><div class="k">Silap</div></div>
+        <div class="stat"><div class="v" id="stStreak">0</div><div class="k">Streak Terbaik</div></div>
+        <div class="stat"><div class="v" id="stTotal">0</div><div class="k">Jumlah Soalan</div></div>
+      </div>
+
+      <div class="accWrap">
+        <div class="accLbl">Kejituan</div>
+        <div class="accBar"><div class="accFill" id="accFill">0%</div></div>
+      </div>
+
+      <div class="weak" id="weakBox">
+        <b id="weakTitle">Sifir untuk diulang kaji</b>
+        <p id="weakText"></p>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="menuBtn">Menu</button>
+        <button class="btn primary" id="againBtn">Main lagi</button>
+      </div>
+      <button class="btn ghost" id="resLbBtn" style="width:100%;margin-top:10px">🏆 Papan Markah</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var MODES = {
+    easy:     {min:2, max:5,  time:60,   label:"Mudah"},
+    mid:      {min:2, max:9,  time:60,   label:"Sederhana"},
+    hard:     {min:2, max:12, time:60,   label:"Sukar"},
+    hero:     {min:2, max:12, time:60,   label:"Hero", reverse:true},
+    practice: {min:2, max:12, time:null, label:"Latihan"}
+  };
+
+  // ===== Konfigurasi Google Sheets (Apps Script Web App) =====
+  // Letakkan URL Web App di sini selepas setup (lihat PANDUAN.md)
+  var SHEETS_URL = "";
+  function sendToSheets(rec){
+    if(!SHEETS_URL) return;
+    try{
+      fetch(SHEETS_URL, {method:"POST", mode:"no-cors",
+        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(rec)});
+    }catch(e){}
+  }
+
+  // ===== PWA =====
+  if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  }
+
+  // ===== Getaran =====
+  function vib(p){
+    if(navigator.vibrate){ try{ navigator.vibrate(p); }catch(e){} }
+  }
+
+  var state = null;
+
+  // ----- papan markah (disimpan dalam pelayar, ikut mode) -----
+  var LB_KEY = "sifirJuaraLB";
+  function loadLB(){
+    try{
+      var d = JSON.parse(localStorage.getItem(LB_KEY));
+      if(d && typeof d === "object") return d;
+    }catch(e){}
+    return {easy:[], mid:[], hard:[], hero:[]};
+  }
+  var lb = loadLB();
+  function saveLB(){
+    try{ localStorage.setItem(LB_KEY, JSON.stringify(lb)); }catch(e){}
+  }
+  function dateStr(){
+    var d = new Date();
+    return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
+  }
+  // masukkan markah; pulangkan kedudukan (0 = tempat pertama, -1 = tak masuk top 5)
+  function addScore(mode, score, name, kelas){
+    if(score <= 0) return -1;
+    var arr = lb[mode] || (lb[mode] = []);
+    var entry = {n:name||"", k:kelas||"", s:score, d:dateStr()};
+    arr.push(entry);
+    arr.sort(function(a,b){ return b.s - a.s; });
+    if(arr.length > 5) arr.length = 5;
+    saveLB();
+    return arr.indexOf(entry);
+  }
+  var soundOn = true;
+  var timerId = null;
+
+  // ----- audio (Web Audio, meriah) -----
+  var actx = null;
+  function tone(freq, dur, type, delay, vol){
+    if(!soundOn) return;
+    try{
+      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+      var t0 = actx.currentTime + (delay||0);
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type||"sine"; o.frequency.value = freq;
+      o.connect(g); g.connect(actx.destination);
+      g.gain.setValueAtTime(.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol||.16, t0+.02);
+      g.gain.exponentialRampToValueAtTime(.0001, t0+dur);
+      o.start(t0); o.stop(t0+dur+.05);
+    }catch(e){}
+  }
+  function sndGood(){ tone(523,.1,"triangle"); tone(784,.14,"triangle",.06); }
+  function sndBad(){ tone(220,.16,"sawtooth",0,.11); tone(155,.26,"sawtooth",.08,.11); }
+  function sndCombo(){ [523,659,784,1047].forEach(function(f,i){ tone(f,.12,"triangle",i*.07); }); }
+  function sndFreeze(){ [1568,1319,1047,880,1319].forEach(function(f,i){ tone(f,.13,"sine",i*.08,.15); }); }
+  function sndFanfare(){
+    [523,659,784].forEach(function(f,i){ tone(f,.14,"triangle",i*.09); });
+    tone(1047,.28,"triangle",.32,.2); tone(1319,.34,"triangle",.44,.2);
+    tone(523,.34,"square",.44,.05);
+  }
+  function sndBadge(){ [784,988,1175,1568].forEach(function(f,i){ tone(f,.13,"square",i*.08,.07); }); }
+
+  // ----- elements -----
+  var $ = function(id){ return document.getElementById(id); };
+  var screens = {start:$("startScreen"), tt:$("ttScreen"), lb:$("lbScreen"), pick:$("pickScreen"),
+    badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"), result:$("resultScreen")};
+  function show(name){
+    for(var k in screens) screens[k].classList.toggle("on", k===name);
+  }
+
+  // ----- start -----
+  document.querySelectorAll(".mode").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(b.dataset.go === "timetrial"){ show("tt"); }
+      else if(b.dataset.mode === "practice"){ buildPicker(); show("pick"); }
+      else if(b.dataset.mode){ startGame(b.dataset.mode); }
+    });
+  });
+  $("ttBack").addEventListener("click", function(){ show("start"); });
+
+  // ----- picker sifir (mod latihan) -----
+  var pickedTables = [];
+  function buildPicker(){
+    var g = $("tblGrid");
+    g.innerHTML = "";
+    for(var n=1; n<=12; n++){
+      (function(n){
+        var b = document.createElement("button");
+        b.className = "tbl" + (pickedTables.indexOf(n)>=0 ? " sel" : "");
+        b.textContent = "\u00d7" + n;
+        b.addEventListener("click", function(){
+          var i = pickedTables.indexOf(n);
+          if(i>=0) pickedTables.splice(i,1); else pickedTables.push(n);
+          b.classList.toggle("sel");
+          updatePickHint();
+        });
+        g.appendChild(b);
+      })(n);
+    }
+    var all = document.createElement("button");
+    all.className = "tbl";
+    all.textContent = "Semua";
+    all.style.fontSize = "16px";
+    all.addEventListener("click", function(){
+      var full = pickedTables.length === 12;
+      pickedTables = [];
+      if(!full){ for(var n=1;n<=12;n++) pickedTables.push(n); }
+      buildPicker();
+      updatePickHint();
+    });
+    g.appendChild(all);
+    updatePickHint();
+  }
+  function updatePickHint(){
+    var h = $("pickHint");
+    if(pickedTables.length === 0){
+      h.textContent = "Tiada pilihan = semua sifir \u00d71 hingga \u00d712";
+    } else {
+      var t = pickedTables.slice().sort(function(a,b){return a-b;})
+        .map(function(n){ return "\u00d7"+n; }).join(", ");
+      h.textContent = "Berlatih sifir: " + t;
+    }
+  }
+  $("pickBack").addEventListener("click", function(){ show("start"); });
+  $("pickStart").addEventListener("click", function(){ startGame("practice"); });
+
+  function startGame(mode){
+    var cfg = MODES[mode];
+    var practice = (cfg.time === null);
+    state = {
+      mode: mode,
+      practice: practice,
+      tables: (practice && pickedTables.length) ? pickedTables.slice() : null,
+      cfg: cfg,
+      score: 0,
+      run: 0,
+      streak: 0,
+      bestStreak: 0,
+      correct: 0,
+      wrong: 0,
+      total: 0,
+      time: practice ? 0 : cfg.time,
+      input: "",
+      current: null,
+      locked: false,
+      freeze: 0,
+      freezeCount: 0,
+      refilled: false,
+      recent: [],
+      // jejak prestasi ikut nombor sifir
+      tblTry: {},
+      tblWrong: {}
+    };
+    $("score").textContent = "0";
+    $("streak").textContent = "0";
+
+    // mod latihan: sembunyi pemasa, tunjuk butang tamat
+    document.querySelector(".timerWrap").classList.remove("frozen");
+    document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("frozenChip"); });
+    document.querySelector(".timerWrap").style.display = practice ? "none" : "";
+    $("endBtn").style.display = practice ? "" : "none";
+    if(practice){ $("timeVal").textContent = "∞"; }
+    else { updateTimer(); }
+
+    show("game");
+    newQuestion();
+
+    if(timerId){ clearInterval(timerId); timerId = null; }
+    if(!practice) timerId = setInterval(tick, 1000);
+  }
+
+  function tick(){
+    if(state.freeze > 0){
+      state.freeze--;
+      $("timeVal").textContent = "❄" + state.freeze;
+      if(state.freeze <= 0) endFreeze();
+      return;                     // masa tidak berkurang semasa beku
+    }
+    state.time--;
+    updateTimer();
+    if(state.time <= 0){ endGame(); }
+  }
+
+  // ----- masa beku -----
+  function startFreeze(){
+    state.freeze = 5;
+    document.querySelector(".timerWrap").classList.add("frozen");
+    var chips = document.querySelectorAll(".chip");
+    chips[chips.length-1].classList.add("frozenChip");
+    $("timeVal").textContent = "❄5";
+    spawnFlakes();
+  }
+  function endFreeze(){
+    state.freeze = 0;
+    document.querySelector(".timerWrap").classList.remove("frozen");
+    document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("frozenChip"); });
+    updateTimer();
+  }
+  function spawnFlakes(emoji){
+    for(var i=0; i<16; i++){
+      var f = document.createElement("div");
+      f.className = "flake";
+      f.textContent = emoji || "❄️";
+      f.style.left = (Math.random()*100) + "vw";
+      f.style.fontSize = (14 + Math.random()*20) + "px";
+      f.style.animationDuration = (1.4 + Math.random()*1.8) + "s";
+      f.style.animationDelay = (Math.random()*0.5) + "s";
+      document.body.appendChild(f);
+      setTimeout((function(fl){ return function(){ fl.remove(); }; })(f), 4000);
+    }
+  }
+
+  function updateTimer(){
+    if(state.practice) return;
+    var t = Math.max(0, state.time);
+    $("timeVal").textContent = t;
+    var pct = Math.max(0, Math.min(100, (t / state.cfg.time) * 100));
+    var bar = $("timerBar");
+    bar.style.width = pct + "%";
+    var col = t > state.cfg.time*0.5 ? "var(--lime)" : (t > state.cfg.time*0.25 ? "var(--yellow)" : "var(--red)");
+    bar.style.background = col;
+  }
+
+  function rnd(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+
+  function newQuestion(){
+    var c = state.cfg;
+    // sifir di tengah: pengganda x sifir (cth: sifir 2 -> 3 x 2)
+    // nombor 1 jarang keluar (nisbah ~1:30); soalan sama tidak diulang dalam 10 soalan
+    var sifir, mult, key, tries = 0;
+    do{
+      // hanya 1 dalam 30 soalan melibatkan nombor 1 (x1 ATAU 1x)
+      var useOne = Math.random() < 1/30;
+      if(state.tables){
+        sifir = state.tables[Math.floor(Math.random()*state.tables.length)];
+        mult = useOne ? 1 : rnd(2, 12);
+      } else if(useOne){
+        if(Math.random() < 0.5){ sifir = 1; mult = rnd(2, 12); }
+        else { sifir = rnd(c.min, c.max); mult = 1; }
+      } else {
+        sifir = rnd(c.min, c.max);
+        mult = rnd(2, 12);
+      }
+      key = mult + "x" + sifir;
+      tries++;
+    }while(state.recent.indexOf(key) >= 0 && tries < 60);
+    state.recent.push(key);
+    if(state.recent.length > 10) state.recent.shift();
+    var a = mult, b = sifir;
+    // hero: sembunyikan salah satu operan; biasa: sembunyikan hasil darab
+    var hide = c.reverse ? (Math.random() < 0.5 ? "a" : "b") : "c";
+    state.current = {a:a, b:b, hide:hide,
+      ans: hide==="a" ? a : (hide==="b" ? b : a*b)};
+    state.input = "";
+    state.locked = false;
+    buildEq();
+    renderInput();
+    $("feedback").textContent = "";
+    $("feedback").className = "feedback";
+    // rekod cubaan untuk kedua-dua sifir
+    bump(state.tblTry, a); bump(state.tblTry, b);
+  }
+  function bump(o,k){ o[k] = (o[k]||0)+1; }
+
+  function buildEq(){
+    var q = state.current;
+    function sp(v){ return "<span>"+v+"</span>"; }
+    var ansSpan = '<span class="ans empty" id="ansBox">?</span>';
+    $("eq").innerHTML =
+      (q.hide==="a" ? ansSpan : sp(q.a)) + '<span class="op">×</span>' +
+      (q.hide==="b" ? ansSpan : sp(q.b)) + '<span class="op">=</span>' +
+      (q.hide==="c" ? ansSpan : sp(q.a*q.b));
+  }
+
+  function renderInput(){
+    var box = $("ansBox");
+    if(state.input === ""){ box.textContent = "?"; box.classList.add("empty"); }
+    else { box.textContent = state.input; box.classList.remove("empty"); }
+  }
+
+  // ----- input -----
+  $("pad").addEventListener("click", function(e){
+    var btn = e.target.closest(".key");
+    if(!btn) return;
+    handleKey(btn.dataset.k);
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(!screens.game.classList.contains("on")) return;
+    if(e.key >= "0" && e.key <= "9") handleKey(e.key);
+    else if(e.key === "Enter") handleKey("enter");
+    else if(e.key === "Backspace"){ e.preventDefault(); handleKey("clear"); }
+  });
+
+  function handleKey(k){
+    if(!state || state.locked) return;
+    if(k === "clear"){ state.input = state.input.slice(0,-1); renderInput(); return; }
+    if(k === "enter"){ submit(); return; }
+    if(/^[0-9]$/.test(k)){
+      if(state.input.length < 3){ state.input += k; renderInput(); }
+    }
+  }
+
+  function submit(){
+    if(state.input === "") return;
+    state.locked = true;
+    var val = parseInt(state.input,10);
+    var q = state.current;
+    state.total++;
+
+    if(val === q.ans){
+      // markah: asas 10 + bonus ikut betul berturut
+      var pts = 10 + state.run*2;
+      state.score += pts;
+      state.correct++;
+      state.run++;
+
+      // 3 betul berturut = 1 streak
+      var gotStreak = (state.run % 3 === 0);
+      if(gotStreak){
+        state.streak++;
+        if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+      }
+
+      $("score").textContent = state.score;
+      $("streak").textContent = state.streak;
+      floatPts("+"+pts);
+      flame();
+      $("card").classList.add("correct");
+      $("feedback").textContent = "Betul! 🎉";
+      $("feedback").className = "feedback good";
+      sndGood(); vib(25);
+
+      if(gotStreak){
+        var isFreeze = (state.streak % 3 === 0);   // setiap 3 streak
+        if(state.practice){
+          showCombo("🔥 STREAK ×" + state.streak + "!");
+          sndCombo(); vib([30,30,30]);
+        } else if(isFreeze){
+          state.freezeCount++;
+          if(state.freezeCount % 3 === 0){
+            // 3 kali bonus beku -> masa penuh semula!
+            state.refilled = true;
+            state.time = state.cfg.time;
+            updateTimer();
+            showCombo("🌟 BONUS BESAR — MASA PENUH " + state.cfg.time + " SAAT!");
+            spawnFlakes("🌟");
+            sndFanfare(); vib([50,50,50,50,180]);
+          } else {
+            startFreeze();
+            showCombo("❄️ " + state.streak + " STREAK — MASA BEKU 5 SAAT!");
+            sndFreeze(); vib([80,40,80]);
+          }
+        } else {
+          state.time += 3;
+          updateTimer();
+          showCombo("🔥 STREAK ×" + state.streak + "  +3 saat!");
+          sndCombo(); vib([30,30,30]);
+        }
+      }
+      setTimeout(function(){ $("card").classList.remove("correct"); nextIfPlaying(); }, 420);
+    } else {
+      state.wrong++;
+      state.run = 0;
+      state.streak = 0;
+      $("streak").textContent = "0";
+      bump(state.tblWrong, q.a); bump(state.tblWrong, q.b);
+      $("card").classList.add("wrong");
+      $("feedback").innerHTML = "Salah — jawapan: <b>"+q.a+" × "+q.b+" = "+(q.a*q.b)+"</b>";
+      $("feedback").className = "feedback bad";
+      sndBad(); vib([60,50,60]);
+      // tunjuk jawapan betul lebih lama supaya murid belajar
+      setTimeout(function(){ $("card").classList.remove("wrong"); nextIfPlaying(); }, 1250);
+    }
+  }
+
+  function nextIfPlaying(){
+    if(state && (state.practice || state.time > 0)) newQuestion();
+  }
+
+  function floatPts(txt){
+    var f = $("floatPts");
+    f.textContent = txt;
+    f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  }
+  function flame(){
+    var fl = $("flame");
+    fl.classList.add("hot");
+    setTimeout(function(){ fl.classList.remove("hot"); }, 200);
+  }
+  function showCombo(txt){
+    var c = $("combo");
+    c.textContent = txt;
+    c.classList.remove("go"); void c.offsetWidth; c.classList.add("go");
+  }
+
+  // ----- end -----
+  function endGame(){
+    if(timerId){ clearInterval(timerId); timerId = null; }
+
+    // statistik & lencana
+    stats.games++;
+    stats.totalCorrect += state.correct;
+    stats.modes[state.mode] = true;
+    saveMeta();
+    evalBadges();
+    if(!state.practice && state.score > 0){
+      // isi nama & kelas dahulu
+      $("saveScore").innerHTML = state.score + "<small>Markah</small>";
+      try{
+        $("nameInput").value = localStorage.getItem("sifirJuaraName") || "";
+        $("classInput").value = localStorage.getItem("sifirJuaraClass") || "";
+      }catch(e){}
+      show("save");
+    } else {
+      show("result");
+    }
+
+    var acc = state.total ? Math.round(state.correct/state.total*100) : 0;
+    var top = (lb[state.mode] && lb[state.mode].length) ? lb[state.mode][0].s : 0;
+    state.saved = false;
+
+    // medal + tajuk
+    var medal="🏆", title="Hebat!";
+    if(state.score < 60){ medal="🌱"; title="Bagus, teruskan berlatih!"; }
+    else if(state.score < 140){ medal="⭐"; title="Kerja yang bagus!"; }
+    else if(state.score < 240){ medal="🥇"; title="Hebat sekali!"; }
+    else { medal="👑"; title="Juara Sifir!"; }
+
+    $("medal").textContent = medal;
+    $("resultTitle").textContent = title;
+    $("finalScore").innerHTML = state.score + "<small>Markah</small>";
+
+    var bl = $("bestLine");
+    if(state.practice){
+      bl.textContent = "🧘 Mod Latihan — markah tidak disimpan"; bl.className="best dark";
+    } else {
+      bl.textContent = "Markah tertinggi "+state.cfg.label+": " + top;
+      bl.className = "best dark";
+    }
+
+    $("stCorrect").textContent = state.correct;
+    $("stWrong").textContent = state.wrong;
+    $("stStreak").textContent = state.bestStreak;
+    $("stTotal").textContent = state.total;
+
+    setTimeout(function(){
+      var f = $("accFill"); f.style.width = acc + "%"; f.textContent = acc + "%";
+    }, 120);
+
+    renderWeak();
+  }
+
+  // cari sifir dengan kejituan paling rendah (min 2 cubaan)
+  function renderWeak(){
+    var box = $("weakBox"), title=$("weakTitle"), text=$("weakText");
+    var worst = [];
+    for(var k in state.tblTry){
+      var tries = state.tblTry[k];
+      var wrong = state.tblWrong[k]||0;
+      if(tries >= 2 && wrong > 0){
+        worst.push({n:+k, rate: wrong/tries, wrong:wrong});
+      }
+    }
+    worst.sort(function(a,b){ return b.rate - a.rate; });
+
+    if(worst.length === 0){
+      box.className = "weak ok";
+      title.textContent = "Semua sifir mantap! ✅";
+      text.textContent = state.wrong===0
+        ? "Tiada silap langsung — luar biasa!"
+        : "Tiada sifir tertentu yang lemah. Teruskan berlatih untuk lebih laju!";
+      return;
+    }
+    box.className = "weak";
+    title.textContent = "Sifir untuk diulang kaji";
+    var top = worst.slice(0,3).map(function(w){ return "sifir "+w.n; });
+    var list = top.length>1
+      ? top.slice(0,-1).join(", ")+" & "+top[top.length-1]
+      : top[0];
+    text.textContent = "Fokus pada "+list+" — di situ paling banyak silap. Ulang sifir ini sebelum cuba lagi!";
+  }
+
+  // ----- buttons -----
+  $("againBtn").addEventListener("click", function(){ startGame(state.mode); });
+  $("endBtn").addEventListener("click", function(){ endGame(); });
+  $("menuBtn").addEventListener("click", function(){
+    if(timerId){ clearInterval(timerId); timerId=null; }
+    show("start");
+  });
+  // ----- lencana & statistik -----
+  var BADGES = [
+    {id:"first",   ic:"🎮", nm:"Langkah Pertama",  ds:"Tamatkan 1 permainan"},
+    {id:"games5",  ic:"🕹️", nm:"Pemain Setia",     ds:"Main 5 permainan"},
+    {id:"games20", ic:"📅", nm:"Rajin Berlatih",   ds:"Main 20 permainan"},
+    {id:"games50", ic:"🏟️", nm:"Veteran Sifir",    ds:"Main 50 permainan"},
+    {id:"c100",    ic:"💯", nm:"Seratus Betul",    ds:"100 jawapan betul (kumulatif)"},
+    {id:"c500",    ic:"🧠", nm:"Otak Bergeliga",   ds:"500 jawapan betul (kumulatif)"},
+    {id:"c1000",   ic:"🚀", nm:"Legenda Sifir",    ds:"1000 jawapan betul (kumulatif)"},
+    {id:"s3",      ic:"🔥", nm:"Panas Membara",    ds:"3 streak dalam satu permainan"},
+    {id:"s5",      ic:"⚡", nm:"Kilat Pantas",     ds:"5 streak dalam satu permainan"},
+    {id:"s10",     ic:"🌋", nm:"Gunung Berapi",    ds:"10 streak dalam satu permainan"},
+    {id:"m100",    ic:"⭐", nm:"Bintang Muda",     ds:"100 markah (Time Trial)"},
+    {id:"m200",    ic:"🌟", nm:"Bintang Terang",   ds:"200 markah (Time Trial)"},
+    {id:"m300",    ic:"💫", nm:"Bintang Jatuh",    ds:"300 markah (Time Trial)"},
+    {id:"m500",    ic:"👑", nm:"Raja Sifir",       ds:"500 markah (Time Trial)"},
+    {id:"perfect", ic:"🎯", nm:"Tepat Sasaran",    ds:"10+ soalan tanpa satu pun silap"},
+    {id:"frz",     ic:"❄️", nm:"Pembeku Masa",     ds:"Dapat bonus masa beku"},
+    {id:"refill",  ic:"🌈", nm:"Masa Ajaib",       ds:"Dapat bonus masa penuh semula"},
+    {id:"hero",    ic:"🦸", nm:"Wira Sifir",       ds:"Main mode Hero"},
+    {id:"hero100", ic:"🛡️", nm:"Perisai Hero",     ds:"100 markah dalam mode Hero"},
+    {id:"prac",    ic:"🧘", nm:"Murid Tekun",      ds:"Cuba mod Latihan"},
+    {id:"all",     ic:"🗺️", nm:"Penjelajah",       ds:"Main semua tahap Time Trial"}
+  ];
+  function loadJSON(key, def){
+    try{ var d = JSON.parse(localStorage.getItem(key)); if(d) return d; }catch(e){}
+    return def;
+  }
+  var badgeState = loadJSON("sifirJuaraBadges", {});
+  var stats = loadJSON("sifirJuaraStats", {games:0, totalCorrect:0, modes:{}});
+  function saveMeta(){
+    try{
+      localStorage.setItem("sifirJuaraBadges", JSON.stringify(badgeState));
+      localStorage.setItem("sifirJuaraStats", JSON.stringify(stats));
+    }catch(e){}
+  }
+  var toastQ = [], toastBusy = false;
+  function queueToast(txt){ toastQ.push(txt); runToast(); }
+  function runToast(){
+    if(toastBusy || !toastQ.length) return;
+    toastBusy = true;
+    var t = $("toast");
+    t.textContent = toastQ.shift();
+    t.classList.add("show");
+    sndBadge(); vib(60);
+    setTimeout(function(){
+      t.classList.remove("show");
+      setTimeout(function(){ toastBusy = false; runToast(); }, 400);
+    }, 2300);
+  }
+  function earn(id){
+    if(badgeState[id]) return;
+    badgeState[id] = true;
+    saveMeta();
+    var b = null;
+    for(var i=0;i<BADGES.length;i++) if(BADGES[i].id===id){ b=BADGES[i]; break; }
+    if(b) queueToast("🎖️ Lencana baharu: " + b.ic + " " + b.nm);
+  }
+  function evalBadges(){
+    earn("first");
+    if(stats.games >= 5)  earn("games5");
+    if(stats.games >= 20) earn("games20");
+    if(stats.games >= 50) earn("games50");
+    if(stats.totalCorrect >= 100)  earn("c100");
+    if(stats.totalCorrect >= 500)  earn("c500");
+    if(stats.totalCorrect >= 1000) earn("c1000");
+    if(state.bestStreak >= 3)  earn("s3");
+    if(state.bestStreak >= 5)  earn("s5");
+    if(state.bestStreak >= 10) earn("s10");
+    if(!state.practice){
+      if(state.score >= 100) earn("m100");
+      if(state.score >= 200) earn("m200");
+      if(state.score >= 300) earn("m300");
+      if(state.score >= 500) earn("m500");
+    }
+    if(state.total >= 10 && state.wrong === 0) earn("perfect");
+    if(state.freezeCount > 0) earn("frz");
+    if(state.refilled) earn("refill");
+    if(state.mode === "hero"){ earn("hero"); if(state.score >= 100) earn("hero100"); }
+    if(state.practice) earn("prac");
+    if(stats.modes.easy && stats.modes.mid && stats.modes.hard && stats.modes.hero) earn("all");
+  }
+  function renderBadges(){
+    var g = $("bdGrid"); g.innerHTML = "";
+    var got = 0;
+    BADGES.forEach(function(b){
+      var un = !!badgeState[b.id];
+      if(un) got++;
+      var d = document.createElement("div");
+      d.className = "bd" + (un ? "" : " lock");
+      var ic = document.createElement("div"); ic.className="ic"; ic.textContent = un ? b.ic : "🔒";
+      var nm = document.createElement("div"); nm.className="nm"; nm.textContent = b.nm;
+      var ds = document.createElement("div"); ds.className="ds"; ds.textContent = b.ds;
+      d.appendChild(ic); d.appendChild(nm); d.appendChild(ds);
+      g.appendChild(d);
+    });
+    $("bdCount").textContent = got + " / " + BADGES.length + " lencana diperoleh";
+  }
+  $("badgeBtn").addEventListener("click", function(){ renderBadges(); show("badge"); });
+  $("badgeBack").addEventListener("click", function(){ show("start"); });
+
+  // ----- jadual sifir -----
+  function renderTS(n){
+    document.querySelectorAll("#tsPick .tbl").forEach(function(b){
+      b.classList.toggle("sel", +b.dataset.n === n);
+    });
+    var list = $("tsList"); list.innerHTML = "";
+    for(var i=1; i<=12; i++){
+      var r = document.createElement("div");
+      r.className = "tsRow";
+      r.innerHTML = i + " × " + n + " = <b>" + (i*n) + "</b>";
+      list.appendChild(r);
+    }
+  }
+  (function buildTS(){
+    var g = $("tsPick");
+    for(var n=1; n<=12; n++){
+      (function(n){
+        var b = document.createElement("button");
+        b.className = "tbl"; b.dataset.n = n; b.textContent = "×"+n;
+        b.style.padding = "10px 0"; b.style.fontSize = "18px";
+        b.addEventListener("click", function(){ renderTS(n); });
+        g.appendChild(b);
+      })(n);
+    }
+  })();
+  $("tableBtn").addEventListener("click", function(){ renderTS(2); show("ts"); });
+  $("tsBack").addEventListener("click", function(){ show("start"); });
+
+  // ----- simpan markah dengan nama & kelas -----
+  function saveScore(){
+    if(!state || state.saved) return;
+    var name = $("nameInput").value.trim() || "Tanpa Nama";
+    var kelas = $("classInput").value.trim();
+    try{
+      localStorage.setItem("sifirJuaraName", name);
+      localStorage.setItem("sifirJuaraClass", kelas);
+    }catch(e){}
+    var rank = addScore(state.mode, state.score, name, kelas);
+    state.saved = true;
+    sendToSheets({
+      nama: name, kelas: kelas, mod: state.cfg.label,
+      markah: state.score, betul: state.correct, salah: state.wrong,
+      streak: state.bestStreak, tarikh: new Date().toISOString()
+    });
+    var bl = $("bestLine");
+    if(rank === 0){ bl.textContent = "🎉 "+name+" — Rekod baharu "+state.cfg.label+"!"; bl.className="best"; }
+    else if(rank > 0){ bl.textContent = "🏅 "+name+" — Tempat #"+(rank+1)+" papan markah "+state.cfg.label+"!"; bl.className="best"; }
+    else { bl.textContent = name+" — tak masuk top 5 kali ini. Cuba lagi!"; bl.className="best dark"; }
+    show("result");
+  }
+  $("saveScoreBtn").addEventListener("click", saveScore);
+  $("nameInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter") saveScore();
+  });
+  $("classInput").addEventListener("keydown", function(e){
+    if(e.key === "Enter") saveScore();
+  });
+
+  // ----- papan markah: paparan -----
+  function renderLB(mode){
+    document.querySelectorAll(".lbTab").forEach(function(t){
+      t.classList.toggle("sel", t.dataset.lb === mode);
+    });
+    var list = $("lbList");
+    list.innerHTML = "";
+    var arr = lb[mode] || [];
+    if(arr.length === 0){
+      var p = document.createElement("p");
+      p.className = "lbEmpty";
+      p.textContent = "Belum ada markah — jadilah yang pertama!";
+      list.appendChild(p);
+      return;
+    }
+    var medals = ["🥇","🥈","🥉","4.","5."];
+    arr.forEach(function(e, i){
+      var row = document.createElement("div");
+      row.className = "lbRow";
+      var r = document.createElement("span"); r.className="lbRank"; r.textContent = medals[i];
+      var nm = document.createElement("span"); nm.className="lbName";
+      var n1 = document.createElement("div"); n1.textContent = e.n || "Tanpa Nama";
+      nm.appendChild(n1);
+      if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = e.k; nm.appendChild(n2); }
+      var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.s;
+      var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = e.d;
+      row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
+      list.appendChild(row);
+    });
+  }
+  document.querySelectorAll(".lbTab").forEach(function(t){
+    t.addEventListener("click", function(){ renderLB(t.dataset.lb); });
+  });
+  $("lbBtn").addEventListener("click", function(){ renderLB("easy"); show("lb"); });
+  $("resLbBtn").addEventListener("click", function(){ renderLB(state && !state.practice ? state.mode : "easy"); show("lb"); });
+  $("lbBack").addEventListener("click", function(){ show("start"); });
+
+  $("soundBtn").addEventListener("click", function(){
+    soundOn = !soundOn;
+    $("soundBtn").textContent = soundOn ? "🔊" : "🔇";
+  });
+
+})();
+</script>
+</body>
+</html>
