@@ -1393,7 +1393,16 @@
   function drawLB(){
     var list = $("lbList");
     list.innerHTML = "";
-    var arr = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
+    var raw = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
+    // ringkaskan: satu markah tertinggi sahaja per pemain (nama+kelas)
+    var byKey = {};
+    for(var x=0; x<raw.length; x++){
+      var it = raw[x];
+      var key = (it.n||"").toUpperCase() + "|" + (it.k||"").toUpperCase();
+      if(!byKey[key] || (it.s||0) > byKey[key].s) byKey[key] = it;
+    }
+    var arr = Object.keys(byKey).map(function(k){ return byKey[k]; })
+      .sort(function(a,b){ return (b.s||0) - (a.s||0); });
     if(arr.length === 0){
       var p = document.createElement("p");
       p.className = "lbEmpty";
@@ -1427,10 +1436,10 @@
     }
   }
   document.querySelectorAll(".lbTab").forEach(function(t){
-    t.addEventListener("click", function(){ renderLB(t.dataset.lb); });
+    t.addEventListener("click", function(){ onlineLB = null; renderLB(t.dataset.lb); });
   });
-  $("lbBtn").addEventListener("click", function(){ renderLB("easy"); show("lb"); });
-  $("resLbBtn").addEventListener("click", function(){ renderLB(state && !state.practice ? state.mode : "easy"); show("lb"); });
+  $("lbBtn").addEventListener("click", function(){ onlineLB = null; renderLB("easy"); show("lb"); });
+  $("resLbBtn").addEventListener("click", function(){ onlineLB = null; renderLB(state && !state.practice ? state.mode : "easy"); show("lb"); });
   $("lbBack").addEventListener("click", function(){ show("start"); });
 
   // ----- UI akaun -----
