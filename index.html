@@ -495,7 +495,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.2</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.3</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -678,7 +678,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.2";
+  var APP_VERSION = "2.3";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -822,6 +822,8 @@
     curScreen = name;
     // butang log masuk hanya boleh ditekan di menu utama
     if($("loginBtn")) $("loginBtn").style.display = (name === "start") ? "" : "none";
+    // kemas kini avatar & level di menu setiap kali menu dibuka
+    if(name === "start") updateMenuAva();
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
     if(name === "lb"){ lbPoll = setInterval(function(){ onlineLB=null; refreshLB(); }, 10000); }
   }
