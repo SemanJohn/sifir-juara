@@ -230,8 +230,12 @@
   .pfCard{background:var(--card);color:var(--ink);border-radius:24px;padding:22px 20px;
     box-shadow:0 14px 0 #00000030,0 24px 48px #00000055;
     max-height:min(70vh,620px);overflow-y:auto;-webkit-overflow-scrolling:touch}
-  .pfAva{width:92px;height:92px;border-radius:50%;margin:0 auto 10px;overflow:hidden;
+  .pfAvaWrap{position:relative;width:92px;height:92px;margin:0 auto 10px}
+  .pfAva{width:92px;height:92px;border-radius:50%;overflow:hidden;
     box-shadow:0 6px 0 #0000002e;background:#fff}
+  .pfLvl{position:absolute;top:-2px;right:-8px;background:linear-gradient(180deg,#ff5aa8,#ff3d97);
+    color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;letter-spacing:.3px;
+    padding:3px 9px;border-radius:99px;box-shadow:0 2px 0 #b31e63}
   .pfName{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;text-align:center;line-height:1.1}
   .pfKelas{text-align:center;font-weight:800;color:#8a7fb5;font-size:14px;margin-top:2px}
   .pfSection{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;letter-spacing:.6px;
@@ -491,13 +495,16 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.0</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.1</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
   <section class="screen" id="profileScreen">
     <div class="pfCard">
-      <div class="pfAva" id="pfAva">🦊</div>
+      <div class="pfAvaWrap">
+        <div class="pfAva" id="pfAva"></div>
+        <span class="pfLvl" id="pfLvl">Lv 1</span>
+      </div>
       <div class="pfName" id="pfName">—</div>
       <div class="pfKelas" id="pfKelas"></div>
 
@@ -671,7 +678,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.0";
+  var APP_VERSION = "2.1";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1540,6 +1547,7 @@
     $("pfAva").innerHTML = avatarSVG(pfIsOwn ? myAvatarIdx() : 0);
     $("pfName").textContent = nick.toUpperCase();
     $("pfKelas").textContent = "";
+    $("pfLvl").textContent = pfIsOwn ? ("Lv " + levelOf(myXP())) : "…";
     $("pfHighs").innerHTML = "<p class='pfEmpty'>Memuatkan…</p>";
     $("pfStats").innerHTML = "";
     $("pfBadges").innerHTML = "";
@@ -1556,6 +1564,7 @@
   function renderProfile(r){
     $("pfName").textContent = (r.nickname||"").toUpperCase();
     var lvl = levelOf((r.stats && r.stats.totalCorrect) || 0);
+    $("pfLvl").textContent = "Lv " + lvl;
     $("pfKelas").textContent = "Level " + lvl + ((r.kelas||"") ? (" · Kelas " + r.kelas) : "");
     // avatar: sendiri guna pilihan tempatan; orang lain guna pilihan dari pelayan (jika ada)
     var avaIdx = pfIsOwn ? myAvatarIdx()
