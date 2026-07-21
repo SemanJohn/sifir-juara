@@ -425,6 +425,7 @@
     <div class="actions">
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
+    <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
   </section>
 
   <!-- LENCANA -->
@@ -684,8 +685,13 @@
     badge:$("badgeScreen"), ts:$("tsScreen"), game:$("gameScreen"), save:$("saveScreen"),
     result:$("resultScreen"), login:$("loginScreen"), reg:$("regScreen"), set:$("setScreen")};
   var lbPoll = null;
+  var curScreen = "start";
+  var setReturn = "start";
   function show(name){
     for(var k in screens) screens[k].classList.toggle("on", k===name);
+    curScreen = name;
+    // butang log masuk hanya boleh ditekan di menu utama
+    if($("loginBtn")) $("loginBtn").style.display = (name === "start") ? "" : "none";
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
     if(name === "lb"){ lbPoll = setInterval(function(){ onlineLB=null; refreshLB(); }, 10000); }
   }
@@ -1525,8 +1531,21 @@
     $("setNick").value = profile.nickname || "";
     $("setKelas").value = profile.kelas || "";
   }
-  $("setBtn").addEventListener("click", function(){ $("setMsg").textContent=""; drawSetts(); show("set"); });
-  $("setBack").addEventListener("click", function(){ show("start"); });
+  $("setBtn").addEventListener("click", function(){
+    setReturn = (curScreen === "set") ? setReturn : curScreen;
+    // dalam permainan time trial (bukan latihan): tunjuk butang Keluar merah
+    var inTimeTrial = (curScreen === "game" && state && !state.practice);
+    $("setExit").style.display = inTimeTrial ? "" : "none";
+    $("setMsg").textContent = "";
+    drawSetts();
+    show("set");
+  });
+  $("setBack").addEventListener("click", function(){ show(setReturn || "start"); });
+  $("setExit").addEventListener("click", function(){
+    if(timerId){ clearInterval(timerId); timerId = null; }
+    state = null;
+    show("start");
+  });
   $("togSound").addEventListener("click", function(){
     soundOn = !soundOn; setts.sound = soundOn; saveSetts(); drawSetts();
     if(soundOn) sndGood();
