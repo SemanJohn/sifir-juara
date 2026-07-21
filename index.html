@@ -279,8 +279,8 @@
   .pfStat .v{font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px}
   .pfStat .k{font-size:10px;font-weight:800;color:#8a7fb5;text-transform:uppercase;margin-top:2px}
   .pfBadges{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-  .pfBadge{font-size:24px;text-align:center;background:#f0ecfa;border-radius:12px;padding:8px 0}
-  .pfBadge.lock{opacity:.25}
+  .pfBadge{text-align:center;padding:2px}
+  .pfBadge svg{width:100%;height:100%;display:block}
   .pfEmpty{color:#8a7fb5;font-weight:800;font-size:13px;text-align:center;padding:8px 0}
 
   /* avatar bulatan di menu utama */
@@ -338,7 +338,8 @@
     max-height:min(54vh,460px);overflow-y:auto;padding:2px 4px 2px 2px;
     scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .bd{background:var(--card);border-radius:16px;padding:12px 6px;text-align:center;color:var(--ink)}
-  .bd .ic{font-size:30px;line-height:1.2}
+  .bd .ic{width:58px;height:62px;margin:0 auto}
+  .bd .ic svg{width:100%;height:100%;display:block}
   .bd .nm{font-weight:900;font-size:11.5px;margin-top:4px}
   .bd .ds{font-size:10px;color:#8a7fb5;font-weight:800;margin-top:2px;line-height:1.3}
   .bd.lock{opacity:.4;filter:grayscale(1)}
@@ -532,7 +533,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.8</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.9</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -774,7 +775,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.8";
+  var APP_VERSION = "2.9";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1366,28 +1367,53 @@
   });
   // ----- lencana & statistik -----
   var BADGES = [
-    {id:"first",   ic:"🎮", nm:"Langkah Pertama",  ds:"Tamatkan 1 permainan"},
-    {id:"games5",  ic:"🕹️", nm:"Pemain Setia",     ds:"Main 5 permainan"},
-    {id:"games20", ic:"📅", nm:"Rajin Berlatih",   ds:"Main 20 permainan"},
-    {id:"games50", ic:"🏟️", nm:"Veteran Sifir",    ds:"Main 50 permainan"},
-    {id:"c100",    ic:"💯", nm:"Seratus Betul",    ds:"100 jawapan betul (kumulatif)"},
-    {id:"c500",    ic:"🧠", nm:"Otak Bergeliga",   ds:"500 jawapan betul (kumulatif)"},
-    {id:"c1000",   ic:"🚀", nm:"Legenda Sifir",    ds:"1000 jawapan betul (kumulatif)"},
-    {id:"s3",      ic:"🔥", nm:"Panas Membara",    ds:"3 streak dalam satu permainan"},
-    {id:"s5",      ic:"⚡", nm:"Kilat Pantas",     ds:"5 streak dalam satu permainan"},
-    {id:"s10",     ic:"🌋", nm:"Gunung Berapi",    ds:"10 streak dalam satu permainan"},
-    {id:"m100",    ic:"⭐", nm:"Bintang Muda",     ds:"100 markah (Time Trial)"},
-    {id:"m200",    ic:"🌟", nm:"Bintang Terang",   ds:"200 markah (Time Trial)"},
-    {id:"m300",    ic:"💫", nm:"Bintang Jatuh",    ds:"300 markah (Time Trial)"},
-    {id:"m500",    ic:"👑", nm:"Raja Sifir",       ds:"500 markah (Time Trial)"},
-    {id:"perfect", ic:"🎯", nm:"Tepat Sasaran",    ds:"10+ soalan tanpa satu pun silap"},
-    {id:"frz",     ic:"❄️", nm:"Pembeku Masa",     ds:"Dapat bonus masa beku"},
-    {id:"refill",  ic:"🌈", nm:"Masa Ajaib",       ds:"Dapat bonus masa penuh semula"},
-    {id:"hero",    ic:"🦸", nm:"Wira Sifir",       ds:"Main mode Hero"},
-    {id:"hero100", ic:"🛡️", nm:"Perisai Hero",     ds:"100 markah dalam mode Hero"},
-    {id:"prac",    ic:"🧘", nm:"Murid Tekun",      ds:"Cuba mod Latihan"},
-    {id:"all",     ic:"🗺️", nm:"Penjelajah",       ds:"Main semua tahap Time Trial"}
+    {id:"first",   ic:"🎮", col:"#26de81", nm:"Langkah Pertama",  ds:"Tamatkan 1 permainan"},
+    {id:"games5",  ic:"🕹️", col:"#2bcbba", nm:"Pemain Setia",     ds:"Main 5 permainan"},
+    {id:"games20", ic:"📅", col:"#4b7bec", nm:"Rajin Berlatih",   ds:"Main 20 permainan"},
+    {id:"games50", ic:"🏟️", col:"#5f27cd", nm:"Veteran Sifir",    ds:"Main 50 permainan"},
+    {id:"c100",    ic:"💯", col:"#ff9f43", nm:"Seratus Betul",    ds:"100 jawapan betul (kumulatif)"},
+    {id:"c500",    ic:"🧠", col:"#e84393", nm:"Otak Bergeliga",   ds:"500 jawapan betul (kumulatif)"},
+    {id:"c1000",   ic:"🚀", col:"#eb3b5a", nm:"Sarjana Sifir",    ds:"1000 jawapan betul (kumulatif)"},
+    {id:"s3",      ic:"🔥", col:"#ff6b6b", nm:"Panas Membara",    ds:"3 streak dalam satu permainan"},
+    {id:"s5",      ic:"⚡", col:"#f7b731", nm:"Kilat Pantas",     ds:"5 streak dalam satu permainan"},
+    {id:"s10",     ic:"🌋", col:"#eb3b5a", nm:"Gunung Berapi",    ds:"10 streak dalam satu permainan"},
+    {id:"m100",    ic:"⭐", col:"#feca57", nm:"Bintang Muda",     ds:"100 markah (Time Trial)"},
+    {id:"m200",    ic:"🌟", col:"#f7b731", nm:"Bintang Terang",   ds:"200 markah (Time Trial)"},
+    {id:"m300",    ic:"💫", col:"#a55eea", nm:"Bintang Jatuh",    ds:"300 markah (Time Trial)"},
+    {id:"m500",    ic:"👑", col:"#ffd54f", nm:"Raja Sifir",       ds:"500 markah (Time Trial)"},
+    {id:"m750",    ic:"🌠", col:"#ff9ff3", nm:"Bintang Super",    ds:"750 markah (Time Trial)"},
+    {id:"perfect", ic:"🎯", col:"#26de81", nm:"Tepat Sasaran",    ds:"10+ soalan tanpa satu pun silap"},
+    {id:"frz",     ic:"❄️", col:"#54a0ff", nm:"Pembeku Masa",     ds:"Dapat bonus masa beku"},
+    {id:"refill",  ic:"🌈", col:"#00d2d3", nm:"Masa Ajaib",       ds:"Dapat bonus masa penuh semula"},
+    {id:"hero",    ic:"🦸", col:"#7c5cff", nm:"Wira Sifir",       ds:"Main mode Hero"},
+    {id:"hero100", ic:"🛡️", col:"#5f27cd", nm:"Perisai Hero",     ds:"100 markah dalam mode Hero"},
+    {id:"prac",    ic:"🧘", col:"#1dd1a1", nm:"Murid Tekun",      ds:"Cuba mod Latihan"},
+    {id:"all",     ic:"🗺️", col:"#ff9f43", nm:"Penjelajah",       ds:"Main semua tahap Time Trial"},
+    {id:"lv5",     ic:"🎖️", col:"#26de81", nm:"Aras 5",          ds:"Capai Level 5"},
+    {id:"lv10",    ic:"🏅", col:"#4b7bec", nm:"Aras 10",         ds:"Capai Level 10"},
+    {id:"lv20",    ic:"👑", col:"#ffd54f", nm:"Aras Maksimum",   ds:"Capai Level 20"},
+    {id:"avatarAll",ic:"🎨",col:"#e84393", nm:"Kolektor Avatar", ds:"Buka semua avatar"},
+    {id:"vs1",     ic:"⚔️", col:"#ff6b6b", nm:"Juara Pertama",   ds:"Menang 1 perlawanan VS"},
+    {id:"vs5",     ic:"🛡️", col:"#4b7bec", nm:"Gladiator",       ds:"Menang 5 perlawanan VS"},
+    {id:"vs25",    ic:"⚜️", col:"#a55eea", nm:"Legenda Arena",   ds:"Menang 25 perlawanan VS"},
+    {id:"vsComeback",ic:"🎯",col:"#26de81", nm:"Serangan Balas", ds:"Menang VS sebagai pencabar kedua"},
+    {id:"vsJaguh", ic:"🥉", col:"#ff9f43", nm:"Jaguh Arena",     ds:"Capai pangkat Jaguh (250 mata VS)"},
+    {id:"vsLegenda",ic:"🏆",col:"#ffd54f", nm:"Legenda Sejati",  ds:"Capai pangkat Legenda (750 mata VS)"}
   ];
+  function badgeSVG(b, unlocked){
+    var col = unlocked ? (b.col||"#a55eea") : "#b6b1c7";
+    var d = shadeHex(col,-45), l = shadeHex(col,45);
+    var s = '<svg viewBox="0 0 100 108" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">';
+    s += '<path d="M34 60 L26 104 L40 90 L50 104 L60 90 L74 104 L66 60 Z" fill="'+d+'"/>';
+    s += '<circle cx="50" cy="48" r="40" fill="'+d+'"/>';
+    s += '<circle cx="50" cy="48" r="35" fill="'+col+'"/>';
+    s += '<circle cx="50" cy="48" r="26" fill="#fff9ef"/>';
+    s += '<path d="M30 30 A35 35 0 0 1 66 18" stroke="'+l+'" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7"/>';
+    s += '<text x="50" y="49" font-size="26" text-anchor="middle" dominant-baseline="central">'+(unlocked?(b.ic||"⭐"):"🔒")+'</text>';
+    s += '</svg>';
+    return s;
+  }
+
   function loadJSON(key, def){
     try{ var d = JSON.parse(localStorage.getItem(key)); if(d) return d; }catch(e){}
     return def;
@@ -1498,6 +1524,14 @@
     if(state.mode === "hero"){ earn("hero"); if(state.score >= 100) earn("hero100"); }
     if(state.practice) earn("prac");
     if(stats.modes.easy && stats.modes.mid && stats.modes.hard && stats.modes.hero) earn("all");
+    // Time Trial 750 markah
+    var isTT = ["easy","mid","hard","hero"].indexOf(state.mode) >= 0;
+    if(isTT && state.score >= 750) earn("m750");
+    // Level
+    var lv = levelOf(myXP());
+    if(lv >= 5)  earn("lv5");
+    if(lv >= 10) earn("lv10");
+    if(lv >= 20){ earn("lv20"); earn("avatarAll"); }
   }
   function renderBadges(){
     var g = $("bdGrid"); g.innerHTML = "";
@@ -1506,8 +1540,8 @@
       var un = !!badgeState[b.id];
       if(un) got++;
       var d = document.createElement("div");
-      d.className = "bd" + (un ? "" : " lock");
-      var ic = document.createElement("div"); ic.className="ic"; ic.textContent = un ? b.ic : "🔒";
+      d.className = "bd";
+      var ic = document.createElement("div"); ic.className="ic"; ic.innerHTML = badgeSVG(b, un);
       var nm = document.createElement("div"); nm.className="nm"; nm.textContent = b.nm;
       var ds = document.createElement("div"); ds.className="ds"; ds.textContent = b.ds;
       d.appendChild(ic); d.appendChild(nm); d.appendChild(ds);
@@ -1733,8 +1767,8 @@
       var un = !!(r.badges && r.badges[b.id]);
       if(un) got++;
       var d = document.createElement("div");
-      d.className = "pfBadge" + (un ? "" : " lock");
-      d.textContent = un ? b.ic : "🔒";
+      d.className = "pfBadge";
+      d.innerHTML = badgeSVG(b, un);
       d.title = b.nm;
       bg.appendChild(d);
     });
@@ -1832,6 +1866,16 @@
     $("vsOpAva").innerHTML = avatarSVG(match.oppAvatar||0);
     $("vsOpName").textContent = (match.oppNick||"Lawan");
     $("vsOpScore").textContent = (oppScore>=0? oppScore : "—");
+    // lencana VS
+    if(r && r.ok && r.done){
+      if(r.result==="win"){
+        stats.vsWins = (stats.vsWins||0) + 1; saveMeta();
+        earn("vs1"); if(stats.vsWins>=5) earn("vs5"); if(stats.vsWins>=25) earn("vs25");
+        if(match.oppScore>=0) earn("vsComeback");
+      }
+      if(typeof r.mata === "number"){ if(r.mata>=250) earn("vsJaguh"); if(r.mata>=750) earn("vsLegenda"); }
+      syncUp();
+    }
     var medal="⚔️", title="Markah dihantar", pt=$("vsPoints");
     if(r && r.ok && r.done){
       if(r.result==="win"){ medal="👑"; title="Kamu Menang!"; pt.textContent="+10 mata VS 🎉"; pt.className="best"; }
