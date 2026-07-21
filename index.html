@@ -1334,13 +1334,13 @@
       streak: state.bestStreak
     }, function(r){
       onlineLB = null;   // paksa muat semula papan markah
-      if(r && r.ok && r.saved){
+      if(r && r.ok && (r.isBest || r.first)){
         bl.textContent = r.first
           ? "🎉 "+name+" — markah pertama disimpan!"
           : "🎉 "+name+" — markah tertinggi baharu!";
         bl.className = "best";
       } else if(r && r.ok){
-        bl.textContent = "Markah terbaik anda kekal: "+r.best+" (kali ini "+state.score+")";
+        bl.textContent = "Markah terbaik anda: "+r.best+" (kali ini "+state.score+")";
         bl.className = "best dark";
       } else {
         bl.textContent = (r && r.err) ? ("⚠️ "+r.err) : "Markah disimpan setempat (luar talian)";
