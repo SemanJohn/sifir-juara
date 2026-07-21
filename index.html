@@ -83,10 +83,11 @@
   .mode.mid{border-color:#ffcf3f55}
   .mode.hard{border-color:#ff5a6e55}
   .mode.prac{border-color:#25d9e855}
-  .mode.vs{border-color:#ff3d9755}
-  .vsBadge{background:var(--magenta);color:#fff;font-family:'Nunito',sans-serif;font-weight:900;
-    font-size:12px;min-width:22px;height:22px;border-radius:99px;display:grid;place-items:center;
-    padding:0 6px;flex:none}
+  .mode.vs{border-color:#ff3d9755;position:relative}
+  .vsBadge{position:absolute;top:-9px;right:-9px;background:#26de81;color:#04351f;
+    font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;min-width:24px;height:24px;
+    border-radius:99px;display:grid;place-items:center;padding:0 6px;
+    border:2px solid #1b1650;box-shadow:0 2px 4px #00000055}
   .vsRow{display:flex;align-items:center;gap:12px;background:var(--card);color:var(--ink);
     border-radius:16px;padding:12px 14px;margin-bottom:10px}
   .vsRow .av{width:44px;height:44px;border-radius:50%;overflow:hidden;flex:none;background:#fff}
@@ -523,7 +524,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.5</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.6</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -564,8 +565,7 @@
   <section class="screen" id="vsHubScreen">
     <div class="brand"><div class="logo">⚔️</div><div class="tag">Lawan (VS)</div></div>
     <div class="actions" style="margin-bottom:6px">
-      <button class="btn primary" id="vsInviteBtn">➕ Jemput Lawan</button>
-      <button class="btn ghost" id="vsBoardBtn">🏆 Papan Markah VS</button>
+      <button class="btn primary" id="vsInviteBtn" style="flex:1">➕ Jemput Lawan</button>
     </div>
     <div class="vsList" id="vsHubList"></div>
     <div class="actions"><button class="btn ghost" id="vsBack">Kembali</button></div>
@@ -766,7 +766,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.5";
+  var APP_VERSION = "2.6";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1710,7 +1710,7 @@
     // VS: pangkat + menang/kalah/mata
     var vm = st.vsMenang||0, vk = st.vsKalah||0, vp = st.vsMata||0;
     var rk = vsRank(vp);
-    $("pfVsRank").innerHTML = "<b>"+stars(rk.stars)+"</b> " + rk.name + " · " + vp + " mata";
+    $("pfVsRank").innerHTML = "<b>"+rankLabel(rk)+"</b> · " + vp + " mata";
     var vg = $("pfVsStats"); vg.innerHTML = "";
     [["Menang", vm],["Kalah", vk],["Mata", vp]].forEach(function(p){
       var d = document.createElement("div"); d.className="pfStat";
@@ -1959,7 +1959,6 @@
   $("vsBack").addEventListener("click", function(){ show("start"); });
   $("vsInviteBtn").addEventListener("click", loadPlayers);
   $("vsInviteBack").addEventListener("click", loadVsHub);
-  $("vsBoardBtn").addEventListener("click", function(){ renderLB("vs"); show("lb"); });
   $("vsBoardBack").addEventListener("click", loadVsHub);
   $("vsResBack").addEventListener("click", loadVsHub);
   $("vsResMenu").addEventListener("click", function(){ show("start"); });
@@ -2004,13 +2003,15 @@
   // pangkat VS: 5 pangkat bintang
   function vsRank(mata){
     mata = mata || 0;
-    if(mata >= 700) return { stars:5, name:"Legenda" };
-    if(mata >= 350) return { stars:4, name:"Hulubalang" };
-    if(mata >= 150) return { stars:3, name:"Jaguh" };
+    if(mata >= 750) return { stars:5, name:"Legenda" };
+    if(mata >= 500) return { stars:4, name:"Hulubalang" };
+    if(mata >= 250) return { stars:3, name:"Jaguh" };
     if(mata >= 50)  return { stars:2, name:"Perwira" };
-    return { stars:1, name:"Pejuang" };
+    if(mata >= 10)  return { stars:1, name:"Pejuang" };
+    return { stars:0, name:"Belum berpangkat" };
   }
-  function stars(n){ return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n); }
+  function stars(n){ return n>0 ? ("★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n)) : ""; }
+  function rankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
   function drawVsBoardInLb(){
     var L = $("lbList"); L.innerHTML = "";
     if(!account){ L.innerHTML = "<p class='lbEmpty'>Log masuk untuk papan markah VS.</p>"; return; }
@@ -2027,7 +2028,7 @@
         var rank = document.createElement("span"); rank.className="lbRank"; rank.textContent = (i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".");
         var av = document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML = avatarSVG(e.avatar||0);
         var nm = document.createElement("span"); nm.className="lbName";
-        nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+stars(rk.stars)+' '+rk.name+'</div>';
+        nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+rankLabel(rk)+'</div>';
         (function(nick){ nm.style.cursor="pointer"; nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.nick||"");
         var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.mata;
         row.appendChild(rank); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
