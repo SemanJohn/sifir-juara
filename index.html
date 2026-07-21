@@ -210,7 +210,11 @@
     transition:background .12s}
   .lbTab.sel{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;border-color:transparent}
   .lbList{background:var(--card);border-radius:20px;padding:8px 18px;min-height:170px;
-    box-shadow:0 10px 0 #00000030}
+    box-shadow:0 10px 0 #00000030;max-height:min(56vh,500px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch}
+  .lbMore{display:block;width:100%;border:none;background:#f0ecfa;color:#6c5fa8;
+    font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;padding:11px;
+    border-radius:12px;margin:10px 0 6px;cursor:pointer}
   .lbRow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1.5px solid #eee7fa;color:var(--ink)}
   .lbRow:last-child{border-bottom:none}
   .lbRank{font-size:20px;width:38px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
@@ -527,14 +531,14 @@
     var d = new Date();
     return d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear();
   }
-  // masukkan markah; pulangkan kedudukan (0 = tempat pertama, -1 = tak masuk top 5)
+  // masukkan markah; pulangkan kedudukan (0 = tempat pertama, -1 = tak masuk top 10)
   function addScore(mode, score, name, kelas){
     if(score <= 0) return -1;
     var arr = lb[mode] || (lb[mode] = []);
     var entry = {n:name||"", k:kelas||"", s:score, d:dateStr()};
     arr.push(entry);
     arr.sort(function(a,b){ return b.s - a.s; });
-    if(arr.length > 5) arr.length = 5;
+    if(arr.length > 10) arr.length = 10;
     saveLB();
     return arr.indexOf(entry);
   }
@@ -1141,10 +1145,11 @@
       markah: state.score, betul: state.correct, salah: state.wrong,
       streak: state.bestStreak, tarikh: new Date().toISOString()
     });
+    onlineLB = null;   // muat semula dari Sheets kali seterusnya
     var bl = $("bestLine");
     if(rank === 0){ bl.textContent = "🎉 "+name+" — Rekod baharu "+state.cfg.label+"!"; bl.className="best"; }
     else if(rank > 0){ bl.textContent = "🏅 "+name+" — Tempat #"+(rank+1)+" papan markah "+state.cfg.label+"!"; bl.className="best"; }
-    else { bl.textContent = name+" — tak masuk top 5 kali ini. Cuba lagi!"; bl.className="best dark"; }
+    else { bl.textContent = name+" — tak masuk top 10 kali ini. Cuba lagi!"; bl.className="best dark"; }
     show("result");
   }
   $("saveScoreBtn").addEventListener("click", saveScore);
@@ -1155,26 +1160,50 @@
     if(e.key === "Enter") saveScore();
   });
 
-  // ----- papan markah: paparan -----
+  // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
+  var onlineLB = null;
+  var lbMode = "easy";
+  var lbExpanded = false;
+  var lbFetching = false;
+  function rankLabel(i){
+    return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+".";
+  }
+  function refreshLB(){
+    if(!SHEETS_URL || lbFetching) return;
+    lbFetching = true;
+    fetch(SHEETS_URL).then(function(r){ return r.json(); }).then(function(d){
+      lbFetching = false;
+      if(d && typeof d === "object"){ onlineLB = d; drawLB(); }
+    }).catch(function(){ lbFetching = false; drawLB(); });
+  }
   function renderLB(mode){
+    lbMode = mode;
+    lbExpanded = false;
     document.querySelectorAll(".lbTab").forEach(function(t){
       t.classList.toggle("sel", t.dataset.lb === mode);
     });
+    drawLB();
+    refreshLB();
+  }
+  function drawLB(){
     var list = $("lbList");
     list.innerHTML = "";
-    var arr = lb[mode] || [];
+    var arr = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
     if(arr.length === 0){
       var p = document.createElement("p");
       p.className = "lbEmpty";
-      p.textContent = "Belum ada markah — jadilah yang pertama!";
+      p.textContent = (SHEETS_URL && !onlineLB && lbFetching)
+        ? "Memuatkan papan markah..."
+        : "Belum ada markah — jadilah yang pertama!";
       list.appendChild(p);
       return;
     }
-    var medals = ["🥇","🥈","🥉","4.","5."];
-    arr.forEach(function(e, i){
+    var showN = lbExpanded ? arr.length : Math.min(10, arr.length);
+    for(var i=0; i<showN; i++){
+      var e = arr[i];
       var row = document.createElement("div");
       row.className = "lbRow";
-      var r = document.createElement("span"); r.className="lbRank"; r.textContent = medals[i];
+      var r = document.createElement("span"); r.className="lbRank"; r.textContent = rankLabel(i);
       var nm = document.createElement("span"); nm.className="lbName";
       var n1 = document.createElement("div"); n1.textContent = e.n || "Tanpa Nama";
       nm.appendChild(n1);
@@ -1183,7 +1212,14 @@
       var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = e.d;
       row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
       list.appendChild(row);
-    });
+    }
+    if(arr.length > 10){
+      var btn = document.createElement("button");
+      btn.className = "lbMore";
+      btn.textContent = lbExpanded ? "Tutup" : "Lihat semua (" + arr.length + ")";
+      btn.addEventListener("click", function(){ lbExpanded = !lbExpanded; drawLB(); });
+      list.appendChild(btn);
+    }
   }
   document.querySelectorAll(".lbTab").forEach(function(t){
     t.addEventListener("click", function(){ renderLB(t.dataset.lb); });
