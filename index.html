@@ -395,6 +395,7 @@
     <div class="setCard">
       <input id="regEmail" type="email" placeholder="Email" autocomplete="off">
       <input id="regPass" type="password" inputmode="numeric" maxlength="4" placeholder="PIN (4 angka)">
+      <input id="regPass2" type="password" inputmode="numeric" maxlength="4" placeholder="Taip PIN sekali lagi">
       <input id="regNick" maxlength="14" placeholder="Nickname (unik)" autocomplete="off">
       <input id="regKelas" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
       <button class="btn primary" id="regGo" style="width:100%;margin-top:14px">Daftar</button>
@@ -1439,6 +1440,7 @@
     var kelas = $("regKelas").value.trim();
     if(!/^\S+@\S+\.\S+$/.test(email)){ regMsg("Email tidak sah"); return; }
     if(!/^\d{4}$/.test(pass)){ regMsg("PIN mesti 4 angka"); return; }
+    if($("regPass2").value.trim() !== pass){ regMsg("PIN tidak sama — taip semula kedua-duanya"); return; }
     if(!nick){ regMsg("Nickname diperlukan"); return; }
     if(!kelas){ regMsg("Kelas diperlukan"); return; }
     regMsg("Mendaftar...", true);
