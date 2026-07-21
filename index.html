@@ -437,6 +437,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v1.1</p>
   </section>
 
   <!-- LENCANA -->
@@ -588,6 +589,8 @@
 <script>
 (function(){
   "use strict";
+
+  var APP_VERSION = "1.1";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1563,6 +1566,7 @@
       $("setGuestName").textContent = guestName();
     }
     if($("setMsg")) $("setMsg").textContent = "";
+    if($("verLine")) $("verLine").textContent = "Sifir × Juara v" + APP_VERSION;
   }
   $("setBtn").addEventListener("click", function(){
     setReturn = (curScreen === "set") ? setReturn : curScreen;
