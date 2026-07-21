@@ -288,6 +288,8 @@
     padding:12px 14px;border:2px solid #d9d0ef;border-radius:14px;color:var(--ink);
     outline:none;background:#faf7ff;margin-top:8px}
   .setCard input:focus{border-color:var(--cyan)}
+  .uc{text-transform:uppercase}
+  .setCard input[readonly]{background:#efeaf9;color:#8a7fb5}
   .setLbl{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;
     letter-spacing:.5px;margin-top:14px}
   .accMsg{font-size:13px;font-weight:800;margin-top:10px;text-align:center;min-height:18px}
@@ -396,8 +398,8 @@
       <input id="regEmail" type="email" placeholder="Email" autocomplete="off">
       <input id="regPass" type="password" inputmode="numeric" maxlength="4" placeholder="PIN (4 angka)">
       <input id="regPass2" type="password" inputmode="numeric" maxlength="4" placeholder="Taip PIN sekali lagi">
-      <input id="regNick" maxlength="14" placeholder="Nickname (unik)" autocomplete="off">
-      <input id="regKelas" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
+      <input id="regNick" class="uc" maxlength="14" placeholder="Nickname (unik)" autocomplete="off">
+      <input id="regKelas" class="uc" maxlength="14" placeholder="Kelas (cth: 3 Bijak)" autocomplete="off">
       <button class="btn primary" id="regGo" style="width:100%;margin-top:14px">Daftar</button>
       <p class="accMsg" id="regMsg"></p>
     </div>
@@ -415,12 +417,21 @@
     <div class="setCard">
       <div class="setRow"><span>🔊 Bunyi</span><button class="tog" id="togSound">ON</button></div>
       <div class="setRow"><span>📳 Getaran</span><button class="tog" id="togVib">ON</button></div>
-      <div class="setLbl">Nickname (nama untuk papan markah)</div>
-      <input id="setNick" maxlength="14" placeholder="cth: Adam" autocomplete="off">
-      <div class="setLbl">Kelas</div>
-      <input id="setKelas" maxlength="14" placeholder="cth: 3 Bijak" autocomplete="off">
-      <button class="btn primary" id="setSave" style="width:100%;margin-top:16px">Simpan Tetapan</button>
-      <p class="accMsg" id="setMsg"></p>
+      <div id="setGuestBox">
+        <div class="setLbl">Nama pemain</div>
+        <div class="setRow"><span id="setGuestName" style="color:var(--ink)">GUEST</span><span style="font-size:11px;color:#8a7fb5">Tetamu</span></div>
+        <p style="font-size:12px;color:#8a7fb5;font-weight:800;margin-top:6px;line-height:1.5">Log masuk di menu utama untuk tukar nama & kelas serta simpan markah kekal. Markah tetamu disimpan 24 jam sahaja.</p>
+      </div>
+      <div id="setUserBox" style="display:none">
+        <div class="setLbl">Nickname (unik)</div>
+        <input id="setNick" class="uc" maxlength="14" placeholder="cth: ADAM" autocomplete="off">
+        <div class="setLbl">Kelas</div>
+        <input id="setKelas" class="uc" maxlength="14" placeholder="cth: 3 BIJAK" autocomplete="off">
+        <div class="setLbl">Email (tidak boleh tukar)</div>
+        <input id="setEmail" readonly autocomplete="off">
+        <button class="btn primary" id="setSave" style="width:100%;margin-top:16px">Simpan Tetapan</button>
+        <p class="accMsg" id="setMsg"></p>
+      </div>
     </div>
     <div class="actions">
       <button class="btn ghost" id="setBack">Kembali</button>
@@ -1036,28 +1047,15 @@
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
       $("saveScore").innerHTML = state.score + "<small>Markah</small>";
-      if(account){
-        // pengguna login: nama & kelas tetap, tidak boleh edit
-        $("saveWho").style.display = "";
-        $("saveWhoName").textContent = (profile.nickname||"").toUpperCase();
-        $("saveWhoClass").textContent = (profile.kelas||"").toUpperCase();
-        $("nameInput").style.display = "none";
-        $("classInput").style.display = "none";
-        $("guestNote").textContent = "";
-      } else {
-        // guest: boleh taip nama & kelas; disimpan 24 jam sahaja
-        $("saveWho").style.display = "none";
-        $("nameInput").style.display = "";
-        $("classInput").style.display = "";
-        var pn = "", pk = "";
-        try{
-          pn = localStorage.getItem("sifirJuaraName") || "";
-          pk = localStorage.getItem("sifirJuaraClass") || "";
-        }catch(e){}
-        $("nameInput").value = pn;
-        $("classInput").value = pk;
-        $("guestNote").textContent = "Bermain sebagai tetamu — markah disimpan 24 jam sahaja. Log masuk untuk kekalkannya.";
-      }
+      // nama & kelas dipapar sahaja (tidak boleh edit); guest guna GUEST(nombor)
+      $("saveWho").style.display = "";
+      $("saveWhoName").textContent = effName().toUpperCase();
+      $("saveWhoClass").textContent = effKelas().toUpperCase();
+      $("nameInput").style.display = "none";
+      $("classInput").style.display = "none";
+      $("guestNote").textContent = account
+        ? ""
+        : "Bermain sebagai " + guestName() + " — markah disimpan 24 jam. Log masuk untuk kekalkannya.";
       show("save");
     } else {
       show("result");
@@ -1172,6 +1170,17 @@
     }catch(e){}
   }
   var profile = loadJSON("sifirJuaraProfile", {nickname:"", kelas:""});
+  function guestName(){
+    var g = null;
+    try{ g = localStorage.getItem("sifirJuaraGuest"); }catch(e){}
+    if(!g || !/^GUEST\d+$/.test(g)){
+      g = "GUEST" + Math.floor(1000 + Math.random()*9000);
+      try{ localStorage.setItem("sifirJuaraGuest", g); }catch(e){}
+    }
+    return g;
+  }
+  function effName(){ return account ? (profile.nickname || "") : guestName(); }
+  function effKelas(){ return account ? (profile.kelas || "") : ""; }
   function saveProfile(){
     try{ localStorage.setItem("sifirJuaraProfile", JSON.stringify(profile)); }catch(e){}
   }
@@ -1307,18 +1316,8 @@
   // ----- simpan markah dengan nama & kelas -----
   function saveScore(){
     if(!state || state.saved) return;
-    var name, kelas;
-    if(account){
-      name = (profile.nickname || "").toUpperCase();
-      kelas = (profile.kelas || "").toUpperCase();
-    } else {
-      name = (($("nameInput").value.trim()) || "Tanpa Nama").toUpperCase();
-      kelas = $("classInput").value.trim().toUpperCase();
-      try{
-        localStorage.setItem("sifirJuaraName", $("nameInput").value.trim());
-        localStorage.setItem("sifirJuaraClass", $("classInput").value.trim());
-      }catch(e){}
-    }
+    var name = effName().toUpperCase();
+    var kelas = effKelas().toUpperCase();
     state.saved = true;
     addScore(state.mode, state.score, name, kelas);  // simpanan tempatan (offline)
 
@@ -1537,8 +1536,18 @@
     $("togSound").classList.toggle("on", soundOn);
     $("togVib").textContent = vibOn ? "ON" : "OFF";
     $("togVib").classList.toggle("on", vibOn);
-    $("setNick").value = profile.nickname || "";
-    $("setKelas").value = profile.kelas || "";
+    if(account){
+      $("setUserBox").style.display = "";
+      $("setGuestBox").style.display = "none";
+      $("setNick").value = profile.nickname || "";
+      $("setKelas").value = profile.kelas || "";
+      $("setEmail").value = account.email;
+    } else {
+      $("setUserBox").style.display = "none";
+      $("setGuestBox").style.display = "";
+      $("setGuestName").textContent = guestName();
+    }
+    if($("setMsg")) $("setMsg").textContent = "";
   }
   $("setBtn").addEventListener("click", function(){
     setReturn = (curScreen === "set") ? setReturn : curScreen;
@@ -1550,6 +1559,14 @@
     show("set");
   });
   $("setBack").addEventListener("click", function(){ show(setReturn || "start"); });
+  ["regNick","regKelas","setNick","setKelas"].forEach(function(id){
+    var el = $(id);
+    if(el) el.addEventListener("input", function(){
+      var p = this.selectionStart;
+      this.value = this.value.toUpperCase();
+      try{ this.setSelectionRange(p, p); }catch(e){}
+    });
+  });
   $("setExit").addEventListener("click", function(){
     if(timerId){ clearInterval(timerId); timerId = null; }
     state = null;
