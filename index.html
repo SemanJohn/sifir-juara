@@ -33,7 +33,8 @@
     color:#fff;
     min-height:100dvh;
     display:flex;justify-content:center;
-    padding:14px;
+    padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right))
+      max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
     overflow-x:hidden;overflow-y:auto;
     position:relative;
   }
@@ -48,6 +49,12 @@
       radial-gradient(2px 2px at 90% 75%, #ffffff44, transparent);
   }
   .stage{width:100%;max-width:440px;position:relative;z-index:1;margin:auto;padding-bottom:10px}
+
+  /* Fokus jelas untuk papan kekunci, D-pad dan alat kawalan TV. */
+  button:focus-visible,input:focus-visible,[tabindex]:focus-visible{
+    outline:4px solid var(--yellow) !important;outline-offset:4px;
+    filter:brightness(1.12);position:relative;z-index:6
+  }
 
   .screen{display:none;animation:pop .35s cubic-bezier(.2,.9,.3,1.3)}
   .screen.on{display:block}
@@ -261,6 +268,10 @@
   .btn.ghost{background:#eee7fa;color:var(--ink);box-shadow:0 5px 0 #cfc4ec}
 
   /* ---------- LEADERBOARD ---------- */
+  #lbScreen.on{height:calc(100dvh - 28px);display:flex;flex-direction:column;overflow:hidden}
+  #lbScreen .brand{flex:none;margin-bottom:12px}
+  #lbScreen .lbModeTabs,#lbScreen .lbTabs,#lbScreen .lbPodium,#lbScreen .actions{flex:none}
+  #lbScreen .actions{margin-top:12px}
   .lbModeTabs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
   .lbModeTab{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#fff;
     border:2px solid #ffffff2b;border-radius:15px;padding:13px 8px;cursor:pointer;
@@ -306,8 +317,9 @@
   .lbPodiumPlayer[data-rank="2"] .lbPodiumBase{height:55px;background:linear-gradient(180deg,#c8d5ed,#8495b4);border-color:#edf5ff}
   .lbPodiumPlayer[data-rank="3"] .lbPodiumBase{background:linear-gradient(180deg,#ef9b64,#ad582e);border-color:#ffc098}
   .lbList{background:linear-gradient(180deg,#fffdf2,#fef5d7);border:2px solid #fff3bb;
-    border-radius:20px;padding:7px 12px;min-height:92px;box-shadow:0 9px 0 #00000030;
-    max-height:min(49vh,430px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+    border-radius:20px;padding:7px 12px;min-height:0;box-shadow:0 9px 0 #00000030;
+    flex:1;max-height:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain}
   .lbMore{display:block;width:100%;border:none;background:#f0ecfa;color:#6c5fa8;
     font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;padding:11px;
     border-radius:12px;margin:10px 0 6px;cursor:pointer}
@@ -456,7 +468,47 @@
     font-weight:900;font-size:13px;cursor:pointer;text-decoration:underline;
     display:block;margin:10px auto 0}
   @media (max-width:380px){
-    .brand .logo{font-size:44px}.eq{font-size:48px}.key{font-size:24px;padding:14px 0}
+    body{padding:10px}.brand .logo{font-size:44px}.eq{font-size:48px}.key{font-size:24px;padding:14px 0}
+    #lbScreen.on{height:calc(100dvh - 20px)}
+  }
+  @media (max-height:740px){
+    .brand{margin-bottom:14px}.brand .logo{font-size:44px}.brand .tag{margin-top:3px}
+    .hud{margin-bottom:8px}.timerWrap{margin-bottom:10px}.card{padding:22px 16px;margin-bottom:12px}
+    .eq{font-size:48px}.feedback{margin-top:8px;min-height:18px}.pad{gap:8px}.key{padding:12px 0}
+  }
+  @media (min-width:700px){
+    .stage{max-width:620px}
+    .brand .logo{font-size:60px}.brand .tag{font-size:17px}
+    .mode{padding:18px 22px}.mode .txt b{font-size:23px}.btn{font-size:20px}
+    .lbRow{grid-template-columns:42px 54px minmax(0,1fr) auto;padding:11px 8px}
+    .lbAvatar{width:50px;height:50px}.lbName{font-size:16px}.lbClass,.lbDate{font-size:11px}
+  }
+  @media (min-width:1000px) and (min-height:620px){
+    body{padding:clamp(24px,3vh,44px)}
+    .stage{max-width:min(920px,82vw)}
+    .topBtn{top:24px;height:52px;border-radius:28px;font-size:18px}
+    #loginBtn{left:24px}#setBtn{right:24px;width:52px;font-size:23px}
+    #lbScreen.on{height:calc(100dvh - clamp(48px,6vh,88px))}
+    .lbPodium{min-height:250px}.lbPodiumAvatar{width:68px;height:68px}
+    .lbPodiumPlayer[data-rank="1"] .lbPodiumAvatar{width:84px;height:84px}
+    .lbModeTab{font-size:19px;padding:16px 10px}.lbTab{font-size:15px;padding:13px 4px}
+  }
+  @media (min-width:900px) and (orientation:landscape) and (min-height:550px){
+    #gameScreen.on{
+      height:calc(100dvh - clamp(48px,6vh,88px));display:grid;overflow:hidden;
+      grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);
+      grid-template-areas:"hud hud" "timer timer" "target target" "card pad" "card end";
+      grid-template-rows:auto auto auto minmax(0,1fr) auto;column-gap:24px;align-items:stretch
+    }
+    #gameScreen .hud{grid-area:hud;margin-bottom:2px}
+    #gameScreen .timerWrap{grid-area:timer;margin-bottom:8px}
+    #gameScreen #vsTargetBar{grid-area:target;margin-bottom:8px}
+    #gameScreen .card{grid-area:card;margin:0;display:flex;flex-direction:column;justify-content:center}
+    #gameScreen .pad{grid-area:pad;min-height:0}
+    #gameScreen #endBtn{grid-area:end}
+    #gameScreen .key{font-size:clamp(27px,3.4vh,38px);padding:clamp(10px,1.7vh,22px) 0}
+    #gameScreen .eq{font-size:clamp(58px,6vw,86px)}
+    #gameScreen .chip{padding:10px 18px}.chip .val{font-size:28px}
   }
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important}}
 </style>
@@ -612,7 +664,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.6</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.8</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -867,7 +919,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "3.6";
+  var APP_VERSION = "3.7";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1104,7 +1156,7 @@
   function addScore(mode, score, name, kelas){
     if(score <= 0) return -1;
     var arr = lb[mode] || (lb[mode] = []);
-    var entry = {n:name||"", k:kelas||"", s:score, d:dateStr()};
+    var entry = {n:name||"", k:kelas||"", s:score, d:dateStr(), avatar:account ? myAvatarIdx() : 0};
     arr.push(entry);
     arr.sort(function(a,b){ return b.s - a.s; });
     if(arr.length > 10) arr.length = 10;
@@ -1429,11 +1481,66 @@
     handleKey(btn.dataset.k);
   });
 
+  function visibleTvButtons(){
+    var root = screens[curScreen] || document;
+    return Array.prototype.slice.call(root.querySelectorAll(
+      'button:not([disabled]),input:not([disabled]),select:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'
+    )).filter(function(el){
+      var r=el.getBoundingClientRect(), s=getComputedStyle(el);
+      return r.width>0 && r.height>0 && s.display!=="none" && s.visibility!=="hidden";
+    });
+  }
+
+  function moveTvFocus(dir){
+    var items=visibleTvButtons();
+    if(!items.length) return;
+    var cur=document.activeElement;
+    if(items.indexOf(cur)<0){
+      items[0].focus({preventScroll:true});
+      items[0].scrollIntoView({block:"nearest",inline:"nearest"});
+      return;
+    }
+    var a=cur.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
+    var best=null, bestScore=Infinity;
+    items.forEach(function(el){
+      if(el===cur) return;
+      var r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2;
+      var dx=x-ax, dy=y-ay, primary, cross;
+      if(dir==="left" && dx<0){ primary=-dx; cross=Math.abs(dy); }
+      else if(dir==="right" && dx>0){ primary=dx; cross=Math.abs(dy); }
+      else if(dir==="up" && dy<0){ primary=-dy; cross=Math.abs(dx); }
+      else if(dir==="down" && dy>0){ primary=dy; cross=Math.abs(dx); }
+      else return;
+      var score=primary + cross*2.2;
+      if(score<bestScore){ bestScore=score; best=el; }
+    });
+    if(best){ best.focus({preventScroll:true}); best.scrollIntoView({block:"nearest",inline:"nearest"}); }
+  }
+
   document.addEventListener("keydown", function(e){
+    var code=e.keyCode||e.which||0, key=e.key;
+    var dirs={ArrowLeft:"left",ArrowRight:"right",ArrowUp:"up",ArrowDown:"down"};
+    if(!dirs[key]){
+      if(code===37) key="ArrowLeft"; else if(code===38) key="ArrowUp";
+      else if(code===39) key="ArrowRight"; else if(code===40) key="ArrowDown";
+    }
+    if(dirs[key]){
+      e.preventDefault(); document.body.classList.add("tvNav"); moveTvFocus(dirs[key]); return;
+    }
+    if(key==="Enter" || key==="OK" || key==="Select" || code===13){
+      var focused=document.activeElement;
+      if(focused && focused.tagName==="BUTTON" && visibleTvButtons().indexOf(focused)>=0){
+        e.preventDefault(); focused.click(); return;
+      }
+    }
     if(!screens.game.classList.contains("on")) return;
-    if(e.key >= "0" && e.key <= "9") handleKey(e.key);
-    else if(e.key === "Enter") handleKey("enter");
-    else if(e.key === "Backspace"){ e.preventDefault(); handleKey("clear"); }
+    var digit=(key>="0"&&key<="9") ? key :
+      ((code>=48&&code<=57) ? String(code-48) : ((code>=96&&code<=105) ? String(code-96) : ""));
+    if(digit){ e.preventDefault(); handleKey(digit); return; }
+    if(key==="Backspace" || key==="Delete" || code===8 || code===46){
+      e.preventDefault(); handleKey("clear"); return;
+    }
+    if(key==="Enter" || key==="OK" || key==="Select" || code===13){ e.preventDefault(); handleKey("enter"); }
   });
 
   function handleKey(k){
@@ -1771,6 +1878,7 @@
       email:account ? account.email : "",
       pass:account ? account.pass : "",
       nama:effName().toUpperCase(), kelas:effKelas().toUpperCase(), mod:s.cfg.label,
+      avatar:account ? myAvatarIdx() : 0,
       markah:s.score, betul:s.correct, salah:s.wrong, streak:s.bestStreak};
   }
 
@@ -2450,6 +2558,8 @@
   var lbShown = 10;
   var lbFetching = false;
   var lbLoadFailed = false;
+  var lbAvatarCache = {};
+  var lbAvatarPending = {};
   function rankLabel(i){
     return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+".";
   }
@@ -2477,6 +2587,59 @@
     var own = lbOwnName();
     return !!own && String(name || "").trim().toUpperCase() === own;
   }
+  function lbNameKey(name){ return String(name || "").trim().toUpperCase(); }
+  function lbIsGuest(name){ return /^GUEST\d+$/.test(lbNameKey(name)); }
+  function validAvatarIndex(v){ return typeof v === "number" && v >= 0 && v < AVA_COUNT; }
+  function lbAvatarFromVs(name){
+    var key = lbNameKey(name);
+    var board = Array.isArray(firebaseVsBoard) ? firebaseVsBoard : [];
+    for(var i=0; i<board.length; i++){
+      if(lbNameKey(board[i].nick || board[i].n) === key && validAvatarIndex(board[i].avatar)){
+        return board[i].avatar;
+      }
+    }
+    return null;
+  }
+  function lbAvatarFor(name, e){
+    var key = lbNameKey(name);
+    if(lbIsOwn(key)) return myAvatarIdx();
+    if(lbIsGuest(key)) return 0;
+    if(e && validAvatarIndex(e.avatar)){
+      lbAvatarCache[key] = e.avatar;
+      return e.avatar;
+    }
+    var vsAvatar = lbAvatarFromVs(key);
+    if(validAvatarIndex(vsAvatar)){
+      lbAvatarCache[key] = vsAvatar;
+      return vsAvatar;
+    }
+    return validAvatarIndex(lbAvatarCache[key]) ? lbAvatarCache[key] : 0;
+  }
+  function requestLbAvatar(name){
+    var key = lbNameKey(name);
+    if(!key || lbIsOwn(key) || lbIsGuest(key) || validAvatarIndex(lbAvatarCache[key]) || lbAvatarPending[key]) return;
+    var fromVs = lbAvatarFromVs(key);
+    if(validAvatarIndex(fromVs)){ lbAvatarCache[key] = fromVs; return; }
+    lbAvatarPending[key] = true;
+    api({action:"profile", nickname:key}, function(r){
+      delete lbAvatarPending[key];
+      var idx = r && r.ok && r.stats ? r.stats.avatar : null;
+      if(!validAvatarIndex(idx)) return;
+      if(lbAvatarCache[key] === idx) return;
+      lbAvatarCache[key] = idx;
+      if(curScreen === "lb" && lbMode !== "vs") drawLB();
+    });
+  }
+  function hydrateLbAvatars(arr, isVs){
+    if(isVs) return;
+    var limit = Math.min(arr.length, Math.max(10, lbShown));
+    for(var i=0; i<limit; i++){
+      var e = arr[i] || {};
+      var name = e.n || e.nick || "";
+      lbAvatarFor(name, e);
+      requestLbAvatar(name);
+    }
+  }
   function lbInfo(e, isVs){
     e = e || {};
     var name = String(isVs ? (e.nick || e.n || "") : (e.n || e.nick || ""));
@@ -2484,8 +2647,7 @@
     var score = isVs ? (e.mata || 0) : (e.s || 0);
     var rawDate = e.d || e.date || e.tarikh || e.updatedAt || e.updated || e.lastPlayed || "";
     var own = lbIsOwn(name);
-    var ava = (typeof e.avatar === "number") ? e.avatar : avatarIdxFor(name);
-    if(own) ava = myAvatarIdx();
+    var ava = lbAvatarFor(name, e);
     return {
       name:(name || "Tanpa Nama").toUpperCase(),
       kelas:String(kelas || "").toUpperCase(),
@@ -2577,6 +2739,7 @@
       clearLbView(isVs ? "Belum ada perlawanan VS." : (lbLoadFailed ? "Tiada sambungan — cuba lagi." : "Belum ada markah — jadilah yang pertama!"));
       return;
     }
+    hydrateLbAvatars(arr, isVs);
 
     podium.classList.add("on");
     for(var p=0; p<Math.min(3, arr.length); p++) podium.appendChild(makeLbPodiumPlayer(arr[p], p+1, isVs));
