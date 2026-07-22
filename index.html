@@ -533,7 +533,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.1</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.2</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -775,7 +775,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "3.1";
+  var APP_VERSION = "3.2";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -788,6 +788,121 @@
   // ===== Konfigurasi Google Sheets (Apps Script Web App) =====
   // Letakkan URL Web App di sini selepas setup (lihat PANDUAN.md)
   var SHEETS_URL = "https://script.google.com/macros/s/AKfycbwVIiBDzbK61Tcr_A6Krx2EFmn74uNYYKCbNq_nNiMPW96eC-6ZqdHx9ViIIL0EMz9CKg/exec";
+  var FIREBASE_DB_URL = "https://sifir-juara-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+  // Sheets kekal sumber utama. Firebase hanya mempercepat paparan ranking dan VS.
+  var firebaseLbStream = null, firebaseVsStream = null, firebaseVsHash = "";
+  var firebaseVsData = null, firebaseVsBoard = null;
+  var firebaseLbTimer = 0, firebaseVsTimer = 0;
+  var vsWaitingResult = null, vsResultSyncing = false;
+
+  function firebaseUrl(path){
+    return FIREBASE_DB_URL + "/" + String(path || "").replace(/^\/+|\/+$/g, "") + ".json";
+  }
+  function firebaseGet(path){
+    return fetchTimeout(firebaseUrl(path), {cache:"no-store"}, 7000)
+      .then(function(r){ if(!r.ok) throw new Error("Firebase " + r.status); return r.json(); });
+  }
+  function firebaseWatch(path, changed){
+    if(typeof EventSource === "undefined") return null;
+    try{
+      var stream = new EventSource(firebaseUrl(path));
+      stream.addEventListener("put", changed);
+      stream.addEventListener("patch", changed);
+      return stream;
+    }catch(e){ return null; }
+  }
+  function sha256Hex(text){
+    if(!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("SHA-256 tidak tersedia"));
+    return window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("0"+b.toString(16)).slice(-2); }).join("");
+    });
+  }
+  function firebaseRefreshLeaderboards(){
+    clearTimeout(firebaseLbTimer);
+    firebaseLbTimer = setTimeout(function(){
+      firebaseGet("leaderboards").then(function(d){
+        if(!d) return;
+        if(d.score){ onlineLB = d.score; lbLoadFailed = false; }
+        if(Array.isArray(d.vs)) firebaseVsBoard = d.vs;
+        if(curScreen === "lb") drawLB();
+        else if(curScreen === "vsBoard" && firebaseVsBoard) renderVsBoard(firebaseVsBoard);
+      }).catch(function(){});
+    }, 120);
+  }
+  function ensureFirebaseLeaderboardWatch(){
+    if(firebaseLbStream) return;
+    firebaseRefreshLeaderboards();
+    firebaseLbStream = firebaseWatch("leaderboards", firebaseRefreshLeaderboards);
+  }
+  function firebaseVsList(raw, previous){
+    var r = {ok:true, incoming:[], active:[], sent:[], recent:[]};
+    var seen = {};
+    function add(m){
+      if(!m || typeof m !== "object") return;
+      if(m.status === "pending") (m.iAmChallenger ? r.sent : r.incoming).push(m);
+      else if(m.status === "accepted") r.active.push(m);
+      else if(m.status === "done") r.recent.push(m);
+    }
+    Object.keys(raw || {}).forEach(function(id){
+      var m = raw[id];
+      if(!m || typeof m !== "object") return;
+      m.id = m.id || id;
+      seen[String(m.id)] = true;
+      add(m);
+    });
+    ["incoming","active","sent","recent"].forEach(function(bucket){
+      (previous && previous[bucket] || []).forEach(function(m){
+        if(!seen[String(m.id)]) add(m);
+      });
+    });
+    r.recent.sort(function(a,b){ return (a.updatedAt||0)-(b.updatedAt||0); });
+    if(r.recent.length > 5) r.recent = r.recent.slice(r.recent.length-5);
+    return r;
+  }
+  function finishWaitingVsFromFirebase(list){
+    if(!vsWaitingResult || vsResultSyncing) return;
+    var all = list.recent || [], found = null;
+    for(var i=0;i<all.length;i++) if(String(all[i].id) === String(vsWaitingResult.match.id)){ found=all[i]; break; }
+    if(!found || found.status !== "done" || found.oppScore < 0) return;
+    var pending = vsWaitingResult;
+    vsWaitingResult = null;
+    vsResultSyncing = true;
+    var result = pending.myScore > found.oppScore ? "win" : (pending.myScore < found.oppScore ? "lose" : "draw");
+    api({action:"vs_list", email:account.email, pass:account.pass}, function(auth){
+      vsResultSyncing = false;
+      showVsResult(pending.match, pending.myScore, {ok:true, done:true, myScore:pending.myScore,
+        oppScore:found.oppScore, result:result, vsStats:auth && auth.ok ? auth.vsStats : null});
+    });
+  }
+  function firebaseApplyVs(raw){
+    firebaseVsData = firebaseVsList(raw, firebaseVsData);
+    setVsBadges(firebaseVsData.incoming.length, vsSwordCount(firebaseVsData));
+    if(curScreen === "vsHub") renderVsHub(firebaseVsData);
+    finishWaitingVsFromFirebase(firebaseVsData);
+  }
+  function firebaseRefreshVs(){
+    clearTimeout(firebaseVsTimer);
+    firebaseVsTimer = setTimeout(function(){
+      if(!firebaseVsHash) return;
+      firebaseGet("vsUsers/"+firebaseVsHash).then(function(d){ firebaseApplyVs(d || {}); }).catch(function(){});
+    }, 120);
+  }
+  function closeFirebaseVsWatch(){
+    if(firebaseVsStream){ firebaseVsStream.close(); firebaseVsStream = null; }
+    firebaseVsHash = ""; firebaseVsData = null;
+  }
+  function ensureFirebaseVsWatch(){
+    if(!account || !account.email){ closeFirebaseVsWatch(); return; }
+    var email = String(account.email).trim().toLowerCase();
+    sha256Hex(email).then(function(hash){
+      if(!account || String(account.email).trim().toLowerCase() !== email) return;
+      if(firebaseVsStream && firebaseVsHash === hash) return;
+      closeFirebaseVsWatch(); firebaseVsHash = hash;
+      firebaseRefreshVs();
+      firebaseVsStream = firebaseWatch("vsUsers/"+hash, firebaseRefreshVs);
+    }).catch(function(){});
+  }
   // fetch dengan tamat-masa supaya app tak tergantung bila pelayan lambat
   function fetchTimeout(url, opts, ms){
     opts = opts || {};
@@ -928,13 +1043,15 @@
     // butang log masuk hanya boleh ditekan di menu utama
     if($("loginBtn")) $("loginBtn").style.display = (name === "start") ? "" : "none";
     // kemas kini avatar & level di menu setiap kali menu dibuka
-    if(name === "start"){ updateMenuAva(); refreshVsBadge(); }
+    if(name === "start"){ updateMenuAva(); ensureFirebaseVsWatch(); refreshVsBadge(); }
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
     if(name === "lb"){
+      ensureFirebaseLeaderboardWatch();
       lbPoll = setInterval(function(){
         if(document.visibilityState === "visible") refreshLB();
-      }, 60000);
+      }, 180000);
     }
+    if(name === "vsHub" || name === "vsBoard" || name === "vsResult") ensureFirebaseVsWatch();
   }
 
   // ----- start -----
@@ -1938,6 +2055,7 @@
     $("vsOpScore").textContent = (oppScore>=0? oppScore : "—");
     // Statistik/lencana VS diselaraskan daripada angka berautoriti pelayan.
     if(r && r.ok && r.done){
+      vsWaitingResult = null;
       reconcileVsProgress(r);
       if(r.result==="win"){
         if(match.oppScore>=0) earn("vsComeback");
@@ -1950,6 +2068,8 @@
       else if(r.result==="lose"){ medal="😢"; title="Kamu Kalah"; pt.textContent="+2 mata penyertaan"; pt.className="best dark"; }
       else { medal="🤝"; title="Seri!"; pt.textContent="+5 mata"; pt.className="best dark"; }
     } else if(r && r.ok){
+      vsWaitingResult = {match:match, myScore:myScore};
+      ensureFirebaseVsWatch();
       medal="⏳"; title="Markah disimpan"; pt.textContent="Menunggu "+(match.oppNick||"lawan")+" bermain…"; pt.className="best dark";
     } else {
       medal="⚠️"; title="Ralat"; pt.textContent=(r&&r.err)||"Gagal hantar markah"; pt.className="best dark";
@@ -1975,8 +2095,10 @@
   function loadVsHub(){
     $("vsHubList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
     show("vsHub");
+    if(firebaseVsData) renderVsHub(firebaseVsData);
     api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
       if(!r || !r.ok){ $("vsHubList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat sambungan")+"</p>"; return; }
+      firebaseVsData = r;
       renderVsHub(r); setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r));
     });
   }
@@ -2048,9 +2170,12 @@
 
   function loadVsBoard(){
     $("vsBoardList").innerHTML="<p class='lbEmpty'>Memuatkan…</p>"; show("vsBoard");
+    ensureFirebaseLeaderboardWatch();
+    if(firebaseVsBoard) renderVsBoard(firebaseVsBoard);
     api({action:"vs_board", email:account.email, pass:account.pass}, function(r){
       if(!r || !r.ok){ $("vsBoardList").innerHTML="<p class='lbEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
-      renderVsBoard(r.board||[]);
+      firebaseVsBoard = r.board || [];
+      renderVsBoard(firebaseVsBoard);
     });
   }
   function renderVsBoard(board){
@@ -2079,10 +2204,12 @@
   var vsBadgePoll=0;
   function refreshVsBadge(){
     if(!account){ setVsBadges(0,0); return; }
+    ensureFirebaseVsWatch();
+    if(firebaseVsData) setVsBadges(firebaseVsData.incoming.length, vsSwordCount(firebaseVsData));
     if(Date.now()-vsBadgePoll < 20000) return;
     vsBadgePoll=Date.now();
     api({action:"vs_list", email:account.email, pass:account.pass}, function(r){
-      if(r && r.ok) setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r));
+      if(r && r.ok){ firebaseVsData = r; setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r)); }
     });
   }
 
@@ -2113,6 +2240,10 @@
   }
   function refreshLB(){
     if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
+    ensureFirebaseLeaderboardWatch();
+    firebaseGet("leaderboards/score").then(function(d){
+      if(d && typeof d === "object"){ onlineLB = d; lbLoadFailed = false; drawLB(); }
+    }).catch(function(){});
     if(!SHEETS_URL || lbFetching) return;
     lbFetching = true;
     fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
@@ -2143,12 +2274,33 @@
   }
   function stars(n){ return n>0 ? ("★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n)) : ""; }
   function vsRankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
+  function renderVsBoardInLeaderboard(board){
+    var L = $("lbList");
+    if(lbMode !== "vs" || $("lbScreen").className.indexOf("on") < 0) return;
+    L.innerHTML = "";
+    if(!board.length){ L.innerHTML = "<p class='lbEmpty'>Belum ada perlawanan VS.</p>"; return; }
+    board.forEach(function(e, i){
+      var rk = vsRank(e.mata);
+      var row = document.createElement("div"); row.className = "lbRow";
+      var rank = document.createElement("span"); rank.className="lbRank"; rank.textContent = rankLabel(i);
+      var av = document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML = avatarSVG(e.avatar||0);
+      var nm = document.createElement("span"); nm.className="lbName";
+      nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+vsRankLabel(rk)+'</div>';
+      (function(nick){ nm.style.cursor="pointer"; nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.nick||"");
+      var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.mata;
+      row.appendChild(rank); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
+      L.appendChild(row);
+    });
+  }
   function drawVsBoardInLb(silent){
     var L = $("lbList");
     if(!account){ L.innerHTML = "<p class='lbEmpty'>Log masuk untuk papan markah VS.</p>"; return; }
+    ensureFirebaseLeaderboardWatch();
+    if(firebaseVsBoard){ renderVsBoardInLeaderboard(firebaseVsBoard); return; }
     if(!silent) L.innerHTML = "<p class='lbEmpty'>Memuatkan…</p>";
     api({action:"vs_board", email:account.email, pass:account.pass}, function(r){
       if(lbMode !== "vs" || $("lbScreen").className.indexOf("on") < 0) return;
+      if(r && r.ok){ firebaseVsBoard = r.board || []; renderVsBoardInLeaderboard(firebaseVsBoard); return; }
       L.innerHTML = "";
       if(!r || !r.ok){ L.innerHTML = "<p class='lbEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
       var board = r.board || [];
@@ -2287,7 +2439,7 @@
       account = {email:email, pass:pass};
       profile.nickname = nick.toUpperCase();
       profile.kelas = kelas.toUpperCase();
-      saveAccount(); saveProfile(); syncUp(); updateAccUI();
+      saveAccount(); saveProfile(); ensureFirebaseVsWatch(); syncUp(); updateAccUI();
       regMsg("Berjaya didaftarkan! ✅", true);
       setTimeout(function(){ accMsg("Selamat datang, "+nick+"! ✅", true); updateAccUI(); show("login"); }, 900);
     });
@@ -2300,6 +2452,7 @@
       if(!r.ok){ accMsg(r.err || "Gagal log masuk"); return; }
       account = {email:a.email, pass:a.pass};
       saveAccount();
+      ensureFirebaseVsWatch();
       applyRemote(r);
       updateAccUI();
       accMsg("Berjaya log masuk! Lencana anda telah dipulihkan ✅", true);
@@ -2316,6 +2469,8 @@
   });
   $("doLogout").addEventListener("click", function(){
     account = null;
+    closeFirebaseVsWatch();
+    vsWaitingResult = null;
     saveAccount(); updateAccUI();
     accMsg("Telah log keluar", true);
   });
@@ -2393,6 +2548,7 @@
     saveProfile();
   });
   updateAccUI();
+  if(account){ ensureFirebaseVsWatch(); syncUp(); }
 
 })();
 </script>
