@@ -1,5 +1,5 @@
 // Service worker Sifir Juara — cache untuk main offline
-var CACHE = "sifir-juara-v41";
+var CACHE = "sifir-juara-v42";
 var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(e){
@@ -28,7 +28,7 @@ self.addEventListener("fetch", function(e){
 
   // Panggilan API (papan markah / akaun) — SENTIASA rangkaian, jangan cache
   // supaya markah sentiasa terkini (elak data lama tersimpan)
-  if(e.request.url.indexOf("script.google") !== -1){
+  if(e.request.url.indexOf("script.google") !== -1 || e.request.url.indexOf("firebasedatabase.app") !== -1){
     return; // biar pelayar buat fetch rangkaian biasa
   }
 
