@@ -268,10 +268,16 @@
   .btn.ghost{background:#eee7fa;color:var(--ink);box-shadow:0 5px 0 #cfc4ec}
 
   /* ---------- LEADERBOARD ---------- */
-  #lbScreen.on{height:calc(100dvh - 28px);display:flex;flex-direction:column;overflow:hidden}
+  #lbScreen.on{height:calc(100dvh - 42px);display:flex;flex-direction:column;overflow:hidden}
   #lbScreen .brand{flex:none;margin-bottom:12px}
+  #lbScreen .brand .logo{display:none}
+  #lbScreen .brand .tag{
+    margin:0;font-family:'Fredoka',sans-serif;font-size:clamp(28px,8vw,40px);font-weight:700;
+    line-height:1.08;letter-spacing:.4px;text-transform:uppercase;color:var(--yellow);
+    text-shadow:0 4px 0 #7a4d00,0 8px 18px #0007
+  }
   #lbScreen .lbModeTabs,#lbScreen .lbTabs,#lbScreen .lbPodium,#lbScreen .actions{flex:none}
-  #lbScreen .actions{margin-top:12px}
+  #lbScreen .actions{margin-top:10px;padding:0 4px 8px}
   .lbModeTabs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
   .lbModeTab{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#fff;
     border:2px solid #ffffff2b;border-radius:15px;padding:13px 8px;cursor:pointer;
@@ -469,7 +475,7 @@
     display:block;margin:10px auto 0}
   @media (max-width:380px){
     body{padding:10px}.brand .logo{font-size:44px}.eq{font-size:48px}.key{font-size:24px;padding:14px 0}
-    #lbScreen.on{height:calc(100dvh - 20px)}
+    #lbScreen.on{height:calc(100dvh - 30px)}
   }
   @media (max-height:740px){
     .brand{margin-bottom:14px}.brand .logo{font-size:44px}.brand .tag{margin-top:3px}
@@ -484,31 +490,39 @@
     .lbAvatar{width:50px;height:50px}.lbName{font-size:16px}.lbClass,.lbDate{font-size:11px}
   }
   @media (min-width:1000px) and (min-height:620px){
-    body{padding:clamp(24px,3vh,44px)}
-    .stage{max-width:min(920px,82vw)}
-    .topBtn{top:24px;height:52px;border-radius:28px;font-size:18px}
-    #loginBtn{left:24px}#setBtn{right:24px;width:52px;font-size:23px}
-    #lbScreen.on{height:calc(100dvh - clamp(48px,6vh,88px))}
-    .lbPodium{min-height:250px}.lbPodiumAvatar{width:68px;height:68px}
-    .lbPodiumPlayer[data-rank="1"] .lbPodiumAvatar{width:84px;height:84px}
-    .lbModeTab{font-size:19px;padding:16px 10px}.lbTab{font-size:15px;padding:13px 4px}
+    body{padding:18px}.stage{max-width:620px}
+    #lbScreen.on{height:calc(100dvh - 54px)}
+  }
+  @media (min-width:1000px) and (min-height:620px){
+    html.tvDevice body{padding:clamp(24px,3vh,44px)}
+    html.tvDevice .stage{max-width:min(920px,82vw)}
+    html.tvDevice .topBtn{top:24px;height:52px;border-radius:28px;font-size:18px}
+    html.tvDevice #loginBtn{left:24px}
+    html.tvDevice #setBtn{right:24px;width:52px;font-size:23px}
+    html.tvDevice #lbScreen.on{height:calc(100dvh - clamp(58px,7vh,102px))}
+    html.tvDevice .lbPodium{min-height:250px}
+    html.tvDevice .lbPodiumAvatar{width:68px;height:68px}
+    html.tvDevice .lbPodiumPlayer[data-rank="1"] .lbPodiumAvatar{width:84px;height:84px}
+    html.tvDevice .lbModeTab{font-size:19px;padding:16px 10px}
+    html.tvDevice .lbTab{font-size:15px;padding:13px 4px}
   }
   @media (min-width:900px) and (orientation:landscape) and (min-height:550px){
-    #gameScreen.on{
+    html.tvDevice #gameScreen.on{
       height:calc(100dvh - clamp(48px,6vh,88px));display:grid;overflow:hidden;
       grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);
       grid-template-areas:"hud hud" "timer timer" "target target" "card pad" "card end";
       grid-template-rows:auto auto auto minmax(0,1fr) auto;column-gap:24px;align-items:stretch
     }
-    #gameScreen .hud{grid-area:hud;margin-bottom:2px}
-    #gameScreen .timerWrap{grid-area:timer;margin-bottom:8px}
-    #gameScreen #vsTargetBar{grid-area:target;margin-bottom:8px}
-    #gameScreen .card{grid-area:card;margin:0;display:flex;flex-direction:column;justify-content:center}
-    #gameScreen .pad{grid-area:pad;min-height:0}
-    #gameScreen #endBtn{grid-area:end}
-    #gameScreen .key{font-size:clamp(27px,3.4vh,38px);padding:clamp(10px,1.7vh,22px) 0}
-    #gameScreen .eq{font-size:clamp(58px,6vw,86px)}
-    #gameScreen .chip{padding:10px 18px}.chip .val{font-size:28px}
+    html.tvDevice #gameScreen .hud{grid-area:hud;margin-bottom:2px}
+    html.tvDevice #gameScreen .timerWrap{grid-area:timer;margin-bottom:8px}
+    html.tvDevice #gameScreen #vsTargetBar{grid-area:target;margin-bottom:8px}
+    html.tvDevice #gameScreen .card{grid-area:card;margin:0;display:flex;flex-direction:column;justify-content:center}
+    html.tvDevice #gameScreen .pad{grid-area:pad;min-height:0}
+    html.tvDevice #gameScreen #endBtn{grid-area:end}
+    html.tvDevice #gameScreen .key{font-size:clamp(27px,3.4vh,38px);padding:clamp(10px,1.7vh,22px) 0}
+    html.tvDevice #gameScreen .eq{font-size:clamp(58px,6vw,86px)}
+    html.tvDevice #gameScreen .chip{padding:10px 18px}
+    html.tvDevice #gameScreen .chip .val{font-size:28px}
   }
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important}}
 </style>
@@ -664,7 +678,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.9</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.0</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -783,7 +797,6 @@
   <!-- LEADERBOARD -->
   <section class="screen" id="lbScreen">
     <div class="brand">
-      <div class="logo">🏆</div>
       <div class="tag">Papan Markah</div>
     </div>
     <div class="lbModeTabs">
@@ -919,7 +932,13 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "3.7";
+  var APP_VERSION = "4.0";
+  var tvAgent = navigator.userAgent || "";
+  var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
+  var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
+    matchMedia("(hover:none)").matches && Math.max(screen.width,screen.height) >= 960;
+  var tvByLink = /(?:^|[?&])tv=1(?:&|$)/.test(location.search);
+  if(tvByAgent || tvByAndroid || tvByLink) document.documentElement.classList.add("tvDevice");
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1482,12 +1501,13 @@
   });
 
   function visibleTvButtons(){
-    var root = screens[curScreen] || document;
-    return Array.prototype.slice.call(root.querySelectorAll(
+    return Array.prototype.slice.call(document.querySelectorAll(
       'button:not([disabled]),input:not([disabled]),select:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])'
     )).filter(function(el){
       var r=el.getBoundingClientRect(), s=getComputedStyle(el);
-      return r.width>0 && r.height>0 && s.display!=="none" && s.visibility!=="hidden";
+      var owner=el.closest(".screen");
+      return (!owner || owner===screens[curScreen]) && r.width>0 && r.height>0 &&
+        s.display!=="none" && s.visibility!=="hidden";
     });
   }
 
@@ -1496,8 +1516,9 @@
     if(!items.length) return;
     var cur=document.activeElement;
     if(items.indexOf(cur)<0){
-      items[0].focus({preventScroll:true});
-      items[0].scrollIntoView({block:"nearest",inline:"nearest"});
+      var preferred=(screens[curScreen] && screens[curScreen].querySelector('button:not([disabled]),input:not([disabled]),select:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])')) || items[0];
+      preferred.focus({preventScroll:true});
+      preferred.scrollIntoView({block:"nearest",inline:"nearest"});
       return;
     }
     var a=cur.getBoundingClientRect(), ax=a.left+a.width/2, ay=a.top+a.height/2;
