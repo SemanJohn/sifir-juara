@@ -923,7 +923,11 @@
     // kemas kini avatar & level di menu setiap kali menu dibuka
     if(name === "start"){ updateMenuAva(); refreshVsBadge(); }
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
-    if(name === "lb"){ lbPoll = setInterval(function(){ onlineLB=null; refreshLB(); }, 10000); }
+    if(name === "lb"){
+      lbPoll = setInterval(function(){
+        if(document.visibilityState === "visible") refreshLB();
+      }, 60000);
+    }
   }
 
   // ----- start -----
@@ -1008,8 +1012,11 @@
       recent: [],
       // jejak prestasi ikut nombor sifir
       tblTry: {},
-      tblWrong: {}
+      tblWrong: {},
+      roundKey: Date.now()+"-"+Math.random(),
+      sessionToken: ""
     };
+    requestGameSession(state);
     $("score").textContent = "0";
     $("streak").textContent = "0";
 
@@ -1122,8 +1129,8 @@
     renderInput();
     $("feedback").textContent = "";
     $("feedback").className = "feedback";
-    // rekod cubaan untuk kedua-dua sifir
-    bump(state.tblTry, a); bump(state.tblTry, b);
+    // b ialah sifir yang dipilih; a hanya pengganda
+    bump(state.tblTry, b);
   }
   function bump(o,k){ o[k] = (o[k]||0)+1; }
 
@@ -1229,7 +1236,7 @@
       state.run = 0;
       state.streak = 0;
       $("streak").textContent = "0";
-      bump(state.tblWrong, q.a); bump(state.tblWrong, q.b);
+      bump(state.tblWrong, q.b);
       $("card").classList.add("wrong");
       $("feedback").innerHTML = "Salah — jawapan: <b>"+q.a+" × "+q.b+" = "+(q.a*q.b)+"</b>";
       $("feedback").className = "feedback bad";
@@ -1276,6 +1283,7 @@
     evalBadges();
     syncUp();
     if(state.vs){ vsFinish(); return; }
+    if(state.practice) submitPracticeProgress(state);
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
       $("saveScore").innerHTML = state.score + "<small>Markah</small>";
@@ -1342,11 +1350,15 @@
     worst.sort(function(a,b){ return b.rate - a.rate; });
 
     if(worst.length === 0){
-      box.className = "weak ok";
-      title.textContent = "Semua sifir mantap! ✅";
-      text.textContent = state.wrong===0
-        ? "Tiada silap langsung — luar biasa!"
-        : "Tiada sifir tertentu yang lemah. Teruskan berlatih untuk lebih laju!";
+      if(state.wrong === 0){
+        box.className = "weak ok";
+        title.textContent = "Semua sifir mantap! ✅";
+        text.textContent = "Tiada silap langsung — luar biasa!";
+      } else {
+        box.className = "weak";
+        title.textContent = "Teruskan cuba untuk analisis lebih tepat";
+        text.textContent = "Ada jawapan yang tersilap, tetapi belum cukup cubaan untuk menentukan sifir yang paling lemah.";
+      }
       return;
     }
     box.className = "weak";
@@ -1455,26 +1467,77 @@
     try{ localStorage.setItem("sifirJuaraSet", JSON.stringify(setts)); }catch(e){}
   }
 
-  // hantar profil (lencana+statistik+nickname) ke Sheets
+  // Hanya profil/avatarnya disegerakkan dari klien. Statistik dan lencana
+  // berautoriti dikira oleh pelayan daripada sesi permainan yang sah.
   function syncUp(cb){
     if(!account){ if(cb) cb({ok:true, offline:true}); return; }
     api({action:"sync", email:account.email, pass:account.pass,
       nickname:profile.nickname||"", kelas:profile.kelas||"",
-      badges:badgeState, stats:stats}, function(r){ if(cb) cb(r); });
+      avatar:myAvatarIdx()}, function(r){ if(cb) cb(r); });
+  }
+
+  function requestGameSession(s){
+    if(!s) return;
+    var key = s.roundKey;
+    api({action:"game_start",
+      email:account ? account.email : "",
+      pass:account ? account.pass : "",
+      nama:effName(), mod:s.vs ? "VS" : s.cfg.label,
+      matchId:s.vs ? s.vs.id : ""}, function(r){
+        if(state && state.roundKey === key && r && r.ok) state.sessionToken = r.sessionToken || "";
+      });
+  }
+
+  function resultPayload(s, action){
+    return {action:action,
+      sessionToken:s.sessionToken||"",
+      email:account ? account.email : "",
+      pass:account ? account.pass : "",
+      nama:effName().toUpperCase(), kelas:effKelas().toUpperCase(), mod:s.cfg.label,
+      markah:s.score, betul:s.correct, salah:s.wrong, streak:s.bestStreak};
+  }
+
+  function submitPracticeProgress(s){
+    if(!account || !s || !s.sessionToken) return;
+    api(resultPayload(s, "game_end"), function(r){
+      if(r && r.ok && r.stats) applyAuthoritativeStats(r.stats);
+    });
+  }
+
+  function applyAuthoritativeStats(rs){
+    if(!rs) return;
+    stats.games = Math.max(stats.games||0, rs.games||0);
+    stats.totalCorrect = Math.max(stats.totalCorrect||0, rs.totalCorrect||0);
+    stats.totalWrong = Math.max(stats.totalWrong||0, rs.totalWrong||0);
+    stats.bestStreak = Math.max(stats.bestStreak||0, rs.bestStreak||0);
+    if(rs.modes){ for(var m in rs.modes){ if(rs.modes[m]) stats.modes[m] = true; } }
+    if(typeof rs.avatar === "number") stats.avatar = rs.avatar;
+    saveMeta();
+  }
+
+  function reconcileVsProgress(src){
+    var v = src && src.vsStats ? src.vsStats : src;
+    if(!v) return;
+    var wins = Number(v.menang != null ? v.menang : v.vsMenang) || 0;
+    var mata = Number(v.mata != null ? v.mata : v.vsMata) || 0;
+    stats.vsWins = Math.max(stats.vsWins||0, wins);
+    if(wins >= 1) earn("vs1");
+    if(wins >= 5) earn("vs5");
+    if(wins >= 25) earn("vs25");
+    if(mata >= 250) earn("vsJaguh");
+    if(mata >= 750) earn("vsLegenda");
+    saveMeta();
   }
   // gabung profil dari Sheets dengan data peranti ini
   function applyRemote(p){
     var rb = p.badges || {};
     for(var k in rb){ if(rb[k]) badgeState[k] = true; }
     var rs = p.stats || {};
-    stats.games = Math.max(stats.games||0, rs.games||0);
-    stats.totalCorrect = Math.max(stats.totalCorrect||0, rs.totalCorrect||0);
-    stats.totalWrong = Math.max(stats.totalWrong||0, rs.totalWrong||0);
-    stats.bestStreak = Math.max(stats.bestStreak||0, rs.bestStreak||0);
-    if(rs.modes){ for(var m in rs.modes){ if(rs.modes[m]) stats.modes[m] = true; } }
+    applyAuthoritativeStats(rs);
     if(p.nickname && !profile.nickname) profile.nickname = p.nickname;
     else if(p.nickname) profile.nickname = p.nickname;
     if(p.kelas) profile.kelas = p.kelas;
+    reconcileVsProgress(rs);
     saveMeta(); saveProfile();
     syncUp();
   }
@@ -1592,14 +1655,10 @@
     bl.textContent = "Menyimpan markah...";
     bl.className = "best dark";
 
-    api({action:"score",
-      email: account ? account.email : "",
-      pass:  account ? account.pass  : "",
-      nama: name, kelas: kelas, mod: state.cfg.label,
-      markah: state.score, betul: state.correct, salah: state.wrong,
-      streak: state.bestStreak
-    }, function(r){
+    var action = state.sessionToken ? "game_end" : "score";
+    api(resultPayload(state, action), function(r){
       onlineLB = null;   // paksa muat semula papan markah
+      if(r && r.ok && r.stats) applyAuthoritativeStats(r.stats);
       if(r && r.ok && (r.isBest || r.first)){
         bl.textContent = r.first
           ? "🎉 "+name+" — markah pertama disimpan!"
@@ -1832,8 +1891,10 @@
       qIndex:0, cfg:{time:60,label:"VS"}, tables:null,
       score:0, run:0, streak:0, bestStreak:0, correct:0, wrong:0, total:0,
       time:60, input:"", current:null, locked:false, freeze:0, freezeCount:0, refilled:false,
-      recent:[], tblTry:{}, tblWrong:{}
+      recent:[], tblTry:{}, tblWrong:{},
+      roundKey:Date.now()+"-"+Math.random(), sessionToken:""
     };
+    requestGameSession(state);
     $("score").textContent="0"; $("streak").textContent="0";
     document.querySelector(".timerWrap").classList.remove("frozen");
     document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("frozenChip"); });
@@ -1852,9 +1913,11 @@
 
   function vsFinish(){
     $("vsTargetBar").style.display="none";
-    var match=state.vs, myScore=state.score;
+    var finished=state, match=finished.vs, myScore=finished.score;
+    var payload=resultPayload(finished,"vs_submit");
+    payload.mod="VS"; payload.matchId=match.id;
     state=null;
-    api({action:"vs_submit", email:account.email, pass:account.pass, matchId:match.id, score:myScore},
+    api(payload,
       function(r){ showVsResult(match, myScore, r); });
   }
 
@@ -1866,14 +1929,12 @@
     $("vsOpAva").innerHTML = avatarSVG(match.oppAvatar||0);
     $("vsOpName").textContent = (match.oppNick||"Lawan");
     $("vsOpScore").textContent = (oppScore>=0? oppScore : "—");
-    // lencana VS
+    // Statistik/lencana VS diselaraskan daripada angka berautoriti pelayan.
     if(r && r.ok && r.done){
+      reconcileVsProgress(r);
       if(r.result==="win"){
-        stats.vsWins = (stats.vsWins||0) + 1; saveMeta();
-        earn("vs1"); if(stats.vsWins>=5) earn("vs5"); if(stats.vsWins>=25) earn("vs25");
         if(match.oppScore>=0) earn("vsComeback");
       }
-      if(typeof r.mata === "number"){ if(r.mata>=250) earn("vsJaguh"); if(r.mata>=750) earn("vsLegenda"); }
       syncUp();
     }
     var medal="⚔️", title="Markah dihantar", pt=$("vsPoints");
@@ -1913,6 +1974,7 @@
     });
   }
   function renderVsHub(r){
+    reconcileVsProgress(r);
     var L=$("vsHubList"); L.innerHTML="";
     var any=false;
     if(r.incoming && r.incoming.length){ any=true; vsSect(L,"Jemputan Masuk");
