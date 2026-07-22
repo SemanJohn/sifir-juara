@@ -533,7 +533,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v2.9</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.0</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -775,7 +775,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "2.9";
+  var APP_VERSION = "3.0";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -1752,7 +1752,7 @@
     // VS: pangkat + menang/kalah/mata
     var vm = st.vsMenang||0, vk = st.vsKalah||0, vp = st.vsMata||0;
     var rk = vsRank(vp);
-    $("pfVsRank").innerHTML = "<b>"+rankLabel(rk)+"</b> · " + vp + " mata";
+    $("pfVsRank").innerHTML = "<b>"+vsRankLabel(rk)+"</b> · " + vp + " mata";
     var vg = $("pfVsStats"); vg.innerHTML = "";
     [["Menang", vm],["Kalah", vk],["Mata", vp]].forEach(function(p){
       var d = document.createElement("div"); d.className="pfStat";
@@ -1948,12 +1948,14 @@
   }
 
   var vsAllPlayers=[];
+  var vsPlayersCache=null, vsPlayersCacheT=0;
   function loadPlayers(){
-    $("vsSearch").value=""; $("vsPlayerList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
-    show("vsInvite");
+    $("vsSearch").value=""; show("vsInvite");
+    if(vsPlayersCache && Date.now()-vsPlayersCacheT < 60000){ vsAllPlayers=vsPlayersCache; drawPlayers(""); return; }
+    $("vsPlayerList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
     api({action:"vs_players", email:account.email, pass:account.pass}, function(r){
       if(!r || !r.ok){ $("vsPlayerList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
-      vsAllPlayers=r.players||[]; drawPlayers("");
+      vsAllPlayers=r.players||[]; vsPlayersCache=vsAllPlayers; vsPlayersCacheT=Date.now(); drawPlayers("");
     });
   }
   function drawPlayers(q){
@@ -2071,7 +2073,7 @@
     return { stars:0, name:"Belum berpangkat" };
   }
   function stars(n){ return n>0 ? ("★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n)) : ""; }
-  function rankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
+  function vsRankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
   function drawVsBoardInLb(silent){
     var L = $("lbList");
     if(!account){ L.innerHTML = "<p class='lbEmpty'>Log masuk untuk papan markah VS.</p>"; return; }
@@ -2088,7 +2090,7 @@
         var rank = document.createElement("span"); rank.className="lbRank"; rank.textContent = (i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".");
         var av = document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML = avatarSVG(e.avatar||0);
         var nm = document.createElement("span"); nm.className="lbName";
-        nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+rankLabel(rk)+'</div>';
+        nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+vsRankLabel(rk)+'</div>';
         (function(nick){ nm.style.cursor="pointer"; nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.nick||"");
         var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.mata;
         row.appendChild(rank); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
