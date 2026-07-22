@@ -261,26 +261,72 @@
   .btn.ghost{background:#eee7fa;color:var(--ink);box-shadow:0 5px 0 #cfc4ec}
 
   /* ---------- LEADERBOARD ---------- */
-  .lbTabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
-  .lbTab{font-size:11px;padding:9px 1px}
-  .lbTab{font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:#fff;
-    background:#ffffff12;border:2px solid #ffffff1f;border-radius:12px;padding:10px 2px;cursor:pointer;
-    transition:background .12s}
-  .lbTab.sel{background:linear-gradient(180deg,#37e29a,#22c67f);color:#04351f;border-color:transparent}
-  .lbList{background:var(--card);border-radius:20px;padding:8px 18px;min-height:170px;
-    box-shadow:0 10px 0 #00000030;max-height:min(56vh,500px);overflow-y:auto;
-    -webkit-overflow-scrolling:touch}
+  .lbModeTabs{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+  .lbModeTab{font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#fff;
+    border:2px solid #ffffff2b;border-radius:15px;padding:13px 8px;cursor:pointer;
+    background:linear-gradient(180deg,#4b408f,#2d2367);box-shadow:0 5px 0 #17103e;
+    transition:transform .1s,filter .15s}
+  .lbModeTab:active{transform:translateY(3px);box-shadow:0 2px 0 #17103e}
+  .lbModeTab.sel{color:#10244e;border-color:#8cf4ff;
+    background:linear-gradient(180deg,#66e9f4,#27a9db);box-shadow:0 5px 0 #12668f}
+  .lbTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+  .lbTabs.hide{display:none}
+  .lbTab{font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:#fff;
+    background:linear-gradient(180deg,#ffffff20,#ffffff0c);border:2px solid #ffffff24;
+    border-radius:13px;padding:10px 2px;cursor:pointer;box-shadow:0 4px 0 #120c38;
+    transition:transform .1s,filter .15s}
+  .lbTab:active{transform:translateY(2px);box-shadow:0 2px 0 #120c38}
+  .lbTab.sel{background:linear-gradient(180deg,#ad5cff,#722bd0);color:#fff;
+    border-color:#ffd95c;box-shadow:0 4px 0 #43147f}
+  .lbPodium{display:none;grid-template-columns:repeat(3,minmax(0,1fr));align-items:end;
+    gap:5px;min-height:228px;margin:3px 0 10px;border-bottom:2px solid #ffffff24}
+  .lbPodium.on{display:grid}
+  .lbPodiumPlayer{min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;
+    justify-content:flex-end;color:#fff;border-radius:18px 18px 0 0;padding-top:5px}
+  .lbPodiumPlayer[data-rank="1"]{order:2}
+  .lbPodiumPlayer[data-rank="2"]{order:1}
+  .lbPodiumPlayer[data-rank="3"]{order:3}
+  .lbPodiumPlayer.own{background:linear-gradient(180deg,#48e08a18,#48e08a36)}
+  .lbPodiumRank{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;
+    font-family:'Fredoka',sans-serif;font-weight:700;font-size:14px;color:#fff;background:#8f89ad;
+    border:2px solid #fff;margin-bottom:-6px;position:relative;z-index:1}
+  .lbPodiumPlayer[data-rank="1"] .lbPodiumRank{background:linear-gradient(180deg,#ffe86d,#e8a914);color:#5b3b00}
+  .lbPodiumPlayer[data-rank="3"] .lbPodiumRank{background:linear-gradient(180deg,#ffaf72,#cb6832)}
+  .lbPodiumAvatar{width:58px;height:58px;border-radius:20px;overflow:hidden;background:#fff;
+    box-shadow:0 6px 0 #00000028}
+  .lbPodiumPlayer[data-rank="1"] .lbPodiumAvatar{width:72px;height:72px}
+  .lbPodiumName{width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-weight:900;font-size:12px;margin-top:7px;padding:0 2px}
+  .lbPodiumClass{color:#cfc8ef;font-size:10px;font-weight:800;min-height:14px}
+  .lbPodiumScore{font-family:'Fredoka',sans-serif;font-weight:700;font-size:17px;color:var(--yellow);margin-top:3px}
+  .lbPodiumDate{color:#bdb5e5;font-size:9px;font-weight:800}
+  .lbPodiumBase{width:100%;height:40px;margin-top:8px;border-radius:15px 15px 0 0;
+    background:linear-gradient(180deg,#625a91,#393164);border-top:3px solid #9b94bd}
+  .lbPodiumPlayer[data-rank="1"] .lbPodiumBase{height:72px;background:linear-gradient(180deg,#ffdd5c,#d99a13);border-color:#fff09b}
+  .lbPodiumPlayer[data-rank="2"] .lbPodiumBase{height:55px;background:linear-gradient(180deg,#c8d5ed,#8495b4);border-color:#edf5ff}
+  .lbPodiumPlayer[data-rank="3"] .lbPodiumBase{background:linear-gradient(180deg,#ef9b64,#ad582e);border-color:#ffc098}
+  .lbList{background:linear-gradient(180deg,#fffdf2,#fef5d7);border:2px solid #fff3bb;
+    border-radius:20px;padding:7px 12px;min-height:92px;box-shadow:0 9px 0 #00000030;
+    max-height:min(49vh,430px);overflow-y:auto;-webkit-overflow-scrolling:touch}
   .lbMore{display:block;width:100%;border:none;background:#f0ecfa;color:#6c5fa8;
     font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;padding:11px;
     border-radius:12px;margin:10px 0 6px;cursor:pointer}
-  .lbRow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1.5px solid #eee7fa;color:var(--ink)}
+  .lbRow{display:grid;grid-template-columns:32px 42px minmax(0,1fr) auto;align-items:center;
+    gap:9px;padding:9px 5px;border-bottom:1.5px solid #eadfb9;color:var(--ink)}
   .lbRow:last-child{border-bottom:none}
-  .lbRank{font-size:20px;width:38px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
-  .lbScore{font-family:'Fredoka',sans-serif;font-weight:700;font-size:24px;flex:1}
-  .lbDate{color:#8a7fb5;font-weight:800;font-size:12px}
+  .lbRow.own{margin:3px 0;border:none;border-radius:13px;background:linear-gradient(90deg,#dff8e9,#c9f3dd)}
+  .lbRank{font-size:18px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
+  .lbAvatar{width:40px;height:40px;border-radius:14px;overflow:hidden;background:#fff;
+    box-shadow:0 3px 0 #cbbf9f}
+  .lbScoreWrap{text-align:right;min-width:72px}
+  .lbScore{display:block;font-family:'Fredoka',sans-serif;font-weight:700;font-size:21px}
+  .lbDate{display:block;color:#8a7fb5;font-weight:800;font-size:10px;white-space:nowrap;margin-top:1px}
   .lbEmpty{color:#8a7fb5;font-weight:800;text-align:center;padding:48px 0;font-size:14px}
-  .lbName{flex:1;font-weight:900;font-size:15px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .lbName{min-width:0;font-weight:900;font-size:14px;color:var(--ink);overflow:hidden;cursor:pointer}
+  .lbName>div:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .lbName:hover>div:first-child{text-decoration:underline}
+  .lbClass{font-size:10px;color:#8a7fb5;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lbGap{text-align:center;color:#a79cc7;font-weight:900;letter-spacing:3px;padding:2px 0}
 
   /* ---------- PROFIL ---------- */
   .pfTop{background:#ffffff1a;border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;
@@ -566,7 +612,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.5</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v3.6</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -688,13 +734,16 @@
       <div class="logo">🏆</div>
       <div class="tag">Papan Markah</div>
     </div>
-    <div class="lbTabs">
-      <button class="lbTab" data-lb="easy">🌱 Mudah</button>
-      <button class="lbTab" data-lb="mid">⚡ Sederhana</button>
-      <button class="lbTab" data-lb="hard">🔥 Sukar</button>
-      <button class="lbTab" data-lb="hero">🦸 Hero</button>
-      <button class="lbTab" data-lb="vs">⚔️ VS</button>
+    <div class="lbModeTabs">
+      <button class="lbModeTab sel" data-lb-group="time">⏱️ TIME TRIAL</button>
+      <button class="lbModeTab" data-lb-group="vs">⚔️ VS</button>
     </div>
+    <div class="lbTabs" id="lbTimeTabs">
+      <button class="lbTab sel" data-lb="easy">🌱 MUDAH</button>
+      <button class="lbTab" data-lb="mid">⚡ SEDERHANA</button>
+      <button class="lbTab" data-lb="hard">🔥 SUKAR</button>
+    </div>
+    <div class="lbPodium" id="lbPodium"></div>
     <div class="lbList" id="lbList"></div>
     <div class="actions">
       <button class="btn ghost" id="lbBack">Kembali</button>
@@ -818,7 +867,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "3.5";
+  var APP_VERSION = "3.6";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -2397,6 +2446,7 @@
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
   var onlineLB = null;
   var lbMode = "easy";
+  var lbTimeMode = "easy";
   var lbShown = 10;
   var lbFetching = false;
   var lbLoadFailed = false;
@@ -2407,9 +2457,153 @@
     if(!v) return "";
     var t = String(v);
     if(/^\d{1,2} [A-Za-z]{3} \d{4}$/.test(t)) return t;   // sudah betul
-    var dt = new Date(t);
+    var dt = /^\d{12,}$/.test(t) ? new Date(Number(t)) : new Date(t);
     if(!isNaN(dt.getTime())) return dt.getDate()+" "+BULAN[dt.getMonth()]+" "+dt.getFullYear();
     return t;
+  }
+  function clearLbView(message){
+    var podium = $("lbPodium"), list = $("lbList");
+    podium.innerHTML = "";
+    podium.classList.remove("on");
+    list.style.display = "";
+    list.innerHTML = "";
+    var p = document.createElement("p");
+    p.className = "lbEmpty";
+    p.textContent = message;
+    list.appendChild(p);
+  }
+  function lbOwnName(){ return String((profile && profile.nickname) || "").trim().toUpperCase(); }
+  function lbIsOwn(name){
+    var own = lbOwnName();
+    return !!own && String(name || "").trim().toUpperCase() === own;
+  }
+  function lbInfo(e, isVs){
+    e = e || {};
+    var name = String(isVs ? (e.nick || e.n || "") : (e.n || e.nick || ""));
+    var kelas = isVs ? (e.kelas || e.k || vsRankLabel(vsRank(e.mata || 0))) : (e.k || e.kelas || "");
+    var score = isVs ? (e.mata || 0) : (e.s || 0);
+    var rawDate = e.d || e.date || e.tarikh || e.updatedAt || e.updated || e.lastPlayed || "";
+    var own = lbIsOwn(name);
+    var ava = (typeof e.avatar === "number") ? e.avatar : avatarIdxFor(name);
+    if(own) ava = myAvatarIdx();
+    return {
+      name:(name || "Tanpa Nama").toUpperCase(),
+      kelas:String(kelas || "").toUpperCase(),
+      score:score,
+      date:fmtDate(rawDate) || "—",
+      avatar:ava,
+      own:own
+    };
+  }
+  function lbOpenable(el, name){
+    if(!name || name === "TANPA NAMA") return;
+    el.style.cursor = "pointer";
+    el.addEventListener("click", function(){ openProfile(name, false); });
+  }
+  function makeLbPodiumPlayer(e, rank, isVs){
+    var info = lbInfo(e, isVs);
+    var player = document.createElement("div");
+    player.className = "lbPodiumPlayer" + (info.own ? " own" : "");
+    player.dataset.rank = rank;
+
+    var medal = document.createElement("div");
+    medal.className = "lbPodiumRank";
+    medal.textContent = rank;
+    var av = document.createElement("div");
+    av.className = "lbPodiumAvatar";
+    av.innerHTML = avatarSVG(info.avatar);
+    var nm = document.createElement("div");
+    nm.className = "lbPodiumName";
+    nm.textContent = info.name;
+    lbOpenable(nm, info.name);
+    var cls = document.createElement("div");
+    cls.className = "lbPodiumClass";
+    cls.textContent = info.kelas;
+    var sc = document.createElement("div");
+    sc.className = "lbPodiumScore";
+    sc.textContent = info.score + " mata";
+    var dt = document.createElement("div");
+    dt.className = "lbPodiumDate";
+    dt.textContent = info.date;
+    var base = document.createElement("div");
+    base.className = "lbPodiumBase";
+
+    player.appendChild(medal); player.appendChild(av); player.appendChild(nm);
+    player.appendChild(cls); player.appendChild(sc); player.appendChild(dt); player.appendChild(base);
+    return player;
+  }
+  function makeLbRow(e, rank, isVs){
+    var info = lbInfo(e, isVs);
+    var row = document.createElement("div");
+    row.className = "lbRow" + (info.own ? " own" : "");
+
+    var r = document.createElement("span");
+    r.className = "lbRank";
+    r.textContent = rank + ".";
+    var av = document.createElement("span");
+    av.className = "lbAvatar";
+    av.innerHTML = avatarSVG(info.avatar);
+    var nm = document.createElement("span");
+    nm.className = "lbName";
+    var n1 = document.createElement("div");
+    n1.textContent = info.name;
+    nm.appendChild(n1);
+    if(info.kelas){
+      var n2 = document.createElement("div");
+      n2.className = "lbClass";
+      n2.textContent = info.kelas;
+      nm.appendChild(n2);
+    }
+    lbOpenable(nm, info.name);
+    var scoreWrap = document.createElement("span");
+    scoreWrap.className = "lbScoreWrap";
+    var sc = document.createElement("span");
+    sc.className = "lbScore";
+    sc.textContent = info.score;
+    var dt = document.createElement("span");
+    dt.className = "lbDate";
+    dt.textContent = info.date;
+    scoreWrap.appendChild(sc); scoreWrap.appendChild(dt);
+    row.appendChild(r); row.appendChild(av); row.appendChild(nm); row.appendChild(scoreWrap);
+    return row;
+  }
+  function drawLbEntries(arr, isVs){
+    arr = Array.isArray(arr) ? arr : [];
+    var podium = $("lbPodium"), list = $("lbList");
+    podium.innerHTML = "";
+    list.innerHTML = "";
+    list.style.display = "";
+    if(!arr.length){
+      clearLbView(isVs ? "Belum ada perlawanan VS." : (lbLoadFailed ? "Tiada sambungan — cuba lagi." : "Belum ada markah — jadilah yang pertama!"));
+      return;
+    }
+
+    podium.classList.add("on");
+    for(var p=0; p<Math.min(3, arr.length); p++) podium.appendChild(makeLbPodiumPlayer(arr[p], p+1, isVs));
+
+    var showN = Math.min(lbShown, arr.length);
+    for(var i=3; i<showN; i++) list.appendChild(makeLbRow(arr[i], i+1, isVs));
+
+    var ownIndex = -1;
+    for(var oi=0; oi<arr.length; oi++){
+      if(lbInfo(arr[oi], isVs).own){ ownIndex = oi; break; }
+    }
+    if(ownIndex >= showN){
+      var gap = document.createElement("div");
+      gap.className = "lbGap";
+      gap.textContent = "•••";
+      list.appendChild(gap);
+      list.appendChild(makeLbRow(arr[ownIndex], ownIndex+1, isVs));
+    }
+
+    if(arr.length > showN){
+      var btn = document.createElement("button");
+      btn.className = "lbMore";
+      btn.textContent = "Lihat kedudukan seterusnya";
+      btn.addEventListener("click", function(){ lbShown += 10; drawLB(); });
+      list.appendChild(btn);
+    }
+    if(arr.length <= 3 && ownIndex < showN) list.style.display = "none";
   }
   function refreshLB(){
     if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
@@ -2426,8 +2620,13 @@
   }
   function renderLB(mode){
     lbMode = mode;
+    if(mode !== "vs") lbTimeMode = mode;
     lbShown = 10;
     lbLoadFailed = false;
+    document.querySelectorAll(".lbModeTab").forEach(function(t){
+      t.classList.toggle("sel", t.dataset.lbGroup === (mode === "vs" ? "vs" : "time"));
+    });
+    $("lbTimeTabs").classList.toggle("hide", mode === "vs");
     document.querySelectorAll(".lbTab").forEach(function(t){
       t.classList.toggle("sel", t.dataset.lb === mode);
     });
@@ -2448,60 +2647,25 @@
   function stars(n){ return n>0 ? ("★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n)) : ""; }
   function vsRankLabel(rk){ return rk.stars>0 ? (stars(rk.stars) + " " + rk.name) : rk.name; }
   function renderVsBoardInLeaderboard(board){
-    var L = $("lbList");
     if(lbMode !== "vs" || $("lbScreen").className.indexOf("on") < 0) return;
-    L.innerHTML = "";
-    if(!board.length){ L.innerHTML = "<p class='lbEmpty'>Belum ada perlawanan VS.</p>"; return; }
-    board.forEach(function(e, i){
-      var rk = vsRank(e.mata);
-      var row = document.createElement("div"); row.className = "lbRow";
-      var rank = document.createElement("span"); rank.className="lbRank"; rank.textContent = rankLabel(i);
-      var av = document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML = avatarSVG(e.avatar||0);
-      var nm = document.createElement("span"); nm.className="lbName";
-      nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+vsRankLabel(rk)+'</div>';
-      (function(nick){ nm.style.cursor="pointer"; nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.nick||"");
-      var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.mata;
-      row.appendChild(rank); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
-      L.appendChild(row);
-    });
+    drawLbEntries(board, true);
   }
   function drawVsBoardInLb(silent){
-    var L = $("lbList");
-    if(!account){ L.innerHTML = "<p class='lbEmpty'>Log masuk untuk papan markah VS.</p>"; return; }
+    if(!account){ clearLbView("Log masuk untuk papan markah VS."); return; }
     ensureFirebaseLeaderboardWatch();
     if(firebaseVsBoard){ renderVsBoardInLeaderboard(firebaseVsBoard); return; }
-    if(!silent) L.innerHTML = "<p class='lbEmpty'>Memuatkan…</p>";
+    if(!silent) clearLbView("Memuatkan…");
     api({action:"vs_board", email:account.email, pass:account.pass}, function(r){
       if(lbMode !== "vs" || $("lbScreen").className.indexOf("on") < 0) return;
       if(r && r.ok){ firebaseVsBoard = r.board || []; renderVsBoardInLeaderboard(firebaseVsBoard); return; }
-      L.innerHTML = "";
-      if(!r || !r.ok){ L.innerHTML = "<p class='lbEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
-      var board = r.board || [];
-      if(!board.length){ L.innerHTML = "<p class='lbEmpty'>Belum ada perlawanan VS.</p>"; return; }
-      board.forEach(function(e, i){
-        var rk = vsRank(e.mata);
-        var row = document.createElement("div"); row.className = "lbRow";
-        var rank = document.createElement("span"); rank.className="lbRank"; rank.textContent = (i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".");
-        var av = document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML = avatarSVG(e.avatar||0);
-        var nm = document.createElement("span"); nm.className="lbName";
-        nm.innerHTML = '<div>'+(e.nick||"")+'</div><div class="lbClass" style="color:#f7b731">'+vsRankLabel(rk)+'</div>';
-        (function(nick){ nm.style.cursor="pointer"; nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.nick||"");
-        var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.mata;
-        row.appendChild(rank); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
-        L.appendChild(row);
-      });
+      clearLbView((r&&r.err)||"Ralat");
     });
   }
   function drawLB(){
     if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
-    var list = $("lbList");
-    list.innerHTML = "";
     // sedang muat: papar "Memuatkan…" sahaja (jangan tunjuk data separa/tempatan)
     if(SHEETS_URL && !onlineLB && !lbLoadFailed){
-      var lp = document.createElement("p");
-      lp.className = "lbEmpty";
-      lp.textContent = "Memuatkan papan markah…";
-      list.appendChild(lp);
+      clearLbView("Memuatkan papan markah…");
       return;
     }
     var raw = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
@@ -2514,44 +2678,24 @@
     }
     var arr = Object.keys(byKey).map(function(k){ return byKey[k]; })
       .sort(function(a,b){ return (b.s||0) - (a.s||0); });
-    if(arr.length === 0){
-      var p = document.createElement("p");
-      p.className = "lbEmpty";
-      p.textContent = lbLoadFailed
-        ? "Tiada sambungan — cuba lagi."
-        : "Belum ada markah — jadilah yang pertama!";
-      list.appendChild(p);
-      return;
-    }
-    var showN = Math.min(lbShown, arr.length);
-    for(var i=0; i<showN; i++){
-      var e = arr[i];
-      var row = document.createElement("div");
-      row.className = "lbRow";
-      var r = document.createElement("span"); r.className="lbRank"; r.textContent = rankLabel(i);
-      var nm = document.createElement("span"); nm.className="lbName";
-      var n1 = document.createElement("div"); n1.textContent = (e.n || "Tanpa Nama").toUpperCase();
-      nm.appendChild(n1);
-      if(e.k){ var n2 = document.createElement("div"); n2.className="lbClass"; n2.textContent = (e.k||"").toUpperCase(); nm.appendChild(n2); }
-      (function(nick){ nm.addEventListener("click", function(){ openProfile(nick, false); }); })(e.n || "");
-      var sc = document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent = e.s;
-      var dt = document.createElement("span"); dt.className="lbDate"; dt.textContent = fmtDate(e.d);
-      row.appendChild(r); row.appendChild(nm); row.appendChild(sc); row.appendChild(dt);
-      list.appendChild(row);
-    }
-    if(arr.length > showN){
-      var btn = document.createElement("button");
-      btn.className = "lbMore";
-      btn.textContent = "Seterusnya";
-      btn.addEventListener("click", function(){ lbShown += 10; drawLB(); });
-      list.appendChild(btn);
-    }
+    drawLbEntries(arr, false);
   }
+  document.querySelectorAll(".lbModeTab").forEach(function(t){
+    t.addEventListener("click", function(){
+      onlineLB = null;
+      renderLB(t.dataset.lbGroup === "vs" ? "vs" : lbTimeMode);
+    });
+  });
   document.querySelectorAll(".lbTab").forEach(function(t){
     t.addEventListener("click", function(){ onlineLB = null; renderLB(t.dataset.lb); });
   });
   $("lbBtn").addEventListener("click", function(){ onlineLB = null; renderLB("easy"); show("lb"); });
-  $("resLbBtn").addEventListener("click", function(){ onlineLB = null; renderLB(state && !state.practice ? state.mode : "easy"); show("lb"); });
+  $("resLbBtn").addEventListener("click", function(){
+    onlineLB = null;
+    var resultMode = state && !state.practice ? state.mode : "easy";
+    renderLB(resultMode === "hero" ? "hard" : resultMode);
+    show("lb");
+  });
   $("lbBack").addEventListener("click", function(){ show("start"); });
 
   // ----- UI akaun -----
