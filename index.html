@@ -65,6 +65,16 @@
   .brand .logo .x{color:var(--magenta);-webkit-text-fill-color:var(--magenta)}
   .brand .tag{color:var(--muted);font-weight:800;margin-top:6px;font-size:15px}
 
+  .dailyGoal{background:linear-gradient(135deg,#ffffff18,#ffffff0c);border:2px solid #ffffff24;
+    border-radius:18px;padding:12px 14px;margin:-8px 0 16px;color:#fff}
+  .dailyGoalTop{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-weight:900;font-size:13px}
+  .dailyGoalTop b{font-family:'Fredoka',sans-serif;color:var(--yellow);font-size:15px}
+  .dailyGoalBar{height:9px;background:#ffffff20;border-radius:99px;overflow:hidden;margin-top:9px}
+  .dailyGoalFill{height:100%;width:0;background:linear-gradient(90deg,var(--lime),var(--yellow));
+    border-radius:inherit;transition:width .35s ease}
+  .dailyGoal.done{border-color:#ffd54d80;box-shadow:0 0 22px #ffd54d24}
+
   .modes{display:flex;flex-direction:column;gap:12px}
   .mode{
     display:flex;align-items:center;gap:14px;
@@ -404,6 +414,10 @@
     <div class="brand">
       <div class="logo">Sifir <span class="x">×</span> Juara</div>
       <div class="tag">Latih sifir, jadi juara! 🔥</div>
+    </div>
+    <div class="dailyGoal" id="dailyGoal">
+      <div class="dailyGoalTop"><span>🎯 Matlamat hari ini</span><b id="dailyGoalText">0 / 30 betul</b></div>
+      <div class="dailyGoalBar"><div class="dailyGoalFill" id="dailyGoalFill"></div></div>
     </div>
     <div class="modes">
       <button class="mode tt" data-go="timetrial">
@@ -775,7 +789,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "3.2";
+  var APP_VERSION = "3.3";
 
   var MODES = {
     easy:     {min:2, max:5,  time:60,   label:"Mudah"},
@@ -917,14 +931,15 @@
 
   function api(payload, cb){
     cb = cb || function(){};
-    if(!SHEETS_URL){ cb({ok:false, err:"Tiada sambungan"}); return; }
+    if(!SHEETS_URL){ cb({ok:false, network:true, err:"Tiada sambungan"}); return; }
+    var timeoutMs = payload && payload.action === "vs_submit" ? 22000 : 12000;
     try{
       fetchTimeout(SHEETS_URL, {method:"POST",
-        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)}, 12000)
+        headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)}, timeoutMs)
         .then(function(r){ return r.json(); })
         .then(cb)
-        .catch(function(){ cb({ok:false, err:"Sambungan lambat / masalah rangkaian"}); });
-    }catch(e){ cb({ok:false, err:"Masalah rangkaian"}); }
+        .catch(function(){ cb({ok:false, network:true, err:"Sambungan lambat / masalah rangkaian"}); });
+    }catch(e){ cb({ok:false, network:true, err:"Masalah rangkaian"}); }
   }
   function sendToSheets(rec){
     rec.action = "score";
@@ -1043,7 +1058,7 @@
     // butang log masuk hanya boleh ditekan di menu utama
     if($("loginBtn")) $("loginBtn").style.display = (name === "start") ? "" : "none";
     // kemas kini avatar & level di menu setiap kali menu dibuka
-    if(name === "start"){ updateMenuAva(); ensureFirebaseVsWatch(); refreshVsBadge(); }
+    if(name === "start"){ updateMenuAva(); renderDailyGoal(); ensureFirebaseVsWatch(); refreshVsBadge(); }
     if(lbPoll){ clearInterval(lbPoll); lbPoll = null; }
     if(name === "lb"){
       ensureFirebaseLeaderboardWatch();
@@ -1200,6 +1215,28 @@
     }
   }
 
+  var DAILY_GOAL = 30;
+  function dailyGoalData(){
+    var today = new Date().toLocaleDateString("en-CA");
+    var d = loadJSON("sifirJuaraDailyGoal", {date:today, correct:0, celebrated:false});
+    if(!d || d.date !== today) d = {date:today, correct:0, celebrated:false};
+    return d;
+  }
+  function renderDailyGoal(){
+    var d=dailyGoalData(), n=Math.min(DAILY_GOAL, Number(d.correct)||0);
+    if($("dailyGoalText")) $("dailyGoalText").textContent = n+" / "+DAILY_GOAL+" betul"+(n>=DAILY_GOAL?" ✓":"");
+    if($("dailyGoalFill")) $("dailyGoalFill").style.width = Math.round(n/DAILY_GOAL*100)+"%";
+    if($("dailyGoal")) $("dailyGoal").classList.toggle("done", n>=DAILY_GOAL);
+  }
+  function recordDailyCorrect(){
+    var d=dailyGoalData(); d.correct=(Number(d.correct)||0)+1;
+    var completed = d.correct>=DAILY_GOAL && !d.celebrated;
+    if(completed) d.celebrated=true;
+    try{ localStorage.setItem("sifirJuaraDailyGoal", JSON.stringify(d)); }catch(e){}
+    renderDailyGoal();
+    if(completed){ queueToast("🌟 Matlamat hari ini selesai!"); sndFanfare(); spawnFlakes("🌟"); }
+  }
+
   function updateTimer(){
     if(state.practice) return;
     var t = Math.max(0, state.time);
@@ -1309,6 +1346,7 @@
       var pts = 10 + state.run*2;
       state.score += pts;
       state.correct++;
+      recordDailyCorrect();
       state.run++;
 
       // 3 betul berturut = 1 streak
@@ -2045,6 +2083,17 @@
       function(r){ showVsResult(match, myScore, r); });
   }
 
+  function recheckVsResult(match, myScore){
+    setTimeout(function(){
+      if(!vsWaitingResult || String(vsWaitingResult.match.id)!==String(match.id)) return;
+      api({action:"vs_list", email:account.email, pass:account.pass}, function(list){
+        if(!list || !list.ok) return;
+        firebaseVsData=list;
+        finishWaitingVsFromFirebase(list);
+      });
+    }, 1500);
+  }
+
   function showVsResult(match, myScore, r){
     var oppScore = (r && r.ok && r.done) ? r.oppScore : (match.oppScore>=0 ? match.oppScore : -1);
     $("vsMeAva").innerHTML = avatarSVG(myAvatarIdx());
@@ -2064,18 +2113,27 @@
     }
     var medal="⚔️", title="Markah dihantar", pt=$("vsPoints");
     if(r && r.ok && r.done){
-      if(r.result==="win"){ medal="👑"; title="Kamu Menang!"; pt.textContent="+10 mata VS 🎉"; pt.className="best"; }
-      else if(r.result==="lose"){ medal="😢"; title="Kamu Kalah"; pt.textContent="+2 mata penyertaan"; pt.className="best dark"; }
-      else { medal="🤝"; title="Seri!"; pt.textContent="+5 mata"; pt.className="best dark"; }
+      var gap=Math.abs(myScore-oppScore);
+      if(r.result==="win"){ medal="👑"; title="Kamu Menang!"; pt.textContent="Hebat! Menang beza "+gap+" mata 🎉"; pt.className="best"; sndFanfare(); spawnFlakes("👑"); }
+      else if(r.result==="lose"){ medal="💪"; title="Hampir! Cuba Lagi"; pt.textContent="Beza "+gap+" mata · keputusan telah direkodkan"; pt.className="best dark"; }
+      else { medal="🤝"; title="Seri!"; pt.textContent="Sama hebat · keputusan telah direkodkan"; pt.className="best dark"; spawnFlakes("✨"); }
     } else if(r && r.ok){
       vsWaitingResult = {match:match, myScore:myScore};
       ensureFirebaseVsWatch();
       medal="⏳"; title="Markah disimpan"; pt.textContent="Menunggu "+(match.oppNick||"lawan")+" bermain…"; pt.className="best dark";
+    } else if(r && r.network){
+      vsWaitingResult = {match:match, myScore:myScore};
+      ensureFirebaseVsWatch();
+      medal="⏳"; title="Mengesahkan keputusan…"; pt.textContent="Markah sudah dihantar. Menunggu pengesahan masa nyata…"; pt.className="best dark";
     } else {
       medal="⚠️"; title="Ralat"; pt.textContent=(r&&r.err)||"Gagal hantar markah"; pt.className="best dark";
     }
     $("vsMedal").textContent=medal; $("vsResultTitle").textContent=title;
     show("vsResult");
+    if(r && r.network){
+      if(firebaseVsData) finishWaitingVsFromFirebase(firebaseVsData);
+      recheckVsResult(match, myScore);
+    }
   }
 
   // ----- UI VS -----
@@ -2139,19 +2197,50 @@
   }
 
   var vsAllPlayers=[];
-  var vsPlayersCache=null, vsPlayersCacheT=0;
+  var vsStoredPlayers=loadJSON("sifirJuaraVsPlayers", null);
+  var vsPlayersCache=vsStoredPlayers && account && vsStoredPlayers.email===account.email && Array.isArray(vsStoredPlayers.players) ? vsStoredPlayers.players : null;
+  var vsPlayersCacheT=vsStoredPlayers ? Number(vsStoredPlayers.t)||0 : 0;
+  function saveVsPlayersCache(){
+    try{ localStorage.setItem("sifirJuaraVsPlayers", JSON.stringify({email:account.email,t:vsPlayersCacheT,players:vsPlayersCache||[]})); }catch(e){}
+  }
+  function refreshVsPlayers(silent){
+    api({action:"vs_players", email:account.email, pass:account.pass}, function(r){
+      if(!r || !r.ok){
+        if(!silent && curScreen==="vsInvite") $("vsPlayerList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat")+"</p>";
+        return;
+      }
+      vsAllPlayers=r.players||[]; vsPlayersCache=vsAllPlayers; vsPlayersCacheT=Date.now(); saveVsPlayersCache();
+      if(curScreen==="vsInvite") drawPlayers($("vsSearch").value);
+    });
+  }
+  function prefetchVsPlayers(){
+    if(!account || (vsPlayersCache && Date.now()-vsPlayersCacheT<300000)) return;
+    refreshVsPlayers(true);
+  }
   function loadPlayers(){
     $("vsSearch").value=""; show("vsInvite");
-    if(vsPlayersCache && Date.now()-vsPlayersCacheT < 60000){ vsAllPlayers=vsPlayersCache; drawPlayers(""); return; }
+    if(vsPlayersCache){
+      vsAllPlayers=vsPlayersCache; drawPlayers("");
+      if(Date.now()-vsPlayersCacheT>=300000) refreshVsPlayers(true);
+      return;
+    }
     $("vsPlayerList").innerHTML="<p class='vsEmpty'>Memuatkan…</p>";
-    api({action:"vs_players", email:account.email, pass:account.pass}, function(r){
-      if(!r || !r.ok){ $("vsPlayerList").innerHTML="<p class='vsEmpty'>"+((r&&r.err)||"Ralat")+"</p>"; return; }
-      vsAllPlayers=r.players||[]; vsPlayersCache=vsAllPlayers; vsPlayersCacheT=Date.now(); drawPlayers("");
+    refreshVsPlayers(false);
+  }
+  function unavailableVsNicks(){
+    var busy={}, d=firebaseVsData||{};
+    ["incoming","active","sent"].forEach(function(k){
+      (d[k]||[]).forEach(function(m){ if(m.oppNick) busy[String(m.oppNick).toUpperCase()]=true; });
     });
+    return busy;
   }
   function drawPlayers(q){
     q=(q||"").toUpperCase(); var L=$("vsPlayerList"); L.innerHTML="";
-    var list=vsAllPlayers.filter(function(p){ return p.nick.indexOf(q)>=0 || (p.kelas||"").indexOf(q)>=0; });
+    var busy=unavailableVsNicks();
+    var list=vsAllPlayers.filter(function(p){
+      var nick=String(p.nick||"").toUpperCase(), kelas=String(p.kelas||"").toUpperCase();
+      return !busy[nick] && (nick.indexOf(q)>=0 || kelas.indexOf(q)>=0);
+    });
     if(!list.length){ L.innerHTML="<p class='vsEmpty'>Tiada pemain sepadan.</p>"; return; }
     list.forEach(function(p){
       var d=document.createElement("div"); d.className="vsRow";
@@ -2163,7 +2252,12 @@
   }
   function sendVsInvite(email, nick){
     api({action:"vs_invite", email:account.email, pass:account.pass, targetEmail:email}, function(r){
-      if(r && r.ok){ queueToast("✅ Jemputan dihantar ke "+nick); loadVsHub(); }
+      if(r && r.ok){
+        firebaseVsData=firebaseVsData||{ok:true,incoming:[],active:[],sent:[],recent:[]};
+        firebaseVsData.sent=firebaseVsData.sent||[];
+        firebaseVsData.sent.push({id:r.matchId,oppNick:nick,status:"pending",iAmChallenger:true});
+        queueToast("✅ Jemputan dihantar ke "+nick); loadVsHub();
+      }
       else queueToast("⚠️ "+((r&&r.err)||"Gagal menghantar"));
     });
   }
@@ -2439,7 +2533,7 @@
       account = {email:email, pass:pass};
       profile.nickname = nick.toUpperCase();
       profile.kelas = kelas.toUpperCase();
-      saveAccount(); saveProfile(); ensureFirebaseVsWatch(); syncUp(); updateAccUI();
+      saveAccount(); saveProfile(); ensureFirebaseVsWatch(); vsPlayersCache=null; vsPlayersCacheT=0; prefetchVsPlayers(); syncUp(); updateAccUI();
       regMsg("Berjaya didaftarkan! ✅", true);
       setTimeout(function(){ accMsg("Selamat datang, "+nick+"! ✅", true); updateAccUI(); show("login"); }, 900);
     });
@@ -2453,6 +2547,7 @@
       account = {email:a.email, pass:a.pass};
       saveAccount();
       ensureFirebaseVsWatch();
+      vsPlayersCache=null; vsPlayersCacheT=0; prefetchVsPlayers();
       applyRemote(r);
       updateAccUI();
       accMsg("Berjaya log masuk! Lencana anda telah dipulihkan ✅", true);
@@ -2471,6 +2566,7 @@
     account = null;
     closeFirebaseVsWatch();
     vsWaitingResult = null;
+    vsPlayersCache=null; vsPlayersCacheT=0;
     saveAccount(); updateAccUI();
     accMsg("Telah log keluar", true);
   });
@@ -2548,7 +2644,8 @@
     saveProfile();
   });
   updateAccUI();
-  if(account){ ensureFirebaseVsWatch(); syncUp(); }
+  renderDailyGoal();
+  if(account){ ensureFirebaseVsWatch(); prefetchVsPlayers(); syncUp(); }
 
 })();
 </script>
