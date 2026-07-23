@@ -286,11 +286,11 @@
   .lbModeTab:active{transform:translateY(3px);box-shadow:0 2px 0 #17103e}
   .lbModeTab.sel{color:#10244e;border-color:#8cf4ff;
     background:linear-gradient(180deg,#66e9f4,#27a9db);box-shadow:0 5px 0 #12668f}
-  .lbTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+  .lbTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
   .lbTabs.hide{display:none}
-  .lbTab{font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:#fff;
+  .lbTab{font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;color:#fff;
     background:linear-gradient(180deg,#ffffff20,#ffffff0c);border:2px solid #ffffff24;
-    border-radius:13px;padding:10px 2px;cursor:pointer;box-shadow:0 4px 0 #120c38;
+    border-radius:13px;padding:10px 1px;cursor:pointer;box-shadow:0 4px 0 #120c38;
     transition:transform .1s,filter .15s}
   .lbTab:active{transform:translateY(2px);box-shadow:0 2px 0 #120c38}
   .lbTab.sel{background:linear-gradient(180deg,#ad5cff,#722bd0);color:#fff;
@@ -678,7 +678,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.0</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.1</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -807,6 +807,7 @@
       <button class="lbTab sel" data-lb="easy">🌱 MUDAH</button>
       <button class="lbTab" data-lb="mid">⚡ SEDERHANA</button>
       <button class="lbTab" data-lb="hard">🔥 SUKAR</button>
+      <button class="lbTab" data-lb="hero">🦸 HERO</button>
     </div>
     <div class="lbPodium" id="lbPodium"></div>
     <div class="lbList" id="lbList"></div>
@@ -932,7 +933,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.0";
+  var APP_VERSION = "4.1";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
