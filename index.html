@@ -977,12 +977,28 @@
   }
   function firebaseWatch(path, changed){
     if(typeof EventSource === "undefined") return null;
-    try{
-      var stream = new EventSource(firebaseUrl(path));
-      stream.addEventListener("put", changed);
-      stream.addEventListener("patch", changed);
-      return stream;
-    }catch(e){ return null; }
+    // pembalut dengan sambung-semula automatik: stream Firebase kerap diputuskan
+    // (skrin kunci, tukar tab, rangkaian) — versi lama mati terus tanpa pulih
+    var holder = { es:null, closed:false };
+    function open(){
+      if(holder.closed) return;
+      try{
+        var stream = new EventSource(firebaseUrl(path));
+        holder.es = stream;
+        stream.addEventListener("put", changed);
+        stream.addEventListener("patch", changed);
+        stream.addEventListener("auth_revoked", function(){ try{stream.close();}catch(e){} setTimeout(open, 2000); });
+        stream.addEventListener("cancel", function(){ try{stream.close();}catch(e){} setTimeout(open, 5000); });
+        stream.onerror = function(){
+          if(stream.readyState === 2 && !holder.closed) setTimeout(open, 4000);
+        };
+        stream.onopen = function(){ changed(); }; // tarik data segera setiap kali tersambung (tangkap acara terlepas)
+      }catch(e){ if(!holder.closed) setTimeout(open, 8000); }
+    }
+    holder.close = function(){ holder.closed = true; try{ if(holder.es) holder.es.close(); }catch(e){} };
+    holder.dead = function(){ return !holder.es || holder.es.readyState === 2; };
+    open();
+    return holder;
   }
   function sha256Hex(text){
     if(!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("SHA-256 tidak tersedia"));
@@ -1068,8 +1084,13 @@
     }
   }
   function firebaseApplyVs(raw){
+    var prevInc = (firebaseVsData && firebaseVsData.incoming) ? firebaseVsData.incoming.length : -1;
+    var prevSwd = firebaseVsData ? vsSwordCount(firebaseVsData) : -1;
     firebaseVsData = firebaseVsList(raw, firebaseVsData);
     setVsBadges(firebaseVsData.incoming.length, vsSwordCount(firebaseVsData));
+    // notis masa nyata: jemputan baharu / giliran kamu bermain
+    if(prevInc >= 0 && firebaseVsData.incoming.length > prevInc) queueToast(ikT("pedang")+" Jemputan VS baharu diterima!");
+    else if(prevSwd >= 0 && vsSwordCount(firebaseVsData) > prevSwd) queueToast(ikT("pedang")+" Giliran kamu — lawan sudah bermain!");
     applyLiveVsTarget(firebaseVsData);
     if(curScreen === "vsHub") renderVsHub(firebaseVsData);
     finishWaitingVsFromFirebase(firebaseVsData);
@@ -2657,6 +2678,17 @@
       if(r && r.ok){ firebaseVsData = r; setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r)); }
     });
   }
+  // hidupkan semula sambungan masa nyata bila app kembali aktif / rangkaian pulih
+  function firebaseWakeAll(){
+    if(firebaseVsStream && firebaseVsStream.dead && firebaseVsStream.dead()){ closeFirebaseVsWatch(); }
+    if(firebaseLbStream && firebaseLbStream.dead && firebaseLbStream.dead()){ try{firebaseLbStream.close();}catch(e){} firebaseLbStream = null; }
+    ensureFirebaseLeaderboardWatch();
+    if(account){ ensureFirebaseVsWatch(); if(firebaseVsHash) firebaseRefreshVs(); refreshVsBadge(); }
+  }
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) firebaseWakeAll(); });
+  window.addEventListener("online", firebaseWakeAll);
+  window.addEventListener("focus", function(){ if(!document.hidden) firebaseWakeAll(); });
+  setInterval(function(){ if(!document.hidden && account) refreshVsBadge(); }, 30000);
 
   $("vsBack").addEventListener("click", function(){ show("start"); });
   $("vsInviteBtn").addEventListener("click", loadPlayers);
