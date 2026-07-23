@@ -336,8 +336,8 @@
   .lbRank{font-size:18px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
   .lbAvatar{width:40px;height:40px;border-radius:14px;overflow:hidden;background:#fff;
     box-shadow:0 3px 0 #cbbf9f}
-  .lbScoreWrap{text-align:right;min-width:72px}
-  .lbScore{display:block;font-family:'Fredoka',sans-serif;font-weight:700;font-size:21px}
+  .lbScoreWrap{text-align:right;min-width:78px;flex:none}
+  .lbScore{display:block;font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;white-space:nowrap}
   .lbDate{display:block;color:#8a7fb5;font-weight:800;font-size:10px;white-space:nowrap;margin-top:1px}
   .lbEmpty{color:#8a7fb5;font-weight:800;text-align:center;padding:48px 0;font-size:14px}
   .lbName{min-width:0;font-weight:900;font-size:14px;color:var(--ink);overflow:hidden;cursor:pointer}
@@ -1615,6 +1615,7 @@
       // markah: asas 10 + bonus ikut betul berturut
       var pts = 10 + state.run*2;
       state.score += pts;
+      if(state.score > 999999) state.score = 999999;
       state.correct++;
       recordDailyCorrect();
       state.run++;
@@ -1722,7 +1723,7 @@
     if(state.practice) submitPracticeProgress(state);
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
-      $("saveScore").innerHTML = state.score + "<small>Markah</small>";
+      $("saveScore").innerHTML = fmtNum(state.score) + "<small>Markah</small>";
       // nama & kelas dipapar sahaja (tidak boleh edit); guest guna GUEST(nombor)
       $("saveWho").style.display = "";
       $("saveWhoName").textContent = effName().toUpperCase();
@@ -1750,13 +1751,13 @@
 
     $("medal").innerHTML = ikSVG(medal);
     $("resultTitle").textContent = title;
-    $("finalScore").innerHTML = state.score + "<small>Markah</small>";
+    $("finalScore").innerHTML = fmtNum(state.score) + "<small>Markah</small>";
 
     var bl = $("bestLine");
     if(state.practice){
       bl.innerHTML = ikT("teratai")+" Mod Latihan — markah tidak disimpan"; bl.className="best dark";
     } else {
-      bl.textContent = "Markah tertinggi "+state.cfg.label+": " + top;
+      bl.textContent = "Markah tertinggi "+state.cfg.label+": " + fmtNum(top);
       bl.className = "best dark";
     }
 
@@ -2163,7 +2164,7 @@
           : ikT("raya")+" "+name+" — markah tertinggi baharu!";
         bl.className = "best";
       } else if(r && r.ok){
-        bl.textContent = "Markah terbaik anda: "+r.best+" (kali ini "+state.score+")";
+        bl.textContent = "Markah terbaik anda: "+fmtNum(r.best)+" (kali ini "+fmtNum(state.score)+")";
         bl.className = "best dark";
       } else {
         bl.textContent = (r && r.err) ? r.err : "Markah disimpan setempat (luar talian)";
@@ -2252,6 +2253,7 @@
   var MAX_LEVEL = 20, XP_PER_LEVEL = 100;
   function myXP(){ return (stats && stats.totalCorrect) || 0; }
   function levelOf(xp){ return Math.min(MAX_LEVEL, Math.floor((xp||0) / XP_PER_LEVEL) + 1); }
+  function fmtNum(n){ n=Number(n)||0; return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   // 5 avatar percuma (Level 1); 15 lagi tersebar merata dari Level 2 hingga 20
   function avatarUnlockLevel(i){ return i < 5 ? 1 : (2 + Math.round((i - 5) * 18 / 14)); }
   function avatarUnlockXP(i){ return (avatarUnlockLevel(i) - 1) * XP_PER_LEVEL; }
@@ -2653,7 +2655,7 @@
       var av=document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML=avatarSVG(e.avatar||0);
       var nm=document.createElement("span"); nm.className="lbName";
       nm.innerHTML='<div>'+(e.nick||"")+'</div><div class="lbClass">Lv '+e.level+" · "+e.menang+"M "+e.kalah+"K</div>";
-      var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=e.mata;
+      var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=fmtNum(e.mata);
       row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
       L.appendChild(row);
     });
@@ -2830,7 +2832,7 @@
     cls.textContent = info.kelas;
     var sc = document.createElement("div");
     sc.className = "lbPodiumScore";
-    sc.textContent = info.score + " mata";
+    sc.textContent = fmtNum(info.score) + " mata";
     var dt = document.createElement("div");
     dt.className = "lbPodiumDate";
     dt.textContent = info.date;
@@ -2868,7 +2870,7 @@
     scoreWrap.className = "lbScoreWrap";
     var sc = document.createElement("span");
     sc.className = "lbScore";
-    sc.textContent = info.score;
+    sc.textContent = fmtNum(info.score);
     var dt = document.createElement("span");
     dt.className = "lbDate";
     dt.textContent = info.date;
