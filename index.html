@@ -1930,11 +1930,23 @@
   }
   var badgeState = loadJSON("sifirJuaraBadges", {});
   var stats = loadJSON("sifirJuaraStats", {games:0, totalCorrect:0, totalWrong:0, bestStreak:0, modes:{}});
+  // storan diasingkan ikut identiti: setiap akaun ada bekasnya sendiri, guest berasingan
+  function idScope(){ return (account && account.email) ? ("a"+hashStr(String(account.email).toLowerCase())) : "guest"; }
+  function freshStats(){ return {games:0, totalCorrect:0, totalWrong:0, bestStreak:0, modes:{}}; }
   function saveMeta(){
     try{
-      localStorage.setItem("sifirJuaraBadges", JSON.stringify(badgeState));
-      localStorage.setItem("sifirJuaraStats", JSON.stringify(stats));
+      localStorage.setItem("sifirJuaraBadges_"+idScope(), JSON.stringify(badgeState));
+      localStorage.setItem("sifirJuaraStats_"+idScope(), JSON.stringify(stats));
     }catch(e){}
+  }
+  // muat semula data untuk identiti semasa (dipanggil bila log masuk/keluar/tukar akaun)
+  function switchIdentity(){
+    stats = loadJSON("sifirJuaraStats_"+idScope(), null) || freshStats();
+    if(!stats.modes) stats.modes = {};
+    badgeState = loadJSON("sifirJuaraBadges_"+idScope(), null) || {};
+    if(!account){ profile.nickname = ""; profile.kelas = ""; }
+    if(typeof updateMenuAva === "function") updateMenuAva();
+    if(typeof renderDailyGoal === "function") renderDailyGoal();
   }
   var profile = loadJSON("sifirJuaraProfile", {nickname:"", kelas:""});
   function guestName(){
@@ -1952,6 +1964,21 @@
     try{ localStorage.setItem("sifirJuaraProfile", JSON.stringify(profile)); }catch(e){}
   }
   var account = loadJSON("sifirJuaraAcc", null);
+  // migrasi sekali: data lama (dikongsi) dipindah ke bekas akaun semasa, kemudian dibuang
+  (function migrateLegacyProgress(){
+    try{
+      var oldS = localStorage.getItem("sifirJuaraStats");
+      if(oldS){
+        if(account && !localStorage.getItem("sifirJuaraStats_"+idScope())){
+          localStorage.setItem("sifirJuaraStats_"+idScope(), oldS);
+          localStorage.setItem("sifirJuaraBadges_"+idScope(), localStorage.getItem("sifirJuaraBadges")||"{}");
+        }
+        localStorage.removeItem("sifirJuaraStats");
+        localStorage.removeItem("sifirJuaraBadges");
+      }
+    }catch(e){}
+  })();
+  switchIdentity();
   function saveAccount(){
     try{
       if(account) localStorage.setItem("sifirJuaraAcc", JSON.stringify(account));
@@ -3066,6 +3093,7 @@
     api({action:"register", email:email, pass:pass, nickname:nick, kelas:kelas}, function(r){
       if(!r.ok){ regMsg(r.err || "Gagal mendaftar"); return; }
       account = {email:email, pass:pass};
+      switchIdentity();   // akaun baharu = data segar (semua lencana tertutup)
       profile.nickname = nick.toUpperCase();
       profile.kelas = kelas.toUpperCase();
       saveAccount(); saveProfile(); ensureFirebaseVsWatch(); vsPlayersCache=null; vsPlayersCacheT=0; prefetchVsPlayers(); syncUp(); updateAccUI();
@@ -3081,6 +3109,7 @@
       if(!r.ok){ accMsg(r.err || "Gagal log masuk"); return; }
       account = {email:a.email, pass:a.pass};
       saveAccount();
+      switchIdentity();   // muat data akaun ini (elak warisi data akaun sebelum)
       ensureFirebaseVsWatch();
       vsPlayersCache=null; vsPlayersCacheT=0; prefetchVsPlayers();
       applyRemote(r);
@@ -3104,7 +3133,7 @@
     closeFirebaseVsWatch();
     vsWaitingResult = null;
     vsPlayersCache=null; vsPlayersCacheT=0;
-    saveAccount(); updateAccUI();
+    saveAccount(); switchIdentity(); updateAccUI();
     accMsg("Telah log keluar", true);
   });
 
