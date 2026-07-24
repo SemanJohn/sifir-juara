@@ -103,8 +103,8 @@
   .mode.vs{border-color:#ff3d9755;position:relative}
   .vsBadges{position:absolute;top:-9px;right:-9px;display:flex;gap:4px}
   .vsBadge{font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;min-width:24px;height:24px;
-    border-radius:99px;display:grid;place-items:center;padding:0 7px;
-    border:2px solid #1b1650;box-shadow:0 2px 4px #00000055}
+    border-radius:99px;display:flex;align-items:center;justify-content:center;gap:2px;padding:0 7px;
+    border:2px solid #1b1650;box-shadow:0 2px 4px #00000055;white-space:nowrap}
   .vsBadge.inv{background:#26de81;color:#04351f}
   .vsBadge.swd{background:#ff4757;color:#fff}
   .vsRow.win{background:#e9fbef;border:2px solid #37e29a}
@@ -286,11 +286,11 @@
   .lbModeTab:active{transform:translateY(3px);box-shadow:0 2px 0 #17103e}
   .lbModeTab.sel{color:#10244e;border-color:#8cf4ff;
     background:linear-gradient(180deg,#66e9f4,#27a9db);box-shadow:0 5px 0 #12668f}
-  .lbTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+  .lbTabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
   .lbTabs.hide{display:none}
-  .lbTab{font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;color:#fff;
+  .lbTab{font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;color:#fff;
     background:linear-gradient(180deg,#ffffff20,#ffffff0c);border:2px solid #ffffff24;
-    border-radius:13px;padding:10px 2px;cursor:pointer;box-shadow:0 4px 0 #120c38;
+    border-radius:13px;padding:10px 1px;cursor:pointer;box-shadow:0 4px 0 #120c38;
     transition:transform .1s,filter .15s}
   .lbTab:active{transform:translateY(2px);box-shadow:0 2px 0 #120c38}
   .lbTab.sel{background:linear-gradient(180deg,#ad5cff,#722bd0);color:#fff;
@@ -336,8 +336,8 @@
   .lbRank{font-size:18px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
   .lbAvatar{width:40px;height:40px;border-radius:14px;overflow:hidden;background:#fff;
     box-shadow:0 3px 0 #cbbf9f}
-  .lbScoreWrap{text-align:right;min-width:72px}
-  .lbScore{display:block;font-family:'Fredoka',sans-serif;font-weight:700;font-size:21px}
+  .lbScoreWrap{text-align:right;min-width:78px;flex:none}
+  .lbScore{display:block;font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;white-space:nowrap}
   .lbDate{display:block;color:#8a7fb5;font-weight:800;font-size:10px;white-space:nowrap;margin-top:1px}
   .lbEmpty{color:#8a7fb5;font-weight:800;text-align:center;padding:48px 0;font-size:14px}
   .lbName{min-width:0;font-weight:900;font-size:14px;color:var(--ink);overflow:hidden;cursor:pointer}
@@ -431,6 +431,14 @@
     max-height:min(54vh,460px);overflow-y:auto;padding:2px 4px 2px 2px;
     scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .bd{background:var(--card);border-radius:16px;padding:12px 6px;text-align:center;color:var(--ink)}
+  .menuAvaCircle svg,.lbAvatar svg,.menuAvaCircle img{width:100%;height:100%;display:block}
+  [data-ik]{display:inline-block;line-height:0;vertical-align:-0.15em}
+  [data-ik] svg{width:1.08em;height:1.08em;display:inline-block}
+  .ikt{display:inline-block;width:1.05em;height:1.05em;line-height:0;vertical-align:-0.15em}
+  .ikt svg{width:100%;height:100%;display:block}
+  .medal>svg{width:1em;height:1em;display:inline-block}
+  .flake>svg{width:1em;height:1em;display:block}
+  .lbRank .ikt{width:1.3em;height:1.3em;vertical-align:-0.3em}
   .bd .ic{width:58px;height:62px;margin:0 auto}
   .bd .ic svg{width:100%;height:100%;display:block}
   .bd .nm{font-weight:900;font-size:11.5px;margin-top:4px}
@@ -528,8 +536,8 @@
 </style>
 </head>
 <body>
-<button class="topBtn" id="loginBtn">👤 Log Masuk</button>
-<button class="topBtn" id="setBtn" title="Tetapan">⚙️</button>
+<button class="topBtn" id="loginBtn"><span data-ik="orang"></span> Log Masuk</button>
+<button class="topBtn" id="setBtn" title="Tetapan" data-ik="gear"></button>
 <div class="toast" id="toast"></div>
 
 <div class="stage">
@@ -538,69 +546,69 @@
   <section class="screen on" id="startScreen">
     <div class="menuAva" id="menuAva" style="display:none">
       <div class="menuAvaWrap">
-        <div class="menuAvaCircle" id="menuAvaCircle">🦊</div>
+        <div class="menuAvaCircle" id="menuAvaCircle"></div>
         <span class="menuLvl" id="menuLvl">Lv 1</span>
       </div>
     </div>
     <div class="brand">
       <div class="logo">Sifir <span class="x">×</span> Juara</div>
-      <div class="tag">Latih sifir, jadi juara! 🔥</div>
+      <div class="tag">Latih sifir, jadi juara! <span data-ik="api"></span></div>
     </div>
     <div class="dailyGoal" id="dailyGoal">
-      <div class="dailyGoalTop"><span>🎯 Matlamat hari ini</span><b id="dailyGoalText">0 / 30 betul</b></div>
+      <div class="dailyGoalTop"><span><span data-ik="sasaran"></span> Matlamat hari ini</span><b id="dailyGoalText">0 / 30 betul</b></div>
       <div class="dailyGoalBar"><div class="dailyGoalFill" id="dailyGoalFill"></div></div>
     </div>
     <div class="modes">
       <button class="mode tt" data-go="timetrial">
-        <span class="emoji">⏱️</span>
+        <span class="emoji" data-ik="jam"></span>
         <span class="txt"><b>Time Trial</b><span>Mudah · Sederhana · Sukar — 60 saat</span></span>
       </button>
       <button class="mode prac" data-mode="practice">
-        <span class="emoji">🧘</span>
+        <span class="emoji" data-ik="teratai"></span>
         <span class="txt"><b>Latihan</b><span>Pilih sifir sendiri · Tiada had masa</span></span>
       </button>
       <button class="mode vs" data-go="vs">
-        <span class="emoji">⚔️</span>
+        <span class="emoji" data-ik="pedang"></span>
         <span class="txt"><b>Lawan (VS)</b><span id="vsSub">Cabar pemain lain</span></span>
         <span class="vsBadges" id="vsBadges">
         <span class="vsBadge inv" id="vsBadgeInvite" style="display:none">0</span>
-        <span class="vsBadge swd" id="vsBadgeSword" style="display:none">⚔️0</span>
+        <span class="vsBadge swd" id="vsBadgeSword" style="display:none">0</span>
       </span>
       </button>
     </div>
     <p class="hint">Guna numpad atau taip nombor + <kbd>Enter</kbd>.</p>
-    <button class="btn ghost" id="lbBtn" style="width:100%;margin-top:14px">🏆 Papan Markah</button>
+    <button class="btn ghost" id="lbBtn" style="width:100%;margin-top:14px"><span data-ik="trofi"></span> Papan Markah</button>
     <div class="actions" style="margin-top:10px">
-      <button class="btn ghost" id="badgeBtn">🎖️ Lencana</button>
-      <button class="btn ghost" id="tableBtn">📖 Jadual Sifir</button>
+      <button class="btn ghost" id="badgeBtn"><span data-ik="medal"></span> Lencana</button>
+      <button class="btn ghost" id="tableBtn"><span data-ik="buku"></span> Jadual Sifir</button>
     </div>
   </section>
 
   <!-- PILIH TAHAP TIME TRIAL -->
   <section class="screen" id="ttScreen">
     <div class="brand">
-      <div class="logo">⏱️</div>
+      <div class="logo" data-ik="jam"></div>
       <div class="tag">Pilih tahap Time Trial</div>
     </div>
     <div class="modes">
       <button class="mode easy" data-mode="easy">
-        <span class="emoji">🌱</span>
+        <span class="emoji" data-ik="benih"></span>
         <span class="txt"><b>Mudah</b><span>Sifir ×1 hingga ×5 · 60 saat</span></span>
       </button>
       <button class="mode mid" data-mode="mid">
-        <span class="emoji">⚡</span>
+        <span class="emoji" data-ik="kilat"></span>
         <span class="txt"><b>Sederhana</b><span>Sifir ×1 hingga ×9 · 60 saat</span></span>
       </button>
       <button class="mode hard" data-mode="hard">
-        <span class="emoji">🔥</span>
+        <span class="emoji" data-ik="api"></span>
         <span class="txt"><b>Sukar</b><span>Sifir ×1 hingga ×12 · 60 saat</span></span>
       </button>
       <button class="mode hero" data-mode="hero">
-        <span class="emoji">🦸</span>
+        <span class="emoji" data-ik="hero"></span>
         <span class="txt"><b>Hero</b><span>Soalan terbalik: ? × 7 = 21 · Sifir ×1–×12 · 60 saat</span></span>
       </button>
     </div>
-    <p class="hint">3 betul = 1 streak <b style="color:var(--yellow)">+3 saat</b> · 3 streak = <b style="color:#a5ecff">❄️ beku 5 saat</b><br>3 kali beku = <b style="color:var(--yellow)">🌟 masa penuh semula!</b></p>
+    <p class="hint">3 betul = 1 streak <b style="color:var(--yellow)">+3 saat</b> · 3 streak = <b style="color:#a5ecff"><span data-ik="salji"></span> beku 5 saat</b><br>3 kali beku = <b style="color:var(--yellow)"><span data-ik="bintang2"></span> masa penuh semula!</b></p>
     <div class="actions">
       <button class="btn ghost" id="ttBack">Kembali</button>
     </div>
@@ -609,7 +617,7 @@
   <!-- LOG MASUK / AKAUN -->
   <section class="screen" id="loginScreen">
     <div class="brand">
-      <div class="logo">👤</div>
+      <div class="logo" data-ik="orang"></div>
       <div class="tag">Akaun Sifir Juara</div>
     </div>
     <div class="setCard">
@@ -632,7 +640,7 @@
   <!-- DAFTAR AKAUN -->
   <section class="screen" id="regScreen">
     <div class="brand">
-      <div class="logo">📝</div>
+      <div class="logo" data-ik="pensel"></div>
       <div class="tag">Daftar Akaun Baharu</div>
     </div>
     <div class="setCard">
@@ -652,12 +660,12 @@
   <!-- TETAPAN -->
   <section class="screen" id="setScreen">
     <div class="brand">
-      <div class="logo">⚙️</div>
+      <div class="logo" data-ik="gear"></div>
       <div class="tag">Tetapan</div>
     </div>
     <div class="setCard">
-      <div class="setRow"><span>🔊 Bunyi</span><button class="tog" id="togSound">ON</button></div>
-      <div class="setRow"><span>📳 Getaran</span><button class="tog" id="togVib">ON</button></div>
+      <div class="setRow"><span><span data-ik="bunyi"></span> Bunyi</span><button class="tog" id="togSound">ON</button></div>
+      <div class="setRow"><span><span data-ik="getar"></span> Getaran</span><button class="tog" id="togVib">ON</button></div>
       <div id="setGuestBox">
         <div class="setLbl">Nama pemain</div>
         <div class="setRow"><span id="setGuestName" style="color:var(--ink)">GUEST</span><span style="font-size:11px;color:#8a7fb5">Tetamu</span></div>
@@ -678,7 +686,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.2</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.3</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -717,9 +725,9 @@
 
   <!-- VS HUB -->
   <section class="screen" id="vsHubScreen">
-    <div class="brand"><div class="logo">⚔️</div><div class="tag">Lawan (VS)</div></div>
+    <div class="brand"><div class="logo" data-ik="pedang"></div><div class="tag">Lawan (VS)</div></div>
     <div class="actions" style="margin-bottom:6px">
-      <button class="btn primary" id="vsInviteBtn" style="flex:1">➕ Jemput Lawan</button>
+      <button class="btn primary" id="vsInviteBtn" style="flex:1"><span data-ik="tambah"></span> Jemput Lawan</button>
     </div>
     <div class="vsList" id="vsHubList"></div>
     <div class="actions"><button class="btn ghost" id="vsBack">Kembali</button></div>
@@ -727,7 +735,7 @@
 
   <!-- JEMPUT LAWAN -->
   <section class="screen" id="vsInviteScreen">
-    <div class="brand"><div class="logo">➕</div><div class="tag">Pilih Lawan</div></div>
+    <div class="brand"><div class="logo" data-ik="tambah"></div><div class="tag">Pilih Lawan</div></div>
     <input id="vsSearch" placeholder="Cari nama..." autocomplete="off"
       style="width:100%;font-family:'Nunito';font-weight:800;font-size:15px;padding:12px 14px;
       border:2px solid #ffffff2f;border-radius:14px;background:#ffffff12;color:#fff;outline:none;margin-bottom:10px">
@@ -737,7 +745,7 @@
 
   <!-- PAPAN MARKAH VS -->
   <section class="screen" id="vsBoardScreen">
-    <div class="brand"><div class="logo">🏆</div><div class="tag">Papan Markah VS</div></div>
+    <div class="brand"><div class="logo" data-ik="trofi"></div><div class="tag">Papan Markah VS</div></div>
     <div class="lbList" id="vsBoardList" style="max-height:min(60vh,520px);overflow-y:auto"></div>
     <div class="actions"><button class="btn ghost" id="vsBoardBack">Kembali</button></div>
   </section>
@@ -745,7 +753,7 @@
   <!-- KEPUTUSAN VS -->
   <section class="screen" id="vsResultScreen">
     <div class="result">
-      <div class="medal" id="vsMedal">⚔️</div>
+      <div class="medal" id="vsMedal" data-ik="pedang"></div>
       <h2 id="vsResultTitle">Keputusan</h2>
       <div style="display:flex;justify-content:space-around;align-items:center;margin:16px 0">
         <div style="text-align:center">
@@ -771,7 +779,7 @@
   <!-- LENCANA -->
   <section class="screen" id="badgeScreen">
     <div class="brand">
-      <div class="logo">🎖️</div>
+      <div class="logo" data-ik="medal"></div>
       <div class="tag">Koleksi Lencana</div>
     </div>
     <div class="bdCount" id="bdCount"></div>
@@ -784,7 +792,7 @@
   <!-- JADUAL SIFIR -->
   <section class="screen" id="tsScreen">
     <div class="brand">
-      <div class="logo">📖</div>
+      <div class="logo" data-ik="buku"></div>
       <div class="tag">Jadual Sifir</div>
     </div>
     <div class="tblGrid" id="tsPick"></div>
@@ -800,13 +808,14 @@
       <div class="tag">Papan Markah</div>
     </div>
     <div class="lbModeTabs">
-      <button class="lbModeTab sel" data-lb-group="time">⏱️ TIME TRIAL</button>
-      <button class="lbModeTab" data-lb-group="vs">⚔️ VS</button>
+      <button class="lbModeTab sel" data-lb-group="time"><span data-ik="jam"></span> TIME TRIAL</button>
+      <button class="lbModeTab" data-lb-group="vs"><span data-ik="pedang"></span> VS</button>
     </div>
     <div class="lbTabs" id="lbTimeTabs">
-      <button class="lbTab sel" data-lb="easy">🌱 MUDAH</button>
-      <button class="lbTab" data-lb="mid">⚡ SEDERHANA</button>
-      <button class="lbTab" data-lb="hard">🔥 SUKAR</button>
+      <button class="lbTab sel" data-lb="easy"><span data-ik="benih"></span> MUDAH</button>
+      <button class="lbTab" data-lb="mid"><span data-ik="kilat"></span> SEDERHANA</button>
+      <button class="lbTab" data-lb="hard"><span data-ik="api"></span> SUKAR</button>
+      <button class="lbTab" data-lb="hero"><span data-ik="hero"></span> HERO</button>
     </div>
     <div class="lbPodium" id="lbPodium"></div>
     <div class="lbList" id="lbList"></div>
@@ -818,7 +827,7 @@
   <!-- PILIH SIFIR (LATIHAN) -->
   <section class="screen" id="pickScreen">
     <div class="brand">
-      <div class="logo">🧘</div>
+      <div class="logo" data-ik="teratai"></div>
       <div class="tag">Pilih sifir untuk berlatih</div>
     </div>
     <div class="tblGrid" id="tblGrid"></div>
@@ -834,7 +843,7 @@
     <div class="hud">
       <div class="chip"><div class="lbl">Markah</div><div class="val" id="score">0</div></div>
       <div class="chip streak"><div class="lbl">Streak</div>
-        <div class="val"><span class="streakFlame" id="flame">🔥</span> <span id="streak">0</span></div></div>
+        <div class="val"><span class="streakFlame" id="flame" data-ik="api"></span> <span id="streak">0</span></div></div>
       <div class="chip"><div class="lbl">Masa</div><div class="val" id="timeVal">30</div></div>
     </div>
     <div class="timerWrap"><div class="timerBar" id="timerBar"></div></div>
@@ -866,18 +875,18 @@
 
   <div class="finishOverlay" id="finishOverlay" aria-hidden="true">
     <div class="finishBurst">
-      <div class="finishIcon">⏰</div>
+      <div class="finishIcon" data-ik="jamloceng"></div>
       <div class="finishTitle">TAMAT!</div>
       <div class="finishLabel">Markah akhir</div>
       <div class="finishScore" id="finishScore">0</div>
-      <div class="finishWait">⚔️ Mengira keputusan lawan<span class="finishDots"></span></div>
+      <div class="finishWait"><span data-ik="pedang"></span> Mengira keputusan lawan<span class="finishDots"></span></div>
     </div>
   </div>
 
   <!-- SIMPAN MARKAH (NAMA & KELAS) -->
   <section class="screen" id="saveScreen">
     <div class="result">
-      <div class="medal">📝</div>
+      <div class="medal" data-ik="pensel"></div>
       <h2>Syabas! Simpan markah kamu</h2>
       <div class="bigscore" id="saveScore">0<small>Markah</small></div>
       <div id="saveWho" style="display:none;text-align:center;font-weight:900;margin:10px 0 2px">
@@ -896,7 +905,7 @@
   <!-- RESULT -->
   <section class="screen" id="resultScreen">
     <div class="result">
-      <div class="medal" id="medal">🏆</div>
+      <div class="medal" id="medal" data-ik="trofi"></div>
       <h2 id="resultTitle">Tamat!</h2>
       <div class="bigscore" id="finalScore">0<small>Markah</small></div>
       <div class="best" id="bestLine"></div>
@@ -922,7 +931,7 @@
         <button class="btn ghost" id="menuBtn">Menu</button>
         <button class="btn primary" id="againBtn">Main lagi</button>
       </div>
-      <button class="btn ghost" id="resLbBtn" style="width:100%;margin-top:10px">🏆 Papan Markah</button>
+      <button class="btn ghost" id="resLbBtn" style="width:100%;margin-top:10px"><span data-ik="trofi"></span> Papan Markah</button>
     </div>
   </section>
 
@@ -932,7 +941,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.2";
+  var APP_VERSION = "4.3";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -968,12 +977,28 @@
   }
   function firebaseWatch(path, changed){
     if(typeof EventSource === "undefined") return null;
-    try{
-      var stream = new EventSource(firebaseUrl(path));
-      stream.addEventListener("put", changed);
-      stream.addEventListener("patch", changed);
-      return stream;
-    }catch(e){ return null; }
+    // pembalut dengan sambung-semula automatik: stream Firebase kerap diputuskan
+    // (skrin kunci, tukar tab, rangkaian) — versi lama mati terus tanpa pulih
+    var holder = { es:null, closed:false };
+    function open(){
+      if(holder.closed) return;
+      try{
+        var stream = new EventSource(firebaseUrl(path));
+        holder.es = stream;
+        stream.addEventListener("put", changed);
+        stream.addEventListener("patch", changed);
+        stream.addEventListener("auth_revoked", function(){ try{stream.close();}catch(e){} setTimeout(open, 2000); });
+        stream.addEventListener("cancel", function(){ try{stream.close();}catch(e){} setTimeout(open, 5000); });
+        stream.onerror = function(){
+          if(stream.readyState === 2 && !holder.closed) setTimeout(open, 4000);
+        };
+        stream.onopen = function(){ changed(); }; // tarik data segera setiap kali tersambung (tangkap acara terlepas)
+      }catch(e){ if(!holder.closed) setTimeout(open, 8000); }
+    }
+    holder.close = function(){ holder.closed = true; try{ if(holder.es) holder.es.close(); }catch(e){} };
+    holder.dead = function(){ return !holder.es || holder.es.readyState === 2; };
+    open();
+    return holder;
   }
   function sha256Hex(text){
     if(!window.crypto || !window.crypto.subtle) return Promise.reject(new Error("SHA-256 tidak tersedia"));
@@ -1051,16 +1076,21 @@
     state.vs.oppScore=target;
     var tb=$("vsTargetBar");
     if(state.score>target){
-      tb.textContent="🏁 Kamu sudah mendahului "+target+" markah — menamatkan permainan!";
-      showCombo("🏁 MENANG! MARKAH LAWAN DILEPASI");
+      tb.innerHTML=ikT("bendera")+" Kamu sudah mendahului "+target+" markah — menamatkan permainan!";
+      showCombo(ikT("bendera")+" MENANG! MARKAH LAWAN DILEPASI");
       endGame();
     } else {
-      tb.textContent="🏁 Lawan tamat dengan "+target+" markah — kalahkan sekarang!";
+      tb.innerHTML=ikT("bendera")+" Lawan tamat dengan "+target+" markah — kalahkan sekarang!";
     }
   }
   function firebaseApplyVs(raw){
+    var prevInc = (firebaseVsData && firebaseVsData.incoming) ? firebaseVsData.incoming.length : -1;
+    var prevSwd = firebaseVsData ? vsSwordCount(firebaseVsData) : -1;
     firebaseVsData = firebaseVsList(raw, firebaseVsData);
     setVsBadges(firebaseVsData.incoming.length, vsSwordCount(firebaseVsData));
+    // notis masa nyata: jemputan baharu / giliran kamu bermain
+    if(prevInc >= 0 && firebaseVsData.incoming.length > prevInc) queueToast(ikT("pedang")+" Jemputan VS baharu diterima!");
+    else if(prevSwd >= 0 && vsSwordCount(firebaseVsData) > prevSwd) queueToast(ikT("pedang")+" Giliran kamu — lawan sudah bermain!");
     applyLiveVsTarget(firebaseVsData);
     if(curScreen === "vsHub") renderVsHub(firebaseVsData);
     finishWaitingVsFromFirebase(firebaseVsData);
@@ -1348,7 +1378,7 @@
   function tick(){
     if(state.freeze > 0){
       state.freeze--;
-      $("timeVal").textContent = "❄" + state.freeze;
+      $("timeVal").innerHTML = ikT("salji") + state.freeze;
       if(state.freeze <= 0) endFreeze();
       return;                     // masa tidak berkurang semasa beku
     }
@@ -1361,7 +1391,7 @@
     $("finishScore").textContent=state ? state.score : 0;
     $("finishOverlay").classList.add("on");
     $("finishOverlay").setAttribute("aria-hidden","false");
-    sndCombo(); vib([70,40,140]); spawnFlakes("⭐");
+    sndCombo(); vib([70,40,140]); spawnFlakes("bintang");
   }
   function hideFinishOverlay(){
     $("finishOverlay").classList.remove("on");
@@ -1374,7 +1404,7 @@
     document.querySelector(".timerWrap").classList.add("frozen");
     var chips = document.querySelectorAll(".chip");
     chips[chips.length-1].classList.add("frozenChip");
-    $("timeVal").textContent = "❄5";
+    $("timeVal").innerHTML = ikT("salji")+"5";
     spawnFlakes();
   }
   function endFreeze(){
@@ -1387,7 +1417,7 @@
     for(var i=0; i<16; i++){
       var f = document.createElement("div");
       f.className = "flake";
-      f.textContent = emoji || "❄️";
+      f.innerHTML = ikSVG(emoji || "salji");
       f.style.left = (Math.random()*100) + "vw";
       f.style.fontSize = (14 + Math.random()*20) + "px";
       f.style.animationDuration = (1.4 + Math.random()*1.8) + "s";
@@ -1406,7 +1436,7 @@
   }
   function renderDailyGoal(){
     var d=dailyGoalData(), n=Math.min(DAILY_GOAL, Number(d.correct)||0);
-    if($("dailyGoalText")) $("dailyGoalText").textContent = n+" / "+DAILY_GOAL+" betul"+(n>=DAILY_GOAL?" ✓":"");
+    if($("dailyGoalText")) $("dailyGoalText").textContent = n+" / "+DAILY_GOAL+" betul"+(n>=DAILY_GOAL?" \u2713":"");
     if($("dailyGoalFill")) $("dailyGoalFill").style.width = Math.round(n/DAILY_GOAL*100)+"%";
     if($("dailyGoal")) $("dailyGoal").classList.toggle("done", n>=DAILY_GOAL);
   }
@@ -1416,7 +1446,7 @@
     if(completed) d.celebrated=true;
     try{ localStorage.setItem("sifirJuaraDailyGoal", JSON.stringify(d)); }catch(e){}
     renderDailyGoal();
-    if(completed){ queueToast("🌟 Matlamat hari ini selesai!"); sndFanfare(); spawnFlakes("🌟"); }
+    if(completed){ queueToast(ikT("bintang2")+" Matlamat hari ini selesai!"); sndFanfare(); spawnFlakes("bintang2"); }
   }
 
   function updateTimer(){
@@ -1585,6 +1615,7 @@
       // markah: asas 10 + bonus ikut betul berturut
       var pts = 10 + state.run*2;
       state.score += pts;
+      if(state.score > 999999) state.score = 999999;
       state.correct++;
       recordDailyCorrect();
       state.run++;
@@ -1601,14 +1632,14 @@
       floatPts("+"+pts);
       flame();
       $("card").classList.add("correct");
-      $("feedback").textContent = "Betul! 🎉";
+      $("feedback").innerHTML = "Betul! "+ikT("raya");
       $("feedback").className = "feedback good";
       sndGood(); vib(25);
 
       if(gotStreak){
         var isFreeze = (state.streak % 3 === 0);   // setiap 3 streak
         if(state.practice){
-          showCombo("🔥 STREAK ×" + state.streak + "!");
+          showCombo(ikT("api")+" STREAK ×" + state.streak + "!");
           sndCombo(); vib([30,30,30]);
         } else if(isFreeze){
           state.freezeCount++;
@@ -1617,18 +1648,18 @@
             state.refilled = true;
             state.time = state.cfg.time;
             updateTimer();
-            showCombo("🌟 BONUS BESAR — MASA PENUH " + state.cfg.time + " SAAT!");
-            spawnFlakes("🌟");
+            showCombo(ikT("bintang2")+" BONUS BESAR — MASA PENUH " + state.cfg.time + " SAAT!");
+            spawnFlakes("bintang2");
             sndFanfare(); vib([50,50,50,50,180]);
           } else {
             startFreeze();
-            showCombo("❄️ " + state.streak + " STREAK — MASA BEKU 5 SAAT!");
+            showCombo(ikT("salji")+" " + state.streak + " STREAK — MASA BEKU 5 SAAT!");
             sndFreeze(); vib([80,40,80]);
           }
         } else {
           state.time += 3;
           updateTimer();
-          showCombo("🔥 STREAK ×" + state.streak + "  +3 saat!");
+          showCombo(ikT("api")+" STREAK ×" + state.streak + "  +3 saat!");
           sndCombo(); vib([30,30,30]);
         }
       }
@@ -1667,7 +1698,7 @@
   }
   function showCombo(txt){
     var c = $("combo");
-    c.textContent = txt;
+    c.innerHTML = txt;
     c.classList.remove("go"); void c.offsetWidth; c.classList.add("go");
   }
 
@@ -1692,7 +1723,7 @@
     if(state.practice) submitPracticeProgress(state);
     if(!state.practice && state.score > 0){
       // isi nama & kelas dahulu
-      $("saveScore").innerHTML = state.score + "<small>Markah</small>";
+      $("saveScore").innerHTML = fmtNum(state.score) + "<small>Markah</small>";
       // nama & kelas dipapar sahaja (tidak boleh edit); guest guna GUEST(nombor)
       $("saveWho").style.display = "";
       $("saveWhoName").textContent = effName().toUpperCase();
@@ -1712,21 +1743,21 @@
     state.saved = false;
 
     // medal + tajuk
-    var medal="🏆", title="Hebat!";
-    if(state.score < 60){ medal="🌱"; title="Bagus, teruskan berlatih!"; }
-    else if(state.score < 140){ medal="⭐"; title="Kerja yang bagus!"; }
-    else if(state.score < 240){ medal="🥇"; title="Hebat sekali!"; }
-    else { medal="👑"; title="Juara Sifir!"; }
+    var medal="trofi", title="Hebat!";
+    if(state.score < 60){ medal="benih"; title="Bagus, teruskan berlatih!"; }
+    else if(state.score < 140){ medal="bintang"; title="Kerja yang bagus!"; }
+    else if(state.score < 240){ medal="emas"; title="Hebat sekali!"; }
+    else { medal="mahkota"; title="Juara Sifir!"; }
 
-    $("medal").textContent = medal;
+    $("medal").innerHTML = ikSVG(medal);
     $("resultTitle").textContent = title;
-    $("finalScore").innerHTML = state.score + "<small>Markah</small>";
+    $("finalScore").innerHTML = fmtNum(state.score) + "<small>Markah</small>";
 
     var bl = $("bestLine");
     if(state.practice){
-      bl.textContent = "🧘 Mod Latihan — markah tidak disimpan"; bl.className="best dark";
+      bl.innerHTML = ikT("teratai")+" Mod Latihan — markah tidak disimpan"; bl.className="best dark";
     } else {
-      bl.textContent = "Markah tertinggi "+state.cfg.label+": " + top;
+      bl.textContent = "Markah tertinggi "+state.cfg.label+": " + fmtNum(top);
       bl.className = "best dark";
     }
 
@@ -1758,7 +1789,7 @@
     if(worst.length === 0){
       if(state.wrong === 0){
         box.className = "weak ok";
-        title.textContent = "Semua sifir mantap! ✅";
+        title.innerHTML = "Semua sifir mantap! "+ikT("tanda");
         text.textContent = "Tiada silap langsung — luar biasa!";
       } else {
         box.className = "weak";
@@ -1783,40 +1814,101 @@
     if(timerId){ clearInterval(timerId); timerId=null; }
     show("start");
   });
+
+  // ===== IKON SVG (kartun moden, tanpa emoji) =====
+  var IKON={
+  jam:'<circle cx="20" cy="22" r="14" fill="#fef9ff" stroke="#5a4fd0" stroke-width="3"/><rect x="17" y="3" width="6" height="4" rx="2" fill="#5a4fd0"/><path d="M29 8 L32 11" stroke="#5a4fd0" stroke-width="3" stroke-linecap="round"/><path d="M20 22 L20 13 M20 22 L26 25" stroke="#ff4d6d" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="22" r="2.2" fill="#5a4fd0"/>',
+  teratai:'<path d="M20 8 Q24 14 24 20 Q24 27 20 30 Q16 27 16 20 Q16 14 20 8Z" fill="#ff77b6"/><path d="M8 14 Q15 15 18 21 Q20 27 17 30 Q10 28 8 14Z" fill="#ff9fcb"/><path d="M32 14 Q25 15 22 21 Q20 27 23 30 Q30 28 32 14Z" fill="#ff9fcb"/><path d="M6 26 Q13 25 20 30 Q27 25 34 26 Q28 34 20 34 Q12 34 6 26Z" fill="#5ac46a"/>',
+  pedang:'<path d="M9 6 L20 17 M31 6 L20 17 M9 6 L13 6 M9 6 L9 10 M31 6 L27 6 M31 6 L31 10" stroke="#c9d0dd" stroke-width="3.4" stroke-linecap="round"/><path d="M13 24 L27 10 M27 24 L13 10" stroke="#aab3c2" stroke-width="3.4" stroke-linecap="round"/><path d="M12 25 L8 33 M28 25 L32 33" stroke="#f2b437" stroke-width="4.4" stroke-linecap="round"/><circle cx="8" cy="34" r="3" fill="#f2b437"/><circle cx="32" cy="34" r="3" fill="#f2b437"/>',
+  sasaran:'<circle cx="20" cy="20" r="15" fill="#f05038"/><circle cx="20" cy="20" r="10" fill="#fff"/><circle cx="20" cy="20" r="5.4" fill="#f05038"/><circle cx="20" cy="20" r="1.8" fill="#fff"/>',
+  trofi:'<path d="M11 6 L29 6 L28 18 Q26 26 20 26 Q14 26 12 18Z" fill="#ffd23a"/><path d="M11 8 Q4 8 5 15 Q6 20 12 20 M29 8 Q36 8 35 15 Q34 20 28 20" fill="none" stroke="#f2b437" stroke-width="3"/><rect x="17" y="26" width="6" height="5" fill="#e8a914"/><path d="M12 33 L28 33 L26 37 L14 37Z" fill="#c98a2a"/><path d="M15 10 Q14 15 16 19" stroke="#fff" stroke-width="2.4" fill="none" opacity=".6"/>',
+  medal:'<path d="M14 4 L20 14 L26 4 L32 4 L23 18 L17 18 L8 4Z" fill="#4b7bec"/><circle cx="20" cy="26" r="10" fill="#ffd23a"/><circle cx="20" cy="26" r="7" fill="#f2b437"/><path d="M20 21 L21.6 24.4 L25.4 24.8 L22.6 27.4 L23.4 31 L20 29 L16.6 31 L17.4 27.4 L14.6 24.8 L18.4 24.4Z" fill="#fff6d8"/>',
+  buku:'<path d="M6 8 Q13 5 20 9 L20 33 Q13 29 6 32Z" fill="#4aa8e8"/><path d="M34 8 Q27 5 20 9 L20 33 Q27 29 34 32Z" fill="#5f9bf0"/><path d="M10 13 Q15 11 17 13 M10 18 Q15 16 17 18 M23 13 Q28 11 30 13 M23 18 Q28 16 30 18" stroke="#fff" stroke-width="2" fill="none" opacity=".75"/>',
+  orang:'<circle cx="20" cy="13" r="8" fill="#f2c89a"/><path d="M6 34 Q6 22 20 22 Q34 22 34 34Z" fill="#5a8fd0"/>',
+  gear:'<path d="M20 6 L23 6 L24 11 L28 13 L33 11 L35 14 L31 18 L31 22 L35 26 L33 29 L28 27 L24 29 L23 34 L17 34 L16 29 L12 27 L7 29 L5 26 L9 22 L9 18 L5 14 L7 11 L12 13 L16 11 L17 6Z" fill="#8a92a3"/><circle cx="20" cy="20" r="6" fill="#fef9ff"/>',
+  bunyi:'<path d="M6 15 L12 15 L20 8 L20 32 L12 25 L6 25Z" fill="#5a4fd0"/><path d="M25 14 Q29 20 25 26 M29 10 Q35 20 29 30" stroke="#5a4fd0" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  getar:'<rect x="13" y="6" width="14" height="28" rx="4" fill="#5a4fd0"/><rect x="16" y="9" width="8" height="19" rx="2" fill="#cfe4ff"/><path d="M7 13 Q4 20 7 27 M33 13 Q36 20 33 27" stroke="#ff77b6" stroke-width="3" fill="none" stroke-linecap="round"/>',
+  tambah:'<circle cx="20" cy="20" r="15" fill="#48c46a"/><path d="M20 12 L20 28 M12 20 L28 20" stroke="#fff" stroke-width="4.4" stroke-linecap="round"/>',
+  pensel:'<path d="M8 32 L10 24 L26 8 L32 14 L16 30Z" fill="#f2b437"/><path d="M26 8 L32 14 L34 8 Q33 5 30 6Z" fill="#ff8aa0"/><path d="M8 32 L10 24 L16 30Z" fill="#f6c89a"/><path d="M8 32 L9.4 28 L12 30.6Z" fill="#4a3f66"/>',
+  emel:'<rect x="5" y="9" width="30" height="22" rx="4" fill="#fef9ff" stroke="#5a4fd0" stroke-width="2.6"/><path d="M6 11 L20 22 L34 11" stroke="#5a4fd0" stroke-width="2.6" fill="none"/>',
+  benih:'<ellipse cx="20" cy="34" rx="10" ry="3.4" fill="#8a5a30"/><rect x="18.6" y="23" width="2.8" height="10" rx="1.4" fill="#57a34a"/><path d="M20 25 Q11 23 10 15 Q19 16 20 25Z" fill="#6cc95e"/><path d="M20 25 Q29 23 30 15 Q21 16 20 25Z" fill="#59b34f"/>',
+  kilat:'<path d="M23 4 L10 22 L18 22 L15 36 L30 17 L21 17Z" fill="#ffd23a" stroke="#f2b437" stroke-width="1.6" stroke-linejoin="round"/>',
+  api:'<path d="M20 4 Q28 12 26 19 Q25 15 21 13 Q25 20 20 24 Q14 20 17 12 Q12 18 13 25 Q14 33 20 35 Q29 33 29 23 Q29 12 20 4Z" fill="#ff8a3a"/><path d="M20 35 Q14 33 14 26 Q14 20 20 16 Q26 20 26 26 Q26 33 20 35Z" fill="#ffd23a"/>',
+  hero:'<path d="M6 14 Q20 6 34 14 Q32 22 20 22 Q8 22 6 14Z" fill="#7c5cff"/><circle cx="14" cy="15" r="3.4" fill="#fff"/><circle cx="26" cy="15" r="3.4" fill="#fff"/><circle cx="14" cy="15" r="1.6" fill="#26223a"/><circle cx="26" cy="15" r="1.6" fill="#26223a"/><path d="M12 28 Q20 24 28 28 L26 36 Q20 33 14 36Z" fill="#ff4d6d"/>',
+  salji:'<path d="M20 4 L20 36 M6 12 L34 28 M34 12 L6 28" stroke="#7cd0f0" stroke-width="3" stroke-linecap="round"/><path d="M20 4 L16 9 M20 4 L24 9 M20 36 L16 31 M20 36 L24 31 M6 12 L12 12 M6 12 L9 17 M34 28 L28 28 M34 28 L31 23 M34 12 L28 12 M34 12 L31 17 M6 28 L12 28 M6 28 L9 23" stroke="#7cd0f0" stroke-width="2.2" stroke-linecap="round"/>',
+  bintang:'<path d="M20 3 L24.6 14 L36 15 L27.5 22.8 L30 34.5 L20 28.4 L10 34.5 L12.5 22.8 L4 15 L15.4 14Z" fill="#ffd23a" stroke="#f2b437" stroke-width="1.4" stroke-linejoin="round"/>',
+  bintang2:'<path d="M20 3 L24.6 14 L36 15 L27.5 22.8 L30 34.5 L20 28.4 L10 34.5 L12.5 22.8 L4 15 L15.4 14Z" fill="#ffe37a" stroke="#f2b437" stroke-width="1.4" stroke-linejoin="round"/><path d="M20 9 L22.4 15 L28 16 L23.8 20 L25 26 L20 23 L15 26 L16.2 20 L12 16 L17.6 15Z" fill="#fff6c0"/>',
+  komet:'<circle cx="26" cy="14" r="8" fill="#ffe37a"/><path d="M20 20 Q10 28 4 36 Q14 32 22 24 M18 14 Q10 16 4 22 Q12 20 20 18 M28 24 Q26 30 22 36 Q28 32 31 26" fill="#ffd23a" opacity=".8"/>',
+  mahkota:'<path d="M6 28 L6 12 L14 19 L20 7 L26 19 L34 12 L34 28Z" fill="#ffd23a"/><rect x="6" y="28" width="28" height="5" rx="2" fill="#f2b437"/><circle cx="20" cy="24" r="2.4" fill="#ff5f9e"/><circle cx="12" cy="25" r="1.8" fill="#4adce0"/><circle cx="28" cy="25" r="1.8" fill="#4adce0"/>',
+  raya:'<path d="M8 34 L14 16 L26 28Z" fill="#ff8a4a"/><path d="M8 34 L11 25 L17 31Z" fill="#ffd23a"/><path d="M22 14 Q26 8 32 8 M26 20 Q32 18 35 13 M18 10 Q18 6 21 4" stroke="#b28cff" stroke-width="2.6" fill="none" stroke-linecap="round"/><circle cx="33" cy="6" r="2.4" fill="#ff5f9e"/><circle cx="36" cy="15" r="2" fill="#4adce0"/><circle cx="23" cy="5" r="2" fill="#48c46a"/>',
+  bendera:'<rect x="8" y="4" width="3.4" height="32" rx="1.7" fill="#8a92a3"/><path d="M12 6 L32 6 L32 20 L12 20Z" fill="#fff"/><path d="M12 6 L17 6 L17 11 L12 11Z M22 6 L27 6 L27 11 L22 11Z M17 11 L22 11 L22 16 L17 16Z M27 11 L32 11 L32 16 L27 16Z M12 16 L17 16 L17 20 L12 20Z M22 16 L27 16 L27 20 L22 20Z" fill="#26223a"/>',
+  bendera2:'<rect x="10" y="4" width="3.4" height="32" rx="1.7" fill="#9a6a3a"/><path d="M14 6 L32 10 L14 17Z" fill="#ff5f5f"/>',
+  kunci:'<rect x="9" y="17" width="22" height="17" rx="5" fill="#f2b437"/><path d="M14 17 L14 12 Q14 5 20 5 Q26 5 26 12 L26 17" fill="none" stroke="#d9962a" stroke-width="4"/><circle cx="20" cy="24" r="3" fill="#8a5a10"/><rect x="18.6" y="25" width="2.8" height="5" rx="1.4" fill="#8a5a10"/>',
+  jampasir:'<path d="M10 5 L30 5 L30 9 Q30 15 24 19 L24 21 Q30 25 30 31 L30 35 L10 35 L10 31 Q10 25 16 21 L16 19 Q10 15 10 9Z" fill="#cfe4ff" stroke="#5a8fd0" stroke-width="2.4"/><path d="M14 9 L26 9 Q25 14 20 17 Q15 14 14 9Z" fill="#f2b437"/><path d="M17 31 L23 31 L20 25Z" fill="#f2b437"/>',
+  amaran:'<path d="M20 4 L37 33 L3 33Z" fill="#ffd23a" stroke="#f2b437" stroke-width="2" stroke-linejoin="round"/><rect x="18" y="14" width="4" height="10" rx="2" fill="#7a4a00"/><circle cx="20" cy="28.5" r="2.4" fill="#7a4a00"/>',
+  salam:'<path d="M4 16 Q10 8 17 13 L20 16 L23 13 Q30 8 36 16 L28 26 Q24 30 20 27 Q16 30 12 26Z" fill="#f2c89a"/><path d="M17 13 L20 16 L23 13" stroke="#d9a870" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  lengan:'<path d="M12 6 Q9 14 10 22 Q11 30 19 33 Q29 36 34 28 Q37 22 32 18 Q27 15 23 18 Q20 20 20 24 M12 6 Q16 5 19 8 L16 14 Q12 12 12 6Z" fill="#f2c89a" stroke="#d9a870" stroke-width="2.2" stroke-linecap="round" fill-rule="evenodd"/>',
+  kilau:'<path d="M14 4 L16.4 11.6 L24 14 L16.4 16.4 L14 24 L11.6 16.4 L4 14 L11.6 11.6Z" fill="#ffe37a"/><path d="M28 18 L29.8 23.2 L35 25 L29.8 26.8 L28 32 L26.2 26.8 L21 25 L26.2 23.2Z" fill="#4adce0"/><path d="M20 28 L21.2 31.4 L24.6 32.6 L21.2 33.8 L20 37.2 L18.8 33.8 L15.4 32.6 L18.8 31.4Z" fill="#ff9fcb"/>',
+  tanda:'<circle cx="20" cy="20" r="15" fill="#48c46a"/><path d="M12 20 L18 26 L28 14" stroke="#fff" stroke-width="4.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  emas:'<circle cx="20" cy="20" r="14" fill="#ffd23a" stroke="#e8a914" stroke-width="3"/><path d="M15 26 L15 14 L20 18 L25 14 L25 26" stroke="#a8700a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  perak:'<circle cx="20" cy="20" r="14" fill="#d5dbe8" stroke="#9aa4b5" stroke-width="3"/><path d="M15 26 L15 14 L20 18 L25 14 L25 26" stroke="#5f6b7d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  gangsa:'<circle cx="20" cy="20" r="14" fill="#e8a05f" stroke="#b5764a" stroke-width="3"/><path d="M15 26 L15 14 L20 18 L25 14 L25 26" stroke="#6f421f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  gamepad:'<path d="M8 12 Q20 8 32 12 Q38 14 37 24 Q36 32 31 31 Q27 30 25 26 L15 26 Q13 30 9 31 Q4 32 3 24 Q2 14 8 12Z" fill="#7c5cff"/><path d="M11 17 L11 23 M8 20 L14 20" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="27" cy="18" r="2.2" fill="#ffd23a"/><circle cx="31" cy="22" r="2.2" fill="#48c46a"/>',
+  joystick:'<circle cx="20" cy="10" r="6" fill="#ff5f5f"/><rect x="18" y="14" width="4" height="12" fill="#8a92a3"/><path d="M8 26 L32 26 L34 34 L6 34Z" fill="#4a4f6a"/><circle cx="28" cy="30" r="2" fill="#ffd23a"/>',
+  kalendar:'<rect x="6" y="8" width="28" height="26" rx="4" fill="#fef9ff" stroke="#5a4fd0" stroke-width="2.6"/><rect x="6" y="8" width="28" height="8" fill="#5a4fd0"/><rect x="12" y="4" width="3.4" height="7" rx="1.7" fill="#26223a"/><rect x="24.6" y="4" width="3.4" height="7" rx="1.7" fill="#26223a"/><rect x="11" y="20" width="5" height="5" rx="1" fill="#ff77b6"/><rect x="18" y="20" width="5" height="5" rx="1" fill="#cfd8ea"/><rect x="25" y="20" width="5" height="5" rx="1" fill="#cfd8ea"/><rect x="11" y="27" width="5" height="4" rx="1" fill="#cfd8ea"/>',
+  stadium:'<ellipse cx="20" cy="26" rx="16" ry="8" fill="#5a8fd0"/><ellipse cx="20" cy="22" rx="16" ry="8" fill="#7cb0e8"/><ellipse cx="20" cy="21" rx="10" ry="4.6" fill="#5ac46a"/><path d="M4 22 L4 26 M36 22 L36 26" stroke="#4a6ab0" stroke-width="2"/><rect x="18.6" y="8" width="2.8" height="8" fill="#8a92a3"/><path d="M21 8 L30 10 L21 13Z" fill="#ff5f5f"/>',
+  seratus:'<circle cx="20" cy="20" r="15" fill="#ff9f43"/><text x="20" y="25.4" font-size="13" font-weight="800" text-anchor="middle" fill="#fff" font-family="Nunito,system-ui">100</text>',
+  otak:'<path d="M17 6 Q10 6 9 12 Q4 14 5 20 Q3 26 9 28 Q10 34 17 33 L17 6Z" fill="#ff9fcb"/><path d="M23 6 Q30 6 31 12 Q36 14 35 20 Q37 26 31 28 Q30 34 23 33 L23 6Z" fill="#ff77b6"/><path d="M20 5 L20 34" stroke="#e0559b" stroke-width="2"/><path d="M12 14 Q15 16 13 20 M27 12 Q25 16 28 19" stroke="#e0559b" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  roket:'<path d="M20 3 Q29 10 27 22 L13 22 Q11 10 20 3Z" fill="#e8ecf5"/><circle cx="20" cy="14" r="4" fill="#4adce0" stroke="#26325a" stroke-width="2"/><path d="M13 20 Q7 24 7 30 L14 27 M27 20 Q33 24 33 30 L26 27" fill="#ff5f5f"/><path d="M16 24 L24 24 L22 30 L18 30Z" fill="#8a92a3"/><path d="M20 31 Q17 35 20 38 Q23 35 20 31Z" fill="#ff8a3a"/>',
+  gunungapi:'<path d="M14 12 L26 12 L36 34 L4 34Z" fill="#8a5a3a"/><path d="M14 12 L26 12 L29 19 Q24 22 20 19 Q16 22 11 19Z" fill="#ff5f3a"/><path d="M18 4 Q17 8 20 10 M24 3 Q25 7 23 10 M14 6 Q15 9 16 10" stroke="#ff8a3a" stroke-width="2.6" fill="none" stroke-linecap="round"/>',
+  peta:'<path d="M5 9 L14 6 L26 10 L35 7 L35 31 L26 34 L14 30 L5 33Z" fill="#f2e8c9"/><path d="M14 6 L14 30 M26 10 L26 34" stroke="#d9c99a" stroke-width="2"/><path d="M9 16 Q14 20 20 17 Q27 14 31 19" stroke="#f05038" stroke-width="2.4" fill="none" stroke-dasharray="3 3"/><circle cx="31" cy="19" r="2.6" fill="#f05038"/>',
+  palet:'<path d="M20 5 Q35 5 36 18 Q36 26 28 26 L24 26 Q21 26 22 30 Q23 35 18 35 Q5 34 4 20 Q4 6 20 5Z" fill="#f2c89a"/><circle cx="13" cy="14" r="3" fill="#f05038"/><circle cx="22" cy="11" r="3" fill="#4aa8e8"/><circle cx="29" cy="16" r="3" fill="#48c46a"/><circle cx="11" cy="23" r="3" fill="#ffd23a"/>',
+  perisai:'<path d="M20 4 Q28 8 34 8 Q34 24 20 36 Q6 24 6 8 Q12 8 20 4Z" fill="#4b7bec"/><path d="M20 8 Q26 11 30 11 Q30 23 20 32Z" fill="#7ca3f5"/><path d="M14 19 L18 23 L26 14" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  lambang:'<path d="M20 4 Q24 10 24 15 Q24 20 20 22 Q16 20 16 15 Q16 10 20 4Z" fill="#b28cff"/><path d="M9 12 Q15 13 17 18 Q19 23 15 25 Q9 23 9 12Z" fill="#9a6fe8"/><path d="M31 12 Q25 13 23 18 Q21 23 25 25 Q31 23 31 12Z" fill="#9a6fe8"/><rect x="13" y="26" width="14" height="4" rx="2" fill="#7c5cff"/><path d="M17 30 L17 36 M23 30 L23 36" stroke="#7c5cff" stroke-width="3" stroke-linecap="round"/>',
+  pelangi:'<path d="M6 30 A14 14 0 0 1 34 30" fill="none" stroke="#f05038" stroke-width="4"/><path d="M11 30 A9 9 0 0 1 29 30" fill="none" stroke="#ffd23a" stroke-width="4"/><path d="M16 30 A4 4 0 0 1 24 30" fill="none" stroke="#48c46a" stroke-width="4"/><ellipse cx="7" cy="31" rx="4.4" ry="3.4" fill="#fff"/><ellipse cx="33" cy="31" rx="4.4" ry="3.4" fill="#fff"/>',
+  musang:'<path d="M8 8 Q8 2 13 5 L17 9 L23 9 L27 5 Q32 2 32 8 L32 12 Q36 18 32 24 Q28 31 20 31 Q12 31 8 24 Q4 18 8 12Z" fill="#ff8a4a"/><path d="M9 9 Q9 5 12 7 L15 10 L11 13Z M31 9 Q31 5 28 7 L25 10 L29 13Z" fill="#e86a2a"/><path d="M12 22 Q20 34 28 22 Q24 27 20 27 Q16 27 12 22Z" fill="#fff"/><circle cx="15" cy="17" r="2.4" fill="#26223a"/><circle cx="25" cy="17" r="2.4" fill="#26223a"/><path d="M18 22.6 Q20 24.4 22 22.6 L20 21Z" fill="#26223a"/>',
+  jamloceng:'<circle cx="20" cy="22" r="13" fill="#fef9ff" stroke="#f05038" stroke-width="3"/><path d="M20 22 L20 14 M20 22 L25 25" stroke="#26223a" stroke-width="2.6" stroke-linecap="round"/><path d="M8 8 L13 4 M32 8 L27 4" stroke="#f05038" stroke-width="3.4" stroke-linecap="round"/><path d="M13 33 L10 37 M27 33 L30 37" stroke="#f05038" stroke-width="3" stroke-linecap="round"/>',
+  raja:'<circle cx="20" cy="24" r="11" fill="#f2c89a"/><path d="M8 18 L8 8 L14 13 L20 5 L26 13 L32 8 L32 18Z" fill="#ffd23a"/><circle cx="16" cy="24" r="1.8" fill="#26223a"/><circle cx="24" cy="24" r="1.8" fill="#26223a"/><path d="M16 29 Q20 32 24 29" stroke="#b5654a" stroke-width="2" fill="none" stroke-linecap="round"/>'
+  };
+  function ikSVG(k){return '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">'+(IKON[k]||IKON.bintang)+'</svg>';}
+  function ikT(k){return '<span class="ikt">'+ikSVG(k)+'</span>';}
+  function ikBoot(){var els=document.querySelectorAll('[data-ik]');for(var i=0;i<els.length;i++){els[i].innerHTML=ikSVG(els[i].getAttribute('data-ik'));}}
+  ikBoot();
+
   // ----- lencana & statistik -----
   var BADGES = [
-    {id:"first",   ic:"🎮", col:"#26de81", nm:"Langkah Pertama",  ds:"Tamatkan 1 permainan"},
-    {id:"games5",  ic:"🕹️", col:"#2bcbba", nm:"Pemain Setia",     ds:"Main 5 permainan"},
-    {id:"games20", ic:"📅", col:"#4b7bec", nm:"Rajin Berlatih",   ds:"Main 20 permainan"},
-    {id:"games50", ic:"🏟️", col:"#5f27cd", nm:"Veteran Sifir",    ds:"Main 50 permainan"},
-    {id:"c100",    ic:"💯", col:"#ff9f43", nm:"Seratus Betul",    ds:"100 jawapan betul (kumulatif)"},
-    {id:"c500",    ic:"🧠", col:"#e84393", nm:"Otak Bergeliga",   ds:"500 jawapan betul (kumulatif)"},
-    {id:"c1000",   ic:"🚀", col:"#eb3b5a", nm:"Sarjana Sifir",    ds:"1000 jawapan betul (kumulatif)"},
-    {id:"s3",      ic:"🔥", col:"#ff6b6b", nm:"Panas Membara",    ds:"3 streak dalam satu permainan"},
-    {id:"s5",      ic:"⚡", col:"#f7b731", nm:"Kilat Pantas",     ds:"5 streak dalam satu permainan"},
-    {id:"s10",     ic:"🌋", col:"#eb3b5a", nm:"Gunung Berapi",    ds:"10 streak dalam satu permainan"},
-    {id:"m100",    ic:"⭐", col:"#feca57", nm:"Bintang Muda",     ds:"100 markah (Time Trial)"},
-    {id:"m200",    ic:"🌟", col:"#f7b731", nm:"Bintang Terang",   ds:"200 markah (Time Trial)"},
-    {id:"m300",    ic:"💫", col:"#a55eea", nm:"Bintang Jatuh",    ds:"300 markah (Time Trial)"},
-    {id:"m500",    ic:"👑", col:"#ffd54f", nm:"Raja Sifir",       ds:"500 markah (Time Trial)"},
-    {id:"m750",    ic:"🌠", col:"#ff9ff3", nm:"Bintang Super",    ds:"750 markah (Time Trial)"},
-    {id:"perfect", ic:"🎯", col:"#26de81", nm:"Tepat Sasaran",    ds:"10+ soalan tanpa satu pun silap"},
-    {id:"frz",     ic:"❄️", col:"#54a0ff", nm:"Pembeku Masa",     ds:"Dapat bonus masa beku"},
-    {id:"refill",  ic:"🌈", col:"#00d2d3", nm:"Masa Ajaib",       ds:"Dapat bonus masa penuh semula"},
-    {id:"hero",    ic:"🦸", col:"#7c5cff", nm:"Wira Sifir",       ds:"Main mode Hero"},
-    {id:"hero100", ic:"🛡️", col:"#5f27cd", nm:"Perisai Hero",     ds:"100 markah dalam mode Hero"},
-    {id:"prac",    ic:"🧘", col:"#1dd1a1", nm:"Murid Tekun",      ds:"Cuba mod Latihan"},
-    {id:"all",     ic:"🗺️", col:"#ff9f43", nm:"Penjelajah",       ds:"Main semua tahap Time Trial"},
-    {id:"lv5",     ic:"🎖️", col:"#26de81", nm:"Aras 5",          ds:"Capai Level 5"},
-    {id:"lv10",    ic:"🏅", col:"#4b7bec", nm:"Aras 10",         ds:"Capai Level 10"},
-    {id:"lv20",    ic:"👑", col:"#ffd54f", nm:"Aras Maksimum",   ds:"Capai Level 20"},
-    {id:"avatarAll",ic:"🎨",col:"#e84393", nm:"Kolektor Avatar", ds:"Buka semua avatar"},
-    {id:"vs1",     ic:"⚔️", col:"#ff6b6b", nm:"Juara Pertama",   ds:"Menang 1 perlawanan VS"},
-    {id:"vs5",     ic:"🛡️", col:"#4b7bec", nm:"Gladiator",       ds:"Menang 5 perlawanan VS"},
-    {id:"vs25",    ic:"⚜️", col:"#a55eea", nm:"Legenda Arena",   ds:"Menang 25 perlawanan VS"},
-    {id:"vsComeback",ic:"🎯",col:"#26de81", nm:"Serangan Balas", ds:"Menang VS sebagai pencabar kedua"},
-    {id:"vsJaguh", ic:"🥉", col:"#ff9f43", nm:"Jaguh Arena",     ds:"Capai pangkat Jaguh (250 mata VS)"},
-    {id:"vsLegenda",ic:"🏆",col:"#ffd54f", nm:"Legenda Sejati",  ds:"Capai pangkat Legenda (750 mata VS)"}
+    {id:"first",   ic:"gamepad", col:"#26de81", nm:"Langkah Pertama",  ds:"Tamatkan 1 permainan"},
+    {id:"games5",  ic:"joystick", col:"#2bcbba", nm:"Pemain Setia",     ds:"Main 5 permainan"},
+    {id:"games20", ic:"kalendar", col:"#4b7bec", nm:"Rajin Berlatih",   ds:"Main 20 permainan"},
+    {id:"games50", ic:"stadium", col:"#5f27cd", nm:"Veteran Sifir",    ds:"Main 50 permainan"},
+    {id:"c100",    ic:"seratus", col:"#ff9f43", nm:"Seratus Betul",    ds:"100 jawapan betul (kumulatif)"},
+    {id:"c500",    ic:"otak", col:"#e84393", nm:"Otak Bergeliga",   ds:"500 jawapan betul (kumulatif)"},
+    {id:"c1000",   ic:"roket", col:"#eb3b5a", nm:"Sarjana Sifir",    ds:"1000 jawapan betul (kumulatif)"},
+    {id:"s3",      ic:"api", col:"#ff6b6b", nm:"Panas Membara",    ds:"3 streak dalam satu permainan"},
+    {id:"s5",      ic:"kilat", col:"#f7b731", nm:"Kilat Pantas",     ds:"5 streak dalam satu permainan"},
+    {id:"s10",     ic:"gunungapi", col:"#eb3b5a", nm:"Gunung Berapi",    ds:"10 streak dalam satu permainan"},
+    {id:"m100",    ic:"bintang", col:"#feca57", nm:"Bintang Muda",     ds:"100 markah (Time Trial)"},
+    {id:"m200",    ic:"bintang2", col:"#f7b731", nm:"Bintang Terang",   ds:"200 markah (Time Trial)"},
+    {id:"m300",    ic:"kilau", col:"#a55eea", nm:"Bintang Jatuh",    ds:"300 markah (Time Trial)"},
+    {id:"m500",    ic:"mahkota", col:"#ffd54f", nm:"Raja Sifir",       ds:"500 markah (Time Trial)"},
+    {id:"m750",    ic:"komet", col:"#ff9ff3", nm:"Bintang Super",    ds:"750 markah (Time Trial)"},
+    {id:"perfect", ic:"sasaran", col:"#26de81", nm:"Tepat Sasaran",    ds:"10+ soalan tanpa satu pun silap"},
+    {id:"frz",     ic:"salji", col:"#54a0ff", nm:"Pembeku Masa",     ds:"Dapat bonus masa beku"},
+    {id:"refill",  ic:"pelangi", col:"#00d2d3", nm:"Masa Ajaib",       ds:"Dapat bonus masa penuh semula"},
+    {id:"hero",    ic:"hero", col:"#7c5cff", nm:"Wira Sifir",       ds:"Main mode Hero"},
+    {id:"hero100", ic:"perisai", col:"#5f27cd", nm:"Perisai Hero",     ds:"100 markah dalam mode Hero"},
+    {id:"prac",    ic:"teratai", col:"#1dd1a1", nm:"Murid Tekun",      ds:"Cuba mod Latihan"},
+    {id:"all",     ic:"peta", col:"#ff9f43", nm:"Penjelajah",       ds:"Main semua tahap Time Trial"},
+    {id:"lv5",     ic:"medal", col:"#26de81", nm:"Aras 5",          ds:"Capai Level 5"},
+    {id:"lv10",    ic:"emas", col:"#4b7bec", nm:"Aras 10",         ds:"Capai Level 10"},
+    {id:"lv20",    ic:"mahkota", col:"#ffd54f", nm:"Aras Maksimum",   ds:"Capai Level 20"},
+    {id:"avatarAll",ic:"palet",col:"#e84393", nm:"Kolektor Avatar", ds:"Buka semua avatar"},
+    {id:"vs1",     ic:"pedang", col:"#ff6b6b", nm:"Juara Pertama",   ds:"Menang 1 perlawanan VS"},
+    {id:"vs5",     ic:"perisai", col:"#4b7bec", nm:"Gladiator",       ds:"Menang 5 perlawanan VS"},
+    {id:"vs25",    ic:"lambang", col:"#a55eea", nm:"Legenda Arena",   ds:"Menang 25 perlawanan VS"},
+    {id:"vsComeback",ic:"sasaran",col:"#26de81", nm:"Serangan Balas", ds:"Menang VS sebagai pencabar kedua"},
+    {id:"vsJaguh", ic:"gangsa", col:"#ff9f43", nm:"Jaguh Arena",     ds:"Capai pangkat Jaguh (250 mata VS)"},
+    {id:"vsLegenda",ic:"trofi",col:"#ffd54f", nm:"Legenda Sejati",  ds:"Capai pangkat Legenda (750 mata VS)"}
   ];
   function badgeSVG(b, unlocked){
     var col = unlocked ? (b.col||"#a55eea") : "#b6b1c7";
@@ -1827,7 +1919,7 @@
     s += '<circle cx="50" cy="48" r="35" fill="'+col+'"/>';
     s += '<circle cx="50" cy="48" r="26" fill="#fff9ef"/>';
     s += '<path d="M30 30 A35 35 0 0 1 66 18" stroke="'+l+'" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.7"/>';
-    s += '<text x="50" y="49" font-size="26" text-anchor="middle" dominant-baseline="central">'+(unlocked?(b.ic||"⭐"):"🔒")+'</text>';
+    s += '<svg x="33" y="31" width="34" height="34" viewBox="0 0 40 40" overflow="visible">'+(IKON[unlocked?b.ic:"kunci"]||IKON.bintang)+'</svg>';
     s += '</svg>';
     return s;
   }
@@ -1991,7 +2083,7 @@
     if(toastBusy || !toastQ.length) return;
     toastBusy = true;
     var t = $("toast");
-    t.textContent = toastQ.shift();
+    t.innerHTML = toastQ.shift();
     t.classList.add("show");
     sndBadge(); vib(60);
     setTimeout(function(){
@@ -2005,7 +2097,7 @@
     saveMeta();
     var b = null;
     for(var i=0;i<BADGES.length;i++) if(BADGES[i].id===id){ b=BADGES[i]; break; }
-    if(b) queueToast("🎖️ Lencana baharu: " + b.ic + " " + b.nm);
+    if(b) queueToast(ikT(b.ic)+" Lencana baharu: " + b.nm);
   }
   function evalBadges(){
     earn("first");
@@ -2103,15 +2195,15 @@
       onlineLB = null;   // paksa muat semula papan markah
       if(r && r.ok && r.stats) applyAuthoritativeStats(r.stats);
       if(r && r.ok && (r.isBest || r.first)){
-        bl.textContent = r.first
-          ? "🎉 "+name+" — markah pertama disimpan!"
-          : "🎉 "+name+" — markah tertinggi baharu!";
+        bl.innerHTML = r.first
+          ? ikT("raya")+" "+name+" — markah pertama disimpan!"
+          : ikT("raya")+" "+name+" — markah tertinggi baharu!";
         bl.className = "best";
       } else if(r && r.ok){
-        bl.textContent = "Markah terbaik anda: "+r.best+" (kali ini "+state.score+")";
+        bl.textContent = "Markah terbaik anda: "+fmtNum(r.best)+" (kali ini "+fmtNum(state.score)+")";
         bl.className = "best dark";
       } else {
-        bl.textContent = (r && r.err) ? ("⚠️ "+r.err) : "Markah disimpan setempat (luar talian)";
+        bl.textContent = (r && r.err) ? r.err : "Markah disimpan setempat (luar talian)";
         bl.className = "best dark";
       }
     });
@@ -2154,19 +2246,42 @@
     return s;
   }
   // 8 avatar khas (rare) untuk index 12-19
-  var SPECIALS = [
-    '<circle cx="50" cy="50" r="50" fill="#dfe9f5"/><line x1="50" y1="30" x2="50" y2="18" stroke="#607d8b" stroke-width="3"/><circle cx="50" cy="16" r="4" fill="#ff5252"/><rect x="26" y="30" width="48" height="42" rx="11" fill="#90a4ae"/><rect x="30" y="34" width="40" height="34" rx="8" fill="#cfd8dc"/><circle cx="40" cy="48" r="6" fill="#00bcd4"/><circle cx="40" cy="48" r="2.5" fill="#0b3a45"/><circle cx="60" cy="48" r="6" fill="#00bcd4"/><circle cx="60" cy="48" r="2.5" fill="#0b3a45"/><rect x="40" y="58" width="20" height="6" rx="3" fill="#607d8b"/><circle cx="24" cy="50" r="4" fill="#78909c"/><circle cx="76" cy="50" r="4" fill="#78909c"/>',
-    '<circle cx="50" cy="50" r="50" fill="#e2e2ea"/><circle cx="50" cy="53" r="30" fill="#2f3640"/><rect x="20" y="40" width="60" height="12" rx="2" fill="#e84118"/><path d="M78 40 l12 -4 -4 10 z" fill="#c23616"/><path d="M80 50 l12 2 -6 8 z" fill="#c23616"/><ellipse cx="41" cy="57" rx="7" ry="4.5" fill="#fff"/><circle cx="42" cy="57" r="2.4" fill="#2f3640"/><ellipse cx="59" cy="57" rx="7" ry="4.5" fill="#fff"/><circle cx="58" cy="57" r="2.4" fill="#2f3640"/>',
-    '<circle cx="50" cy="50" r="50" fill="#2b2f55"/><circle cx="24" cy="26" r="1.4" fill="#fff"/><circle cx="78" cy="30" r="1.6" fill="#fff"/><circle cx="70" cy="18" r="1.2" fill="#fff"/><circle cx="50" cy="53" r="30" fill="#f5f6fa"/><rect x="30" y="44" width="40" height="26" rx="13" fill="#1e2746"/><ellipse cx="42" cy="54" rx="7" ry="5" fill="#4b7bec"/><path d="M62 50 l1.6 3.2 3.2 1.6 -3.2 1.6 -1.6 3.2 -1.6 -3.2 -3.2 -1.6 3.2 -1.6 z" fill="#fff"/>',
-    '<circle cx="50" cy="50" r="50" fill="#dcffe9"/><path d="M34 34 L30 18 L42 30 Z" fill="#145a32"/><path d="M66 34 L70 18 L58 30 Z" fill="#145a32"/><circle cx="50" cy="55" r="30" fill="#27ae60"/><ellipse cx="50" cy="66" rx="17" ry="11" fill="#2ecc71"/><circle cx="44" cy="67" r="2" fill="#145a32"/><circle cx="56" cy="67" r="2" fill="#145a32"/><ellipse cx="41" cy="50" rx="6" ry="7.5" fill="#fff"/><ellipse cx="41" cy="51" rx="2" ry="4.5" fill="#145a32"/><ellipse cx="59" cy="50" rx="6" ry="7.5" fill="#fff"/><ellipse cx="59" cy="51" rx="2" ry="4.5" fill="#145a32"/>',
-    '<circle cx="50" cy="50" r="50" fill="#ffe1ef"/><path d="M50 14 L45 34 L55 34 Z" fill="#f9ca24"/><path d="M50 16 L47 28 L53 28 Z" fill="#ffeaa7"/><circle cx="50" cy="56" r="29" fill="#ffffff"/><path d="M62 30 q15 7 12 26 q-9 -9 -17 -6 z" fill="#ff7675"/><path d="M67 35 q12 9 8 24 q-6 -9 -14 -8 z" fill="#a29bfe"/><path d="M38 55 q4 5 8 0" stroke="#6c5ce7" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M54 55 q4 5 8 0" stroke="#6c5ce7" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="37" cy="63" r="3" fill="#ff9ff3"/><circle cx="61" cy="63" r="3" fill="#ff9ff3"/>',
-    '<circle cx="50" cy="50" r="50" fill="#ffeede"/><path d="M30 40 L26 22 L44 34 Z" fill="#ff9f43"/><path d="M70 40 L74 22 L56 34 Z" fill="#ff9f43"/><path d="M32 38 L31 28 L40 34 Z" fill="#ffb8c6"/><path d="M68 38 L69 28 L60 34 Z" fill="#ffb8c6"/><circle cx="50" cy="56" r="28" fill="#ffb142"/><ellipse cx="39" cy="54" rx="7" ry="9" fill="#fff"/><circle cx="39" cy="55" r="5" fill="#2d3436"/><circle cx="41" cy="52" r="1.6" fill="#fff"/><ellipse cx="61" cy="54" rx="7" ry="9" fill="#fff"/><circle cx="61" cy="55" r="5" fill="#2d3436"/><circle cx="63" cy="52" r="1.6" fill="#fff"/><path d="M47 64 l3 3 3 -3 z" fill="#e17055"/><path d="M50 67 q-3 3 -6 2 M50 67 q3 3 6 2" stroke="#2d3436" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
-    '<circle cx="50" cy="50" r="50" fill="#fff6d6"/><path d="M30 34 L34 22 L42 30 L50 20 L58 30 L66 22 L70 34 Z" fill="#f9ca24"/><circle cx="34" cy="24" r="2.2" fill="#ff7675"/><circle cx="50" cy="20" r="2.4" fill="#0984e3"/><circle cx="66" cy="24" r="2.2" fill="#00b894"/><circle cx="50" cy="58" r="26" fill="#ffd8a8"/><circle cx="41" cy="56" r="3" fill="#2d3436"/><circle cx="59" cy="56" r="3" fill="#2d3436"/><path d="M42 66 q8 6 16 0" stroke="#2d3436" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="34" cy="62" r="3" fill="#ffb8b8"/><circle cx="66" cy="62" r="3" fill="#ffb8b8"/>',
-    '<circle cx="50" cy="50" r="50" fill="#e8ffe8"/><line x1="41" y1="30" x2="34" y2="16" stroke="#20bf6b" stroke-width="2.5"/><circle cx="33" cy="14" r="3.5" fill="#20bf6b"/><line x1="59" y1="30" x2="66" y2="16" stroke="#20bf6b" stroke-width="2.5"/><circle cx="67" cy="14" r="3.5" fill="#20bf6b"/><ellipse cx="50" cy="54" rx="26" ry="31" fill="#2ed573"/><ellipse cx="40" cy="52" rx="6.5" ry="11" fill="#1e272e"/><ellipse cx="38" cy="48" rx="2" ry="3" fill="#fff"/><ellipse cx="60" cy="52" rx="6.5" ry="11" fill="#1e272e"/><ellipse cx="58" cy="48" rx="2" ry="3" fill="#fff"/><path d="M45 72 q5 3 10 0" stroke="#1e272e" stroke-width="2" fill="none" stroke-linecap="round"/>'
+  // 15 avatar WOW (indeks 5-19) — semakin tinggi, semakin hebat & beranimasi
+  var WOW = [
+  // 5 Kucing Riang
+  '<circle cx="50" cy="50" r="50" fill="#ffe3ec"/><path d="M26 38 L20 14 L40 26Z" fill="#ff8fb3"/><path d="M74 38 L80 14 L60 26Z" fill="#ff8fb3"/><path d="M28 36 L24 20 L37 28Z" fill="#ffc2d6"/><path d="M72 36 L76 20 L63 28Z" fill="#ffc2d6"/><circle cx="50" cy="56" r="30" fill="#ff8fb3"/><ellipse cx="40" cy="52" rx="5" ry="6" fill="#241a52"><animate attributeName="ry" values="6;6;0.8;6" keyTimes="0;0.9;0.95;1" dur="3.6s" repeatCount="indefinite"/></ellipse><ellipse cx="60" cy="52" rx="5" ry="6" fill="#241a52"><animate attributeName="ry" values="6;6;0.8;6" keyTimes="0;0.9;0.95;1" dur="3.6s" repeatCount="indefinite"/></ellipse><path d="M46 62 Q50 66 54 62" stroke="#241a52" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M50 58 L47 62 M50 58 L53 62" stroke="#241a52" stroke-width="2" stroke-linecap="round"/><path d="M22 58 L34 60 M22 66 L34 64 M78 58 L66 60 M78 66 L66 64" stroke="#e06a90" stroke-width="2" stroke-linecap="round"/><circle cx="33" cy="62" r="4" fill="#ff5f9e" opacity=".5"/><circle cx="67" cy="62" r="4" fill="#ff5f9e" opacity=".5"/>',
+  // 6 Panda Ninja
+  '<circle cx="50" cy="50" r="50" fill="#d8e6f5"/><circle cx="30" cy="28" r="10" fill="#26223a"/><circle cx="70" cy="28" r="10" fill="#26223a"/><circle cx="50" cy="55" r="31" fill="#fff"/><rect x="19" y="42" width="62" height="12" rx="6" fill="#e0392f"/><path d="M79 44 L92 38 L88 50 L80 52Z" fill="#e0392f"><animateTransform attributeName="transform" type="rotate" values="0 80 48;8 80 48;0 80 48" dur="2.4s" repeatCount="indefinite"/></path><ellipse cx="38" cy="60" rx="8" ry="9" fill="#26223a"/><ellipse cx="62" cy="60" rx="8" ry="9" fill="#26223a"/><circle cx="39" cy="58" r="3.4" fill="#fff"/><circle cx="61" cy="58" r="3.4" fill="#fff"/><circle cx="39.6" cy="59" r="1.6" fill="#26223a"/><circle cx="60.4" cy="59" r="1.6" fill="#26223a"/><ellipse cx="50" cy="72" rx="5" ry="3.6" fill="#26223a"/><path d="M44 78 Q50 82 56 78" stroke="#26223a" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  // 7 Katak Angkasa
+  '<circle cx="50" cy="50" r="50" fill="#1c2b5a"/><circle cx="22" cy="22" r="1.6" fill="#fff"><animate attributeName="opacity" values="1;.2;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="1.4" fill="#fff"><animate attributeName="opacity" values=".3;1;.3" dur="2.6s" repeatCount="indefinite"/></circle><circle cx="70" cy="14" r="1.2" fill="#fff"/><circle cx="50" cy="58" r="26" fill="#5ac46a"/><circle cx="40" cy="40" r="9" fill="#5ac46a"/><circle cx="60" cy="40" r="9" fill="#5ac46a"/><circle cx="40" cy="39" r="5.4" fill="#fff"/><circle cx="60" cy="39" r="5.4" fill="#fff"/><circle cx="40" cy="40" r="2.6" fill="#241a52"/><circle cx="60" cy="40" r="2.6" fill="#241a52"/><path d="M40 64 Q50 72 60 64" stroke="#2f7a3a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="33" cy="58" r="3.6" fill="#ff9d9d" opacity=".6"/><circle cx="67" cy="58" r="3.6" fill="#ff9d9d" opacity=".6"/><circle cx="50" cy="52" r="38" fill="none" stroke="#9fd8ff" stroke-width="3" opacity=".7"/><ellipse cx="34" cy="30" rx="8" ry="4" fill="#fff" opacity=".35" transform="rotate(-30 34 30)"/>',
+  // 8 Robo-Bit
+  '<circle cx="50" cy="50" r="50" fill="#e2f2f5"/><rect x="47" y="10" width="6" height="12" rx="3" fill="#8a92a3"/><circle cx="50" cy="9" r="5" fill="#ff5252"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" repeatCount="indefinite"/></circle><rect x="22" y="26" width="56" height="50" rx="14" fill="#3fbfae"/><rect x="30" y="36" width="40" height="20" rx="8" fill="#173040"/><circle cx="41" cy="46" r="5" fill="#4adce0"><animate attributeName="r" values="5;3.4;5" dur="2.2s" repeatCount="indefinite"/></circle><circle cx="59" cy="46" r="5" fill="#4adce0"><animate attributeName="r" values="5;3.4;5" dur="2.2s" repeatCount="indefinite"/></circle><rect x="34" y="62" width="5" height="8" rx="2" fill="#173040"/><rect x="42" y="60" width="5" height="10" rx="2" fill="#173040"/><rect x="50" y="63" width="5" height="7" rx="2" fill="#173040"/><rect x="58" y="61" width="5" height="9" rx="2" fill="#173040"/><rect x="14" y="42" width="8" height="18" rx="4" fill="#2f9a8c"/><rect x="78" y="42" width="8" height="18" rx="4" fill="#2f9a8c"/>',
+  // 9 Ubur Neon
+  '<circle cx="50" cy="50" r="50" fill="#141a3a"/><g><path d="M28 50 Q28 24 50 24 Q72 24 72 50 L72 56 L28 56Z" fill="#ff5f9e"><animate attributeName="opacity" values="1;.75;1" dur="2s" repeatCount="indefinite"/></path><path d="M32 56 Q30 70 34 80 M42 57 Q41 72 44 84 M50 57 Q50 74 50 86 M58 57 Q59 72 56 84 M68 56 Q70 70 66 80" stroke="#ff8ab8" stroke-width="3.4" fill="none" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" values="-3 50 56;3 50 56;-3 50 56" dur="3s" repeatCount="indefinite"/></path><circle cx="42" cy="42" r="4.4" fill="#fff"/><circle cx="58" cy="42" r="4.4" fill="#fff"/><circle cx="42" cy="43" r="2" fill="#241a52"/><circle cx="58" cy="43" r="2" fill="#241a52"/><path d="M44 50 Q50 54 56 50" stroke="#c93a70" stroke-width="2.4" fill="none" stroke-linecap="round"/></g><circle cx="50" cy="46" r="34" fill="#ff5f9e" opacity=".14"><animate attributeName="r" values="34;40;34" dur="2.6s" repeatCount="indefinite"/></circle>',
+  // 10 Serigala Siber
+  '<circle cx="50" cy="50" r="50" fill="#2a2f45"/><path d="M28 40 L20 14 L42 28Z" fill="#7d8bad"/><path d="M72 40 L80 14 L58 28Z" fill="#7d8bad"/><path d="M30 36 L26 22 L38 30Z" fill="#4a5578"/><path d="M70 36 L74 22 L62 30Z" fill="#4a5578"/><circle cx="50" cy="58" r="29" fill="#93a3c4"/><path d="M50 46 Q36 46 32 58 Q40 54 50 55 Q60 54 68 58 Q64 46 50 46Z" fill="#e8eef8"/><ellipse cx="40" cy="55" rx="5" ry="5.6" fill="#241a52"/><g><ellipse cx="60" cy="55" rx="6" ry="6.4" fill="#0d2233"/><ellipse cx="60" cy="55" rx="4" ry="4.4" fill="#31e6ff"><animate attributeName="opacity" values="1;.35;1" dur="1.6s" repeatCount="indefinite"/></ellipse><path d="M53 55 L67 55" stroke="#31e6ff" stroke-width="1.2" opacity=".7"><animate attributeName="opacity" values=".7;.15;.7" dur="1.6s" repeatCount="indefinite"/></path></g><path d="M46 68 L54 68 L50 73Z" fill="#241a52"/><path d="M50 73 Q50 78 44 79" stroke="#241a52" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+  // 11 Astro Comel
+  '<circle cx="50" cy="50" r="50" fill="#20255c"/><circle cx="20" cy="24" r="1.6" fill="#fff"><animate attributeName="opacity" values="1;.2;1" dur="1.8s" repeatCount="indefinite"/></circle><circle cx="82" cy="20" r="1.4" fill="#fff"><animate attributeName="opacity" values=".2;1;.2" dur="2.4s" repeatCount="indefinite"/></circle><circle cx="76" cy="76" r="1.4" fill="#fff"/><g><animateTransform attributeName="transform" type="translate" values="0 0;0 -3;0 0" dur="3s" repeatCount="indefinite"/><circle cx="50" cy="52" r="30" fill="#f2f4ff"/><circle cx="50" cy="52" r="30" fill="none" stroke="#c9d4f0" stroke-width="3"/><path d="M26 52 Q26 30 50 30 Q74 30 74 52 L74 58 Q74 64 66 64 L34 64 Q26 64 26 58Z" fill="#31364f"/><path d="M32 42 Q40 34 52 35" stroke="#8fd0ff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/><circle cx="62" cy="44" r="3" fill="#ffd23a"><animate attributeName="opacity" values="1;.3;1" dur="2s" repeatCount="indefinite"/></circle><rect x="42" y="78" width="16" height="7" rx="3.5" fill="#ff7a4a"/></g>',
+  // 12 Naga Kristal
+  '<circle cx="50" cy="50" r="50" fill="#0f2a4a"/><path d="M30 26 L24 8 L40 20Z" fill="#7ce0ff"/><path d="M70 26 L76 8 L60 20Z" fill="#7ce0ff"/><circle cx="50" cy="56" r="30" fill="#3f9fd9"/><path d="M50 26 L58 40 L50 48 L42 40Z" fill="#a8ecff"><animate attributeName="opacity" values="1;.5;1" dur="2.2s" repeatCount="indefinite"/></path><path d="M30 48 L38 52 L34 60Z" fill="#7ce0ff" opacity=".8"><animate attributeName="opacity" values=".8;.3;.8" dur="2.8s" repeatCount="indefinite"/></path><path d="M70 48 L62 52 L66 60Z" fill="#7ce0ff" opacity=".8"><animate attributeName="opacity" values=".3;.8;.3" dur="2.8s" repeatCount="indefinite"/></path><ellipse cx="41" cy="54" rx="5" ry="6" fill="#eaffff"/><ellipse cx="59" cy="54" rx="5" ry="6" fill="#eaffff"/><circle cx="41" cy="55" r="2.4" fill="#0f2a4a"/><circle cx="59" cy="55" r="2.4" fill="#0f2a4a"/><path d="M42 68 Q50 74 58 68" stroke="#0f3a5a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M46 74 L48 70 M54 74 L52 70" stroke="#eaffff" stroke-width="2" stroke-linecap="round"/>',
+  // 13 Phoenix Api
+  '<circle cx="50" cy="50" r="50" fill="#3a1230"/><g><path d="M50 6 Q58 16 54 26 Q52 20 48 18 Q52 26 46 30 Q40 22 44 12 Q46 8 50 6Z" fill="#ff8a3a"><animateTransform attributeName="transform" type="rotate" values="-6 50 22;6 50 22;-6 50 22" dur="1.6s" repeatCount="indefinite"/></path><path d="M28 20 Q34 26 32 34 L24 30Z" fill="#ffb03a"><animate attributeName="opacity" values="1;.5;1" dur="1.3s" repeatCount="indefinite"/></path><path d="M72 20 Q66 26 68 34 L76 30Z" fill="#ffb03a"><animate attributeName="opacity" values=".5;1;.5" dur="1.3s" repeatCount="indefinite"/></path></g><circle cx="50" cy="58" r="29" fill="#ff6a3a"/><path d="M50 42 Q38 44 34 54 Q42 50 50 51 Q58 50 66 54 Q62 44 50 42Z" fill="#ffd23a"/><ellipse cx="41" cy="56" rx="4.6" ry="5.4" fill="#fff"/><ellipse cx="59" cy="56" rx="4.6" ry="5.4" fill="#fff"/><circle cx="41" cy="57" r="2.2" fill="#3a1230"/><circle cx="59" cy="57" r="2.2" fill="#3a1230"/><path d="M46 66 L54 66 L50 73Z" fill="#ffd23a"/><path d="M30 78 Q50 88 70 78 Q60 84 50 84 Q40 84 30 78Z" fill="#ffb03a" opacity=".8"/>',
+  // 14 Ahli Sihir Galaksi
+  '<circle cx="50" cy="50" r="50" fill="#241a52"/><g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="14s" repeatCount="indefinite"/><circle cx="50" cy="10" r="2" fill="#ffd23a"/><circle cx="88" cy="60" r="1.6" fill="#4adce0"/><circle cx="18" cy="72" r="1.8" fill="#ff8ab8"/></g><path d="M50 8 L66 40 L34 40Z" fill="#6a3ff0"/><path d="M50 8 L58 24 L42 24Z" fill="#8a5fff"/><circle cx="50" cy="12" r="3.4" fill="#ffd23a"><animate attributeName="opacity" values="1;.4;1" dur="1.8s" repeatCount="indefinite"/></circle><rect x="30" y="38" width="40" height="7" rx="3.5" fill="#4a2fb0"/><circle cx="50" cy="60" r="24" fill="#f2c89a"/><circle cx="42" cy="57" r="3" fill="#241a52"/><circle cx="58" cy="57" r="3" fill="#241a52"/><path d="M36 52 Q39 49 42 51 M58 51 Q61 49 64 52" stroke="#b0b8d9" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M40 74 Q44 84 50 86 Q56 84 60 74 Q55 78 50 78 Q45 78 40 74Z" fill="#e8eef8"/><path d="M44 66 Q50 71 56 66" stroke="#8a5a30" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  // 15 Raja Singa Emas
+  '<circle cx="50" cy="50" r="50" fill="#4a2a10"/><g><circle cx="50" cy="56" r="36" fill="#e8901f"/><circle cx="50" cy="56" r="36" fill="none" stroke="#c9741a" stroke-width="5" stroke-dasharray="9 7"><animateTransform attributeName="transform" type="rotate" from="0 50 56" to="360 50 56" dur="24s" repeatCount="indefinite"/></circle></g><circle cx="50" cy="58" r="25" fill="#ffd88a"/><path d="M34 14 L40 24 L50 20 L60 24 L66 14 L70 28 L30 28Z" fill="#ffd23a"/><circle cx="40" cy="18" r="2" fill="#ff5f9e"><animate attributeName="opacity" values="1;.3;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="60" cy="18" r="2" fill="#4adce0"><animate attributeName="opacity" values=".3;1;.3" dur="2s" repeatCount="indefinite"/></circle><ellipse cx="41" cy="54" rx="4.6" ry="5.4" fill="#4a2a10"/><ellipse cx="59" cy="54" rx="4.6" ry="5.4" fill="#4a2a10"/><path d="M46 62 L54 62 L50 68Z" fill="#8a5a30"/><path d="M50 68 Q50 73 44 74 M50 68 Q50 73 56 74" stroke="#8a5a30" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M30 50 Q26 48 24 44 M70 50 Q74 48 76 44" stroke="#c9741a" stroke-width="2.4" fill="none" stroke-linecap="round"/>',
+  // 16 Kesateria Plasma
+  '<circle cx="50" cy="50" r="50" fill="#131a2e"/><path d="M28 34 Q28 16 50 16 Q72 16 72 34 L72 62 Q72 78 50 78 Q28 78 28 62Z" fill="#3a4668"/><path d="M32 34 Q32 20 50 20 Q68 20 68 34 L68 40 L32 40Z" fill="#57679a"/><path d="M50 8 L54 18 L46 18Z" fill="#ff4d6d"/><rect x="32" y="44" width="36" height="12" rx="6" fill="#0d1626"/><rect x="34" y="46" width="32" height="8" rx="4" fill="#31e6ff"><animate attributeName="opacity" values="1;.45;1" dur="1.4s" repeatCount="indefinite"/></rect><path d="M36 62 L64 62 M40 68 L60 68" stroke="#57679a" stroke-width="3" stroke-linecap="round"/><path d="M78 26 L84 20 M81 30 L88 27" stroke="#31e6ff" stroke-width="2.4" stroke-linecap="round"><animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite"/></path>',
+  // 17 Roh Aurora
+  '<circle cx="50" cy="50" r="50" fill="#0d1b33"/><path d="M10 66 Q30 40 50 58 Q70 74 90 48 L90 100 L10 100Z" fill="#3ae0b8" opacity=".5"><animateTransform attributeName="transform" type="translate" values="0 0;0 -6;0 0" dur="4s" repeatCount="indefinite"/></path><path d="M10 78 Q32 56 52 70 Q72 84 90 62 L90 100 L10 100Z" fill="#7c5cff" opacity=".5"><animateTransform attributeName="transform" type="translate" values="0 0;0 5;0 0" dur="5s" repeatCount="indefinite"/></path><circle cx="50" cy="44" r="24" fill="#eaf4ff"/><path d="M28 40 Q30 20 50 20 Q70 20 72 40 Q66 30 50 30 Q34 30 28 40Z" fill="#bfe0ff"/><ellipse cx="42" cy="44" rx="3.6" ry="5" fill="#2a4a7a"><animate attributeName="ry" values="5;5;.8;5" keyTimes="0;.88;.94;1" dur="4.2s" repeatCount="indefinite"/></ellipse><ellipse cx="58" cy="44" rx="3.6" ry="5" fill="#2a4a7a"><animate attributeName="ry" values="5;5;.8;5" keyTimes="0;.88;.94;1" dur="4.2s" repeatCount="indefinite"/></ellipse><path d="M45 54 Q50 58 55 54" stroke="#7aa0c9" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="50" cy="12" r="2.4" fill="#fff"><animate attributeName="opacity" values="1;.2;1" dur="1.6s" repeatCount="indefinite"/></circle>',
+  // 18 Naga Emas Legenda
+  '<circle cx="50" cy="50" r="50" fill="#2a1a05"/><g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="8s" repeatCount="indefinite"/><circle cx="50" cy="8" r="2.4" fill="#ffd23a"/><circle cx="92" cy="50" r="2" fill="#ffe37a"/><circle cx="50" cy="92" r="2.4" fill="#ffd23a"/><circle cx="8" cy="50" r="2" fill="#ffe37a"/></g><path d="M28 28 L20 8 L40 20Z" fill="#ffd23a"/><path d="M72 28 L80 8 L60 20Z" fill="#ffd23a"/><circle cx="50" cy="56" r="30" fill="#f2b437"/><path d="M50 26 L57 38 L50 46 L43 38Z" fill="#ffe37a"><animate attributeName="opacity" values="1;.55;1" dur="1.8s" repeatCount="indefinite"/></path><ellipse cx="41" cy="53" rx="5" ry="6" fill="#fff6d8"/><ellipse cx="59" cy="53" rx="5" ry="6" fill="#fff6d8"/><circle cx="41" cy="54" r="2.4" fill="#7a4a00"/><circle cx="59" cy="54" r="2.4" fill="#7a4a00"/><path d="M40 66 Q50 74 60 66" stroke="#8a5a10" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44 72 L46 68 M56 72 L54 68" stroke="#fff6d8" stroke-width="2.2" stroke-linecap="round"/><circle cx="50" cy="56" r="41" fill="none" stroke="#ffd23a" stroke-width="1.6" opacity=".5"><animate attributeName="r" values="38;44" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".5;0" dur="2s" repeatCount="indefinite"/></circle>',
+  // 19 JUARA AGUNG
+  '<circle cx="50" cy="50" r="50" fill="#1a1040"/><circle cx="50" cy="50" r="44" fill="#241a63"><animate attributeName="fill" values="#241a63;#3a1a5c;#1a2a63;#241a63" dur="6s" repeatCount="indefinite"/></circle><circle cx="50" cy="50" r="30" fill="none" stroke="#ffd23a" stroke-width="2" opacity=".6"><animate attributeName="r" values="30;46" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0" dur="2.4s" repeatCount="indefinite"/></circle><circle cx="50" cy="50" r="30" fill="none" stroke="#4adce0" stroke-width="2" opacity=".6"><animate attributeName="r" values="30;46" begin="1.2s" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values=".6;0" begin="1.2s" dur="2.4s" repeatCount="indefinite"/></circle><g><animateTransform attributeName="transform" type="rotate" from="0 50 50" to="-360 50 50" dur="10s" repeatCount="indefinite"/><path d="M50 6 L51.8 10.6 L56.6 11 L53 14.2 L54 19 L50 16.4 L46 19 L47 14.2 L43.4 11 L48.2 10.6Z" fill="#ffd23a"/><circle cx="88" cy="62" r="2" fill="#ff8ab8"/><circle cx="14" cy="66" r="2" fill="#4adce0"/></g><path d="M32 26 L38 34 L50 28 L62 34 L68 26 L70 40 L30 40Z" fill="#ffd23a"/><circle cx="50" cy="24" r="3" fill="#ff5f9e"><animate attributeName="r" values="3;4.2;3" dur="1.6s" repeatCount="indefinite"/></circle><circle cx="50" cy="60" r="23" fill="#ffd88a"/><path d="M38 54 L44 58 M62 54 L56 58" stroke="#7a4a00" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="42" cy="61" rx="3.6" ry="4.4" fill="#241a52"/><ellipse cx="58" cy="61" rx="3.6" ry="4.4" fill="#241a52"/><path d="M42 70 Q50 77 58 70" stroke="#8a5a10" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="36" cy="68" r="3.4" fill="#ff8a5a" opacity=".6"/><circle cx="64" cy="68" r="3.4" fill="#ff8a5a" opacity=".6"/>'
   ];
   function avatarSVG(i){
     i=((i%AVA_COUNT)+AVA_COUNT)%AVA_COUNT;
-    var inner = (i>=12) ? SPECIALS[i-12] : monsterInner(i);
+    var inner = (i>=5) ? WOW[i-5] : monsterInner(i);
     return '<svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';
   }
   function avatarIdxFor(name){ return hashStr(String(name).toUpperCase()) % AVA_COUNT; }
@@ -2174,6 +2289,7 @@
   var MAX_LEVEL = 20, XP_PER_LEVEL = 100;
   function myXP(){ return (stats && stats.totalCorrect) || 0; }
   function levelOf(xp){ return Math.min(MAX_LEVEL, Math.floor((xp||0) / XP_PER_LEVEL) + 1); }
+  function fmtNum(n){ n=Number(n)||0; return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   // 5 avatar percuma (Level 1); 15 lagi tersebar merata dari Level 2 hingga 20
   function avatarUnlockLevel(i){ return i < 5 ? 1 : (2 + Math.round((i - 5) * 18 / 14)); }
   function avatarUnlockXP(i){ return (avatarUnlockLevel(i) - 1) * XP_PER_LEVEL; }
@@ -2196,7 +2312,7 @@
   });
 
   // ----- profil pengguna -----
-  var MODE_LABEL = { easy:"🌱 Mudah", mid:"⚡ Sederhana", hard:"🔥 Sukar", hero:"🦸 Hero" };
+  var MODE_LABEL = { easy:ikT("benih")+" Mudah", mid:ikT("kilat")+" Sederhana", hard:ikT("api")+" Sukar", hero:ikT("hero")+" Hero" };
   var pfIsOwn = false;
   function openProfile(nick, isOwn){
     nick = (nick||"").trim();
@@ -2238,7 +2354,7 @@
     var hg = $("pfHighs"); hg.innerHTML = "";
     ["easy","mid","hard","hero"].forEach(function(m){
       var d = document.createElement("div"); d.className = "pfHigh";
-      var mm = document.createElement("span"); mm.className="m"; mm.textContent = MODE_LABEL[m];
+      var mm = document.createElement("span"); mm.className="m"; mm.innerHTML = MODE_LABEL[m];
       var vv = document.createElement("span"); vv.className="v"; vv.textContent = (r.highs && r.highs[m]) || 0;
       d.appendChild(mm); d.appendChild(vv); hg.appendChild(d);
     });
@@ -2281,7 +2397,7 @@
     var intoLevel = xp % XP_PER_LEVEL;
     var msg = "Level <b>" + lvl + "</b>";
     if(lvl < MAX_LEVEL) msg += "  ·  <b>" + intoLevel + "/" + XP_PER_LEVEL + " XP</b> ke Level " + (lvl + 1);
-    else msg += "  ·  Level maksimum! 🎉";
+    else msg += "  ·  Level maksimum! "+ikT("raya");
     $("pfXp").innerHTML = msg;
     var g = $("pfAvaPick"); g.innerHTML = "";
     for(var i=0;i<AVA_COUNT;i++){
@@ -2301,7 +2417,7 @@
             renderAvatarPicker();
           });
         } else {
-          c.textContent = "🔒";
+          c.innerHTML = ikSVG("kunci");
           var x = document.createElement("div"); x.className = "xp"; x.textContent = "Lvl " + needLvl;
           c.appendChild(x);
         }
@@ -2345,9 +2461,9 @@
     document.querySelector(".timerWrap").style.display="";
     $("endBtn").style.display="none";
     var tb=$("vsTargetBar"); tb.style.display="";
-    tb.textContent = state.vsTarget>=0
-      ? ("🎯 Kalahkan " + state.vsTarget + " markah — lawan " + match.oppNick)
-      : ("🚩 Main dahulu — tetapkan markah untuk " + match.oppNick + " kejar!");
+    tb.innerHTML = state.vsTarget>=0
+      ? (ikT("sasaran")+" Kalahkan " + state.vsTarget + " markah — lawan " + match.oppNick)
+      : (ikT("bendera2")+" Main dahulu — tetapkan markah untuk " + match.oppNick + " kejar!");
     updateTimer();
     show("game");
     newQuestion();
@@ -2396,24 +2512,24 @@
       }
       syncUp();
     }
-    var medal="⚔️", title="Markah dihantar", pt=$("vsPoints");
+    var medal="pedang", title="Markah dihantar", pt=$("vsPoints");
     if(r && r.ok && r.done){
       var gap=Math.abs(myScore-oppScore);
-      if(r.result==="win"){ medal="👑"; title="Kamu Menang!"; pt.textContent="Hebat! Menang beza "+gap+" mata 🎉"; pt.className="best"; sndFanfare(); spawnFlakes("👑"); }
-      else if(r.result==="lose"){ medal="💪"; title="Hampir! Cuba Lagi"; pt.textContent="Beza "+gap+" mata · keputusan telah direkodkan"; pt.className="best dark"; }
-      else { medal="🤝"; title="Seri!"; pt.textContent="Sama hebat · keputusan telah direkodkan"; pt.className="best dark"; spawnFlakes("✨"); }
+      if(r.result==="win"){ medal="mahkota"; title="Kamu Menang!"; pt.innerHTML="Hebat! Menang beza "+gap+" mata "+ikT("raya"); pt.className="best"; sndFanfare(); spawnFlakes("mahkota"); }
+      else if(r.result==="lose"){ medal="lengan"; title="Hampir! Cuba Lagi"; pt.textContent="Beza "+gap+" mata · keputusan telah direkodkan"; pt.className="best dark"; }
+      else { medal="salam"; title="Seri!"; pt.textContent="Sama hebat · keputusan telah direkodkan"; pt.className="best dark"; spawnFlakes("kilau"); }
     } else if(r && r.ok){
       vsWaitingResult = {match:match, myScore:myScore};
       ensureFirebaseVsWatch();
-      medal="⏳"; title="Markah disimpan"; pt.textContent="Menunggu "+(match.oppNick||"lawan")+" bermain…"; pt.className="best dark";
+      medal="jampasir"; title="Markah disimpan"; pt.textContent="Menunggu "+(match.oppNick||"lawan")+" bermain…"; pt.className="best dark";
     } else if(r && r.network){
       vsWaitingResult = {match:match, myScore:myScore};
       ensureFirebaseVsWatch();
-      medal="⏳"; title="Mengesahkan keputusan…"; pt.textContent="Markah sudah dihantar. Menunggu pengesahan masa nyata…"; pt.className="best dark";
+      medal="jampasir"; title="Mengesahkan keputusan…"; pt.textContent="Markah sudah dihantar. Menunggu pengesahan masa nyata…"; pt.className="best dark";
     } else {
-      medal="⚠️"; title="Ralat"; pt.textContent=(r&&r.err)||"Gagal hantar markah"; pt.className="best dark";
+      medal="amaran"; title="Ralat"; pt.textContent=(r&&r.err)||"Gagal hantar markah"; pt.className="best dark";
     }
-    $("vsMedal").textContent=medal; $("vsResultTitle").textContent=title;
+    $("vsMedal").innerHTML=ikSVG(medal); $("vsResultTitle").textContent=title;
     show("vsResult");
     if(r && r.network){
       if(firebaseVsData) finishWaitingVsFromFirebase(firebaseVsData);
@@ -2457,7 +2573,7 @@
     if(r.active && r.active.length){ any=true; vsSect(L,"Perlawanan Aktif");
       r.active.forEach(function(m){ var played=m.myScore>=0;
         var sub = played ? ("Markah kamu "+m.myScore+" · tunggu lawan")
-          : (m.oppScore>=0 ? ("🎯 Kalahkan "+m.oppScore+"!") : "Giliran kamu — main dahulu");
+          : (m.oppScore>=0 ? (ikT("sasaran")+" Kalahkan "+m.oppScore+"!") : "Giliran kamu — main dahulu");
         var it=vsMiniRow(m,"Lv "+m.oppLevel+" · "+sub);
         if(!played) it.w.appendChild(vsBtn("go","Main",function(){ startVS(m); }));
         L.appendChild(it.d); }); }
@@ -2468,15 +2584,15 @@
     if(r.recent && r.recent.length){ any=true; vsSect(L,"Keputusan Terkini");
       r.recent.slice().reverse().forEach(function(m){
         var win = m.myScore>m.oppScore, lose = m.myScore<m.oppScore;
-        var res = win?"Menang 👑":(lose?"Kalah":"Seri 🤝");
+        var res = win?("Menang "+ikT("mahkota")):(lose?"Kalah":("Seri "+ikT("salam")));
         var it=vsMiniRow(m, res+" ("+m.myScore+" vs "+m.oppScore+")"+(m.date?(" · "+m.date):""));
         it.d.classList.add(win?"win":(lose?"lose":"draw"));
         L.appendChild(it.d); }); }
-    if(!any) L.innerHTML="<p class='vsEmpty'>Tiada perlawanan lagi. Tekan '➕ Jemput Lawan' untuk mula!</p>";
+    if(!any) L.innerHTML="<p class='vsEmpty'>Tiada perlawanan lagi. Tekan &#43; Jemput Lawan untuk mula!</p>";
   }
   function vsAct(action, id){
     api({action:action, email:account.email, pass:account.pass, matchId:id}, function(r){
-      if(r && !r.ok) queueToast("⚠️ "+(r.err||"Ralat"));
+      if(r && !r.ok) queueToast(ikT("amaran")+" "+(r.err||"Ralat"));
       loadVsHub();
     });
   }
@@ -2539,19 +2655,19 @@
   function sendVsInvite(email, nick, btn){
     if(btn && btn.disabled) return;
     if(btn){ btn.disabled=true; btn.classList.add("sending"); btn.textContent="Menghantar…"; }
-    queueToast("⏳ Menghantar jemputan ke "+nick+"…");
+    queueToast(ikT("jampasir")+" Menghantar jemputan ke "+nick+"…");
     api({action:"vs_invite", email:account.email, pass:account.pass, targetEmail:email}, function(r){
       if(r && r.ok){
         firebaseVsData=firebaseVsData||{ok:true,incoming:[],active:[],sent:[],recent:[]};
         firebaseVsData.sent=firebaseVsData.sent||[];
         firebaseVsData.sent.push({id:r.matchId,oppNick:nick,status:"pending",iAmChallenger:true});
         if(btn){ btn.classList.remove("sending"); btn.textContent="Dihantar ✓"; }
-        queueToast("✅ Jemputan dihantar ke "+nick);
+        queueToast(ikT("tanda")+" Jemputan dihantar ke "+nick);
         setTimeout(loadVsHub, 250);
       }
       else {
         if(btn){ btn.disabled=false; btn.classList.remove("sending"); btn.textContent="Jemput"; }
-        queueToast("⚠️ "+((r&&r.err)||"Gagal menghantar"));
+        queueToast(ikT("amaran")+" "+((r&&r.err)||"Gagal menghantar"));
       }
     });
   }
@@ -2571,11 +2687,11 @@
     if(!board.length){ L.innerHTML="<p class='lbEmpty'>Belum ada perlawanan VS.</p>"; return; }
     board.forEach(function(e,i){
       var row=document.createElement("div"); row.className="lbRow";
-      var rk=document.createElement("span"); rk.className="lbRank"; rk.textContent=(i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".");
+      var rk=document.createElement("span"); rk.className="lbRank"; rk.innerHTML=(i===0?ikT("emas"):i===1?ikT("perak"):i===2?ikT("gangsa"):((i+1)+"."));
       var av=document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML=avatarSVG(e.avatar||0);
       var nm=document.createElement("span"); nm.className="lbName";
       nm.innerHTML='<div>'+(e.nick||"")+'</div><div class="lbClass">Lv '+e.level+" · "+e.menang+"M "+e.kalah+"K</div>";
-      var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=e.mata;
+      var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=fmtNum(e.mata);
       row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
       L.appendChild(row);
     });
@@ -2587,7 +2703,7 @@
   function setVsBadges(inv, swd){
     var bi=$("vsBadgeInvite"), bs=$("vsBadgeSword");
     if(inv>0){ bi.style.display=""; bi.textContent=inv; } else bi.style.display="none";
-    if(swd>0){ bs.style.display=""; bs.textContent="⚔️"+swd; } else bs.style.display="none";
+    if(swd>0){ bs.style.display=""; bs.innerHTML=ikT("pedang")+swd; } else bs.style.display="none";
   }
   var vsBadgePoll=0;
   function refreshVsBadge(){
@@ -2600,6 +2716,17 @@
       if(r && r.ok){ firebaseVsData = r; setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r)); }
     });
   }
+  // hidupkan semula sambungan masa nyata bila app kembali aktif / rangkaian pulih
+  function firebaseWakeAll(){
+    if(firebaseVsStream && firebaseVsStream.dead && firebaseVsStream.dead()){ closeFirebaseVsWatch(); }
+    if(firebaseLbStream && firebaseLbStream.dead && firebaseLbStream.dead()){ try{firebaseLbStream.close();}catch(e){} firebaseLbStream = null; }
+    ensureFirebaseLeaderboardWatch();
+    if(account){ ensureFirebaseVsWatch(); if(firebaseVsHash) firebaseRefreshVs(); refreshVsBadge(); }
+  }
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) firebaseWakeAll(); });
+  window.addEventListener("online", firebaseWakeAll);
+  window.addEventListener("focus", function(){ if(!document.hidden) firebaseWakeAll(); });
+  setInterval(function(){ if(!document.hidden && account) refreshVsBadge(); }, 30000);
 
   $("vsBack").addEventListener("click", function(){ show("start"); });
   $("vsInviteBtn").addEventListener("click", loadPlayers);
@@ -2619,7 +2746,7 @@
   var lbAvatarCache = {};
   var lbAvatarPending = {};
   function rankLabel(i){
-    return i===0 ? "🥇" : i===1 ? "🥈" : i===2 ? "🥉" : (i+1)+".";
+    return i===0 ? ikT("emas") : i===1 ? ikT("perak") : i===2 ? ikT("gangsa") : (i+1)+".";
   }
   function fmtDate(v){
     if(!v) return "";
@@ -2741,7 +2868,7 @@
     cls.textContent = info.kelas;
     var sc = document.createElement("div");
     sc.className = "lbPodiumScore";
-    sc.textContent = info.score + " mata";
+    sc.textContent = fmtNum(info.score) + " mata";
     var dt = document.createElement("div");
     dt.className = "lbPodiumDate";
     dt.textContent = info.date;
@@ -2779,7 +2906,7 @@
     scoreWrap.className = "lbScoreWrap";
     var sc = document.createElement("span");
     sc.className = "lbScore";
-    sc.textContent = info.score;
+    sc.textContent = fmtNum(info.score);
     var dt = document.createElement("span");
     dt.className = "lbDate";
     dt.textContent = info.date;
@@ -2927,14 +3054,14 @@
   }
   function updateAccUI(){
     if(account){
-      $("loginBtn").textContent = "👤 " + ((profile.nickname || account.email.split("@")[0]) || "").toUpperCase();
+      $("loginBtn").innerHTML = ikT("orang")+" " + ((profile.nickname || account.email.split("@")[0]) || "").toUpperCase();
       updateMenuAva();
       $("accForm").style.display = "none";
       $("doLogout").style.display = "";
       $("accInfo").style.display = "";
       $("accInfo").textContent = "Log masuk sebagai: " + account.email;
     } else {
-      $("loginBtn").textContent = "👤 Log Masuk";
+      $("loginBtn").innerHTML = ikT("orang")+" Log Masuk";
       updateMenuAva();
       $("accForm").style.display = "";
       $("doLogout").style.display = "none";
@@ -2979,8 +3106,8 @@
       profile.nickname = nick.toUpperCase();
       profile.kelas = kelas.toUpperCase();
       saveAccount(); saveProfile(); ensureFirebaseVsWatch(); vsPlayersCache=null; vsPlayersCacheT=0; prefetchVsPlayers(); syncUp(); updateAccUI();
-      regMsg("Berjaya didaftarkan! ✅", true);
-      setTimeout(function(){ accMsg("Selamat datang, "+nick+"! ✅", true); updateAccUI(); show("login"); }, 900);
+      regMsg("Berjaya didaftarkan!", true);
+      setTimeout(function(){ accMsg("Selamat datang, "+nick+"!", true); updateAccUI(); show("login"); }, 900);
     });
   });
   $("doLogin").addEventListener("click", function(){
@@ -2998,7 +3125,7 @@
       updateAccUI();
       accMsg("");
       show("start");
-      queueToast("✅ Selamat kembali, "+(profile.nickname||"Juara")+"!");
+      queueToast(ikT("tanda")+" Selamat kembali, "+(profile.nickname||"Juara")+"!");
     });
   });
   $("doReset").addEventListener("click", function(){
@@ -3007,7 +3134,7 @@
     accMsg("Menghantar...", true);
     api({action:"reset", email:email}, function(r){
       if(!r.ok){ accMsg(r.err || "Gagal menghantar"); return; }
-      accMsg("PIN telah dihantar ke email anda 📧", true);
+      accMsg("PIN telah dihantar ke email anda", true);
     });
   });
   $("doLogout").addEventListener("click", function(){
@@ -3087,7 +3214,7 @@
         return;
       }
       saveProfile();
-      m.textContent = "Tetapan disimpan ✅";
+      m.textContent = "Tetapan disimpan";
       m.className = "accMsg ok";
     });
     saveProfile();
