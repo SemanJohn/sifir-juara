@@ -686,7 +686,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.3</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v4.4</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -941,7 +941,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.3";
+  var APP_VERSION = "4.4";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -2561,14 +2561,42 @@
       renderVsHub(r); setVsBadges(r.incoming?r.incoming.length:0, vsSwordCount(r));
     });
   }
+  var vsPendingActions = {};
+  function vsMatchIn(list, id){
+    list = list || [];
+    for(var i=0;i<list.length;i++){
+      if(String(list[i].id) === String(id)) return list[i];
+    }
+    return null;
+  }
+  function promoteAcceptedVs(id, fallback){
+    firebaseVsData = firebaseVsData || {ok:true,incoming:[],active:[],sent:[],recent:[]};
+    var incoming = firebaseVsData.incoming || [];
+    var match = vsMatchIn(incoming, id) || vsMatchIn(firebaseVsData.active, id) || fallback;
+    firebaseVsData.incoming = incoming.filter(function(m){ return String(m.id) !== String(id); });
+    firebaseVsData.active = firebaseVsData.active || [];
+    if(match && !vsMatchIn(firebaseVsData.active, id)){
+      match.status = "accepted";
+      if(typeof match.myScore !== "number") match.myScore = -1;
+      if(typeof match.oppScore !== "number") match.oppScore = -1;
+      firebaseVsData.active.push(match);
+    }
+    setVsBadges(firebaseVsData.incoming.length, vsSwordCount(firebaseVsData));
+  }
   function renderVsHub(r){
     reconcileVsProgress(r);
     var L=$("vsHubList"); L.innerHTML="";
     var any=false;
     if(r.incoming && r.incoming.length){ any=true; vsSect(L,"Jemputan Masuk");
       r.incoming.forEach(function(m){ var it=vsMiniRow(m,"Lv "+m.oppLevel+" · mahu lawan kamu");
-        it.w.appendChild(vsBtn("go","Terima",function(){ vsAct("vs_accept",m.id); }));
-        it.w.appendChild(vsBtn("no","Tolak",function(){ vsAct("vs_decline",m.id); }));
+        var pending = vsPendingActions[String(m.id)] === "vs_accept";
+        var acceptBtn=vsBtn("go",pending?"Menerima…":"Terima",function(){ vsAct("vs_accept",m.id,acceptBtn,m); });
+        var declineBtn=vsBtn("no","Tolak",function(){ vsAct("vs_decline",m.id); });
+        if(pending){
+          acceptBtn.disabled=true; acceptBtn.classList.add("sending"); declineBtn.disabled=true;
+        }
+        it.w.appendChild(acceptBtn);
+        it.w.appendChild(declineBtn);
         L.appendChild(it.d); }); }
     if(r.active && r.active.length){ any=true; vsSect(L,"Perlawanan Aktif");
       r.active.forEach(function(m){ var played=m.myScore>=0;
@@ -2590,10 +2618,34 @@
         L.appendChild(it.d); }); }
     if(!any) L.innerHTML="<p class='vsEmpty'>Tiada perlawanan lagi. Tekan &#43; Jemput Lawan untuk mula!</p>";
   }
-  function vsAct(action, id){
+  function vsAct(action, id, btn, match){
+    var key=String(id);
+    if(vsPendingActions[key]) return;
+    vsPendingActions[key]=action;
+    var row=btn && btn.closest ? btn.closest(".vsRow") : null;
+    var rowButtons=row ? row.querySelectorAll("button") : [];
+    if(action==="vs_accept"){
+      for(var i=0;i<rowButtons.length;i++) rowButtons[i].disabled=true;
+      if(btn){ btn.classList.add("sending"); btn.textContent="Menerima…"; }
+      queueToast(ikT("jampasir")+" Menerima jemputan…");
+    }
     api({action:action, email:account.email, pass:account.pass, matchId:id}, function(r){
-      if(r && !r.ok) queueToast(ikT("amaran")+" "+(r.err||"Ralat"));
-      loadVsHub();
+      var firebaseConfirmed = action==="vs_accept" && firebaseVsData && vsMatchIn(firebaseVsData.active,id);
+      delete vsPendingActions[key];
+      if((r && r.ok) || firebaseConfirmed){
+        if(action==="vs_accept"){
+          promoteAcceptedVs(id,match);
+          if(curScreen==="vsHub") renderVsHub(firebaseVsData);
+          queueToast(ikT("tanda")+" Jemputan diterima — tekan Main!");
+          setTimeout(function(){ if(curScreen==="vsHub") loadVsHub(); },350);
+        } else {
+          loadVsHub();
+        }
+        return;
+      }
+      for(var i=0;i<rowButtons.length;i++) rowButtons[i].disabled=false;
+      if(btn){ btn.classList.remove("sending"); btn.textContent="Terima"; }
+      queueToast(ikT("amaran")+" "+((r&&r.err)||"Ralat"));
     });
   }
 
