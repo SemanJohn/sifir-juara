@@ -941,7 +941,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.4";
+  var APP_VERSION = "4.5";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -1615,7 +1615,7 @@
       // markah: asas 10 + bonus ikut betul berturut
       var pts = 10 + state.run*2;
       state.score += pts;
-      if(state.score > 999999) state.score = 999999;
+      if(state.score > 9999999) state.score = 9999999;
       state.correct++;
       recordDailyCorrect();
       state.run++;
@@ -1937,13 +1937,15 @@
       ? "account:" + String(account.email).trim().toLowerCase()
       : "guest";
   }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(ch){ return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[ch]; }); }
   function identityKey(base){
     return base + "::" + encodeURIComponent(identitySuffix());
   }
   var badgeState = {};
   var stats = emptyStats();
   var profile = {nickname:"", kelas:""};
-  function loadIdentityState(resetGuest){
+  function cleanLegacyKeys(){ try{ if(localStorage.getItem("sjCleaned1")) return; var kill=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(/^sifirJuara(Stats|Badges|Profile)_/.test(k)) kill.push(k); } for(var j=0;j<kill.length;j++) localStorage.removeItem(kill[j]); localStorage.setItem("sjCleaned1","1"); }catch(e){} }
+  function loadIdentityState(resetGuest){ cleanLegacyKeys();
     if(!account){
       badgeState = {};
       stats = emptyStats();
@@ -2542,7 +2544,7 @@
   function vsSect(L,txt){ var d=document.createElement("div"); d.className="vsSect"; d.textContent=txt; L.appendChild(d); }
   function vsMiniRow(m, sub){
     var d=document.createElement("div"); d.className="vsRow";
-    d.innerHTML='<div class="av">'+avatarSVG(m.oppAvatar||0)+'</div><div class="info"><b>'+(m.oppNick||"—")+'</b><span>'+sub+'</span></div>';
+    d.innerHTML='<div class="av">'+avatarSVG(m.oppAvatar||0)+'</div><div class="info"><b>'+esc(m.oppNick||"—")+'</b><span>'+sub+'</span></div>';
     var w=document.createElement("div"); w.style.display="flex"; w.style.gap="6px"; w.style.flex="none";
     d.appendChild(w); return {d:d,w:w};
   }
@@ -2697,7 +2699,7 @@
     if(!list.length){ L.innerHTML="<p class='vsEmpty'>Tiada pemain sepadan.</p>"; return; }
     list.forEach(function(p){
       var d=document.createElement("div"); d.className="vsRow";
-      d.innerHTML='<div class="av">'+avatarSVG(p.avatar||0)+'</div><div class="info"><b>'+p.nick+'</b><span>Lv '+p.level+(p.kelas?(" · "+p.kelas):"")+'</span></div>';
+      d.innerHTML='<div class="av">'+avatarSVG(p.avatar||0)+'</div><div class="info"><b>'+esc(p.nick)+'</b><span>Lv '+p.level+(p.kelas?(" · "+p.kelas):"")+'</span></div>';
       var w=document.createElement("div"); w.style.flex="none";
       var inviteBtn=vsBtn("go","Jemput",function(){ sendVsInvite(p.email, p.nick, inviteBtn); });
       w.appendChild(inviteBtn);
@@ -2742,7 +2744,7 @@
       var rk=document.createElement("span"); rk.className="lbRank"; rk.innerHTML=(i===0?ikT("emas"):i===1?ikT("perak"):i===2?ikT("gangsa"):((i+1)+"."));
       var av=document.createElement("span"); av.style.cssText="width:34px;height:34px;border-radius:50%;overflow:hidden;flex:none"; av.innerHTML=avatarSVG(e.avatar||0);
       var nm=document.createElement("span"); nm.className="lbName";
-      nm.innerHTML='<div>'+(e.nick||"")+'</div><div class="lbClass">Lv '+e.level+" · "+e.menang+"M "+e.kalah+"K</div>";
+      nm.innerHTML='<div>'+esc(e.nick||"")+'</div><div class="lbClass">Lv '+e.level+" · "+e.menang+"M "+e.kalah+"K</div>";
       var sc=document.createElement("span"); sc.className="lbScore"; sc.style.flex="none"; sc.textContent=fmtNum(e.mata);
       row.appendChild(rk); row.appendChild(av); row.appendChild(nm); row.appendChild(sc);
       L.appendChild(row);
@@ -3106,7 +3108,7 @@
   }
   function updateAccUI(){
     if(account){
-      $("loginBtn").innerHTML = ikT("orang")+" " + ((profile.nickname || account.email.split("@")[0]) || "").toUpperCase();
+      $("loginBtn").innerHTML = ikT("orang")+" " + esc((( profile.nickname || account.email.split("@")[0]) || "").toUpperCase());
       updateMenuAva();
       $("accForm").style.display = "none";
       $("doLogout").style.display = "";
