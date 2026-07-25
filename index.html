@@ -494,6 +494,18 @@
   .modalBox h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:21px;margin:2px 0 6px;color:#fff}
   .modalBox .modalText{font-size:13px;color:#c8c0ff;font-weight:700;line-height:1.55;margin-bottom:14px}
   .modalBox input{width:100%}
+
+  .sk{background:linear-gradient(90deg,#e9e4f7 25%,#f6f2ff 50%,#e9e4f7 75%);background-size:400% 100%;
+    animation:skmove 1.15s ease-in-out infinite;border-radius:10px;display:block}
+  @keyframes skmove{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .skRow{display:flex;gap:8px;margin:8px 0}
+  .skRow .sk{height:52px;flex:1}
+  .skLine{height:14px;margin:8px 0}
+  .skChip{height:34px;width:88px;border-radius:16px}
+  .skBadges{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .skBadges .sk{width:52px;height:58px;border-radius:14px}
+  .pfFade{animation:pfIn .35s ease both}
+  @keyframes pfIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   .accMsg{font-size:13px;font-weight:800;margin-top:10px;text-align:center;min-height:18px}
   .accMsg.err{color:#e23b52}
   .accMsg.ok{color:#1fa85a}
@@ -974,7 +986,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "5.0";
+  var APP_VERSION = "5.1";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -2496,6 +2508,27 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   // ----- profil pengguna -----
   var MODE_LABEL = { easy:ikT("benih")+" Mudah", mid:ikT("kilat")+" Sederhana", hard:ikT("api")+" Sukar", hero:ikT("hero")+" Hero" };
   var pfIsOwn = false;
+  function pfSkeleton(){
+    var hi=$("pfHighs"), st=$("pfStats"), bd=$("pfBadges");
+    if(hi) hi.innerHTML='<div class="skRow"><span class="sk"></span><span class="sk"></span><span class="sk"></span><span class="sk"></span></div>';
+    if(st) st.innerHTML='<div class="skRow"><span class="sk"></span><span class="sk"></span><span class="sk"></span></div><span class="sk skLine"></span>';
+    if(bd) bd.innerHTML='<div class="skBadges"><span class="sk"></span><span class="sk"></span><span class="sk"></span><span class="sk"></span><span class="sk"></span><span class="sk"></span></div>';
+  }
+  function localProfileData(){
+    var bm = (stats && stats.bestMode) || {};
+    return {
+      ok:true,
+      nickname: (profile && profile.nickname) || "",
+      kelas: (profile && profile.kelas) || "",
+      badges: badgeState || {},
+      highs: { easy:Number(bm.easy)||0, mid:Number(bm.mid)||0, hard:Number(bm.hard)||0, hero:Number(bm.hero)||0 },
+      stats: {
+        games: stats.games||0, totalCorrect: stats.totalCorrect||0, totalWrong: stats.totalWrong||0,
+        bestStreak: stats.bestStreak||0, avatar: myAvatarIdx(),
+        vsMenang: stats.vsWins||0, vsKalah: stats.vsKalah||0, vsMata: stats.vsMata||0
+      }
+    };
+  }
   function openProfile(nick, isOwn){
     nick = (nick||"").trim();
     if(!nick) return;
@@ -2505,7 +2538,8 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     $("pfName").textContent = nick.toUpperCase();
     $("pfKelas").textContent = "";
     $("pfLvl").textContent = pfIsOwn ? ("Lv " + levelOf(myXP())) : "…";
-    $("pfHighs").innerHTML = "<p class='pfEmpty'>Memuatkan…</p>";
+    pfSkeleton();
+    if(pfIsOwn){ try{ renderProfile(localProfileData()); }catch(e){} }
     $("pfStats").innerHTML = "";
     $("pfBadges").innerHTML = "";
     $("pfAvaPickWrap").style.display = "none";
@@ -2518,7 +2552,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       renderProfile(r);
     });
   }
-  function renderProfile(r){
+  function renderProfile(r){ ["pfHighs","pfStats","pfBadges"].forEach(function(pid){ var el=$(pid); if(el){ el.classList.remove("pfFade"); void el.offsetWidth; el.classList.add("pfFade"); } });
     $("pfName").textContent = (r.nickname||"").toUpperCase();
     var lvl = levelOf((r.stats && r.stats.totalCorrect) || 0);
     $("pfLvl").textContent = "Lv " + lvl;
