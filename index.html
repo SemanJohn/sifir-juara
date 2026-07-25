@@ -475,6 +475,19 @@
   .setCard input[readonly]{background:#efeaf9;color:#8a7fb5}
   .setLbl{font-size:12px;font-weight:900;color:#8a7fb5;text-transform:uppercase;
     letter-spacing:.5px;margin-top:14px}
+
+  .modalBack{position:fixed;inset:0;background:#0b0730d9;z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+  .modalBack.on{display:flex;animation:mfade .18s ease both}
+  @keyframes mfade{from{opacity:0}to{opacity:1}}
+  .modalBox{width:100%;max-width:360px;background:linear-gradient(180deg,#2f2472,#241a5c);border:2px solid #ffffff26;
+    border-radius:24px;padding:22px 20px;box-shadow:0 20px 50px #0009;text-align:center;
+    animation:mpop .3s cubic-bezier(.34,1.56,.64,1) both}
+  @keyframes mpop{from{opacity:0;transform:scale(.78)}to{opacity:1;transform:scale(1)}}
+  .modalBox .modalIcon{width:56px;height:56px;margin:0 auto 8px}
+  .modalBox .modalIcon svg{width:100%;height:100%;display:block}
+  .modalBox h3{font-family:'Fredoka',sans-serif;font-weight:600;font-size:21px;margin:2px 0 6px;color:#fff}
+  .modalBox .modalText{font-size:13px;color:#c8c0ff;font-weight:700;line-height:1.55;margin-bottom:14px}
+  .modalBox input{width:100%}
   .accMsg{font-size:13px;font-weight:800;margin-top:10px;text-align:center;min-height:18px}
   .accMsg.err{color:#e23b52}
   .accMsg.ok{color:#1fa85a}
@@ -636,6 +649,20 @@
       <button class="btn ghost" id="loginBack">Kembali</button>
     </div>
   </section>
+
+  
+  <!-- POPUP LUPA PIN -->
+  <div class="modalBack" id="rsModal" aria-hidden="true">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+      <div class="modalIcon" data-ik="emel"></div>
+      <h3 id="rsTitle">Lupa PIN?</h3>
+      <p class="modalText">Masukkan email akaun kamu.<br>PIN akan dihantar ke email itu.</p>
+      <input id="rsEmail" type="email" placeholder="Email akaun" autocomplete="off" inputmode="email">
+      <button class="btn primary" id="rsSend" style="width:100%;margin-top:12px">Hantar PIN ke Email</button>
+      <button class="btn ghost" id="rsClose" style="width:100%;margin-top:8px">Tutup</button>
+      <p class="accMsg" id="rsMsg"></p>
+    </div>
+  </div>
 
   <!-- DAFTAR AKAUN -->
   <section class="screen" id="regScreen">
@@ -941,7 +968,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.7";
+  var APP_VERSION = "4.8";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -3263,15 +3290,34 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       queueToast(ikT("tanda")+" Selamat kembali, "+(profile.nickname||"Juara")+"!");
     });
   });
-  $("doReset").addEventListener("click", function(){
-    var email = $("accEmail").value.trim().toLowerCase();
-    if(!/^\S+@\S+\.\S+$/.test(email)){ accMsg("Taip email anda dahulu"); return; }
-    accMsg("Menghantar...", true);
+    function rsMsg(t, ok){ var m=$("rsMsg"); m.textContent=t||""; m.className="accMsg"+(t?(ok?" ok":" err"):""); }
+  function rsOpen(){
+    accMsg("");
+    $("rsEmail").value = $("accEmail").value.trim();
+    rsMsg("");
+    $("rsModal").classList.add("on");
+    $("rsModal").setAttribute("aria-hidden","false");
+    setTimeout(function(){ try{ $("rsEmail").focus(); }catch(e){} }, 80);
+  }
+  function rsShut(){ $("rsModal").classList.remove("on"); $("rsModal").setAttribute("aria-hidden","true"); }
+  function rsSubmit(){
+    var b=$("rsSend"), email=$("rsEmail").value.trim().toLowerCase();
+    if(!/^\S+@\S+\.\S+$/.test(email)){ rsMsg("Email tidak sah — sila semak semula"); return; }
+    b.disabled=true; rsMsg("Menghantar…", true);
     api({action:"reset", email:email}, function(r){
-      if(!r.ok){ accMsg(r.err || "Gagal menghantar"); return; }
-      accMsg("PIN telah dihantar ke email anda", true);
+      b.disabled=false;
+      if(!r || !r.ok){ rsMsg((r && r.err) || "Gagal menghantar. Cuba lagi."); return; }
+      rsMsg("Berjaya! Semak email kamu untuk PIN.", true);
+      $("accEmail").value = email;
+      setTimeout(rsShut, 2400);
     });
-  });
+  }
+  $("doReset").addEventListener("click", rsOpen);
+  $("rsClose").addEventListener("click", rsShut);
+  $("rsSend").addEventListener("click", rsSubmit);
+  $("rsEmail").addEventListener("keydown", function(e){ if(e.key==="Enter"){ e.preventDefault(); rsSubmit(); } });
+  $("rsModal").addEventListener("click", function(e){ if(e.target===this) rsShut(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape" && $("rsModal").classList.contains("on")) rsShut(); });
   $("doLogout").addEventListener("click", function(){
     account = null;
     loadIdentityState(true);
