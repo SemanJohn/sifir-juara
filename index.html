@@ -974,7 +974,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.9";
+  var APP_VERSION = "5.0";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -2117,7 +2117,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     if(!account){ if(cb) cb({ok:true, offline:true}); return; }
     api({action:"sync", email:account.email, pass:account.pass,
       nickname:profile.nickname||"", kelas:profile.kelas||"",
-      avatar:myAvatarIdx()}, function(r){ if(cb) cb(r); });
+      avatar: myAvatarIdx(), badges: badgeState, stats: stats}, function(r){ if(cb) cb(r); });
   }
 
   function requestGameSession(s){
@@ -2155,6 +2155,8 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     stats.totalCorrect = Math.max(stats.totalCorrect||0, rs.totalCorrect||0);
     stats.totalWrong = Math.max(stats.totalWrong||0, rs.totalWrong||0);
     stats.bestStreak = Math.max(stats.bestStreak||0, rs.bestStreak||0);
+    if(rs.bestScore) stats.bestScore = Math.max(stats.bestScore||0, Number(rs.bestScore)||0);
+    if(rs.bestMode){ stats.bestMode = stats.bestMode||{}; for(var bmK in rs.bestMode){ stats.bestMode[bmK] = Math.max(stats.bestMode[bmK]||0, Number(rs.bestMode[bmK])||0); } }
     if(rs.modes){ for(var m in rs.modes){ if(rs.modes[m]) stats.modes[m] = true; } }
     if(typeof rs.avatar === "number") stats.avatar = rs.avatar;
     saveMeta();
@@ -2185,6 +2187,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     else if(p.nickname) profile.nickname = p.nickname;
     if(p.kelas) profile.kelas = p.kelas;
     reconcileVsProgress(rs);
+    if(p && p.highs){ stats.bestMode = stats.bestMode||{}; for(var hK in p.highs){ var hV=Number(p.highs[hK])||0; if(hV>(stats.bestMode[hK]||0)) stats.bestMode[hK]=hV; if(hV>(stats.bestScore||0)) stats.bestScore=hV; } }
     saveMeta(); saveProfile(); try{ evalBadgesRetro(true); }catch(e){}
     syncUp();
   }
