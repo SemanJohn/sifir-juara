@@ -444,6 +444,12 @@
   .bd .nm{font-weight:900;font-size:11.5px;margin-top:4px}
   .bd .ds{font-size:10px;color:#8a7fb5;font-weight:800;margin-top:2px;line-height:1.3}
   .bd.lock{opacity:.4;filter:grayscale(1)}
+
+  .bdCat{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    margin:16px 2px 2px;font-family:'Fredoka',sans-serif;font-weight:600;font-size:15px;color:#fff}
+  .bdCat:first-child{margin-top:2px}
+  .bdCat b{font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;color:#241a52;
+    background:linear-gradient(180deg,#ffe37a,#ffc23a);border-radius:20px;padding:3px 10px;flex:none}
   .bdCount{text-align:center;color:var(--muted);font-weight:800;font-size:13px;margin-bottom:12px}
 
   /* jadual sifir */
@@ -968,7 +974,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "4.8";
+  var APP_VERSION = "4.9";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -1742,6 +1748,7 @@
     stats.totalCorrect += state.correct;
     stats.totalWrong = (stats.totalWrong||0) + state.wrong;
     stats.bestStreak = Math.max(stats.bestStreak||0, state.bestStreak);
+    if(!state.practice){ stats.bestScore = Math.max(stats.bestScore||0, state.score||0); stats.bestMode = stats.bestMode||{}; stats.bestMode[state.mode] = Math.max(stats.bestMode[state.mode]||0, state.score||0); }
     stats.modes[state.mode] = true;
     saveMeta();
     evalBadges();
@@ -2046,7 +2053,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   var stats = emptyStats();
   var profile = {nickname:"", kelas:""};
   function cleanLegacyKeys(){ try{ if(localStorage.getItem("sjCleaned1")) return; var kill=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(/^sifirJuara(Stats|Badges|Profile)_/.test(k)) kill.push(k); } for(var j=0;j<kill.length;j++) localStorage.removeItem(kill[j]); localStorage.setItem("sjCleaned1","1"); }catch(e){} }
-  function loadIdentityState(resetGuest){ cleanLegacyKeys();
+  function loadIdentityState(resetGuest){ cleanLegacyKeys(); setTimeout(function(){ try{ evalBadgesRetro(true); }catch(e){} }, 400);
     if(!account){
       badgeState = {};
       stats = emptyStats();
@@ -2178,7 +2185,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     else if(p.nickname) profile.nickname = p.nickname;
     if(p.kelas) profile.kelas = p.kelas;
     reconcileVsProgress(rs);
-    saveMeta(); saveProfile();
+    saveMeta(); saveProfile(); try{ evalBadgesRetro(true); }catch(e){}
     syncUp();
   }
 
@@ -2242,19 +2249,80 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     if(lv >= 15) earn("lv15");
     if(lv >= 20){ earn("lv20"); earn("avatarAll"); }
   }
+  var BCAT=[
+    {nm:"Kekerapan Bermain", ids:["first","games5","games20","games50","games100"]},
+    {nm:"Jawapan Betul",     ids:["c100","c500","c1000","c2500","c5000"]},
+    {nm:"Kemahiran Streak",  ids:["s1","s10","s25","s50","s100"]},
+    {nm:"Markah Terbaik",    ids:["m50","m100","m250","m500","m750","m1000"]},
+    {nm:"Eksplorasi & Mod",  ids:["perfect","perfect20","prac","all","hero","hero100","daily"]},
+    {nm:"Tahap Pengalaman",  ids:["lv5","lv10","lv15","lv20","avatarAll"]},
+    {nm:"Pangkat & Kemenangan VS", ids:["vsPejuang","vsPerwira","vsJaguh","vsHulubalang","vsLegenda","vsWin1","vsWin10"]}
+  ];
+  function seedBestFromLB(){
+    try{
+      var own=String((profile&&profile.nickname)||"").trim().toUpperCase(); if(!own) return;
+      stats.bestMode = stats.bestMode || {};
+      ["easy","mid","hard","hero"].forEach(function(m){
+        var arr=(typeof lb!=="undefined" && lb && lb[m]) ? lb[m] : [];
+        for(var i=0;i<arr.length;i++){
+          var e=arr[i]||{}, nm=String(e.n||e.name||"").trim().toUpperCase();
+          if(nm===own){
+            var s=Number(e.s!=null?e.s:e.score)||0;
+            if(s>(stats.bestMode[m]||0)) stats.bestMode[m]=s;
+            if(s>(stats.bestScore||0)) stats.bestScore=s;
+          }
+        }
+      });
+    }catch(e){}
+  }
+  function evalBadgesRetro(announce){
+    try{
+      seedBestFromLB();
+      var g=stats.games||0, c=stats.totalCorrect||0, bs=stats.bestStreak||0;
+      var sc=stats.bestScore||0, bm=stats.bestMode||{}, lv=levelOf(myXP()), n=0;
+      function give(id){ if(!badgeState[id]){ badgeState[id]=true; n++; } }
+      if(g>=1) give("first");
+      if(g>=5) give("games5"); if(g>=20) give("games20"); if(g>=50) give("games50"); if(g>=100) give("games100");
+      if(c>=100) give("c100"); if(c>=500) give("c500"); if(c>=1000) give("c1000");
+      if(c>=2500) give("c2500"); if(c>=5000) give("c5000");
+      if(bs>=1) give("s1"); if(bs>=10) give("s10"); if(bs>=25) give("s25");
+      if(bs>=50) give("s50"); if(bs>=100) give("s100");
+      if(sc>=50) give("m50"); if(sc>=100) give("m100"); if(sc>=250) give("m250");
+      if(sc>=500) give("m500"); if(sc>=750) give("m750"); if(sc>=1000) give("m1000");
+      if((bm.hero||0)>0) give("hero");
+      if((bm.hero||0)>=100) give("hero100");
+      if(stats.modes){
+        if(stats.modes.hero) give("hero");
+        if(stats.modes.practice||stats.modes.prac) give("prac");
+        if(stats.modes.easy&&stats.modes.mid&&stats.modes.hard&&stats.modes.hero) give("all");
+      }
+      if(lv>=5) give("lv5"); if(lv>=10) give("lv10"); if(lv>=15) give("lv15");
+      if(lv>=20){ give("lv20"); give("avatarAll"); }
+      if(stats.vsWins>=1) give("vsWin1"); if(stats.vsWins>=10) give("vsWin10");
+      if(n>0){ saveMeta(); if(announce) queueToast(ikT("medal")+" "+n+" lencana lama dibuka!"); }
+    }catch(e){}
+  }
   function renderBadges(){
-    var g = $("bdGrid"); g.innerHTML = "";
-    var got = 0;
-    BADGES.forEach(function(b){
-      var un = !!badgeState[b.id];
-      if(un) got++;
-      var d = document.createElement("div");
-      d.className = "bd";
-      var ic = document.createElement("div"); ic.className="ic"; ic.innerHTML = badgeSVG(b, un);
-      var nm = document.createElement("div"); nm.className="nm"; nm.textContent = b.nm;
-      var ds = document.createElement("div"); ds.className="ds"; ds.textContent = b.ds;
-      d.appendChild(ic); d.appendChild(nm); d.appendChild(ds);
-      g.appendChild(d);
+    evalBadgesRetro(false);
+    var g=$("bdGrid"); g.innerHTML="";
+    var byId={}; BADGES.forEach(function(b){ byId[b.id]=b; });
+    var got=0;
+    BCAT.forEach(function(cat){
+      var sub=cat.ids.filter(function(id){ return byId[id]; });
+      if(!sub.length) return;
+      var n=sub.filter(function(id){ return !!badgeState[id]; }).length;
+      var head=document.createElement("div"); head.className="bdCat";
+      var t=document.createElement("span"); t.textContent=cat.nm;
+      var c=document.createElement("b"); c.textContent=n+" / "+sub.length;
+      head.appendChild(t); head.appendChild(c); g.appendChild(head);
+      sub.forEach(function(id){
+        var b=byId[id], un=!!badgeState[id]; if(un) got++;
+        var d=document.createElement("div"); d.className="bd";
+        var ic=document.createElement("div"); ic.className="ic"; ic.innerHTML=badgeSVG(b,un);
+        var nm=document.createElement("div"); nm.className="nm"; nm.textContent=b.nm;
+        var ds=document.createElement("div"); ds.className="ds"; ds.textContent=b.ds;
+        d.appendChild(ic); d.appendChild(nm); d.appendChild(ds); g.appendChild(d);
+      });
     });
     $("bdCount").textContent = got + " / " + BADGES.length + " lencana diperoleh";
   }
