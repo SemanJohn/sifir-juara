@@ -270,8 +270,28 @@ Tukar kepada:
 ## Deploy
 
 1. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy**
-2. Tiada fungsi perlu dijalankan secara manual. Lajur `Bulan` mengisi sendiri
-   pada `purge` pertama; sebelum itu bulan dibaca daripada lajur `Masa`.
+   (Simpan sahaja tidak cukup — Web App kekal pada versi lama sehingga anda buat versi baharu.)
+2. **Pilih fungsi `firebaseSeedAll` dalam editor dan tekan Run — SEKALI.**
+   Ini WAJIB. Lihat penjelasan di bawah.
+3. Selepas itu tiada apa perlu dijalankan lagi. Lajur `Bulan` mengisi sendiri pada
+   `purge` pertama; sebelum itu bulan dibaca daripada lajur `Masa`.
+
+### Kenapa langkah 2 wajib
+
+Ada DUA sumber papan markah, dan keduanya berkelakuan berbeza:
+
+| Sumber | Cara ia dikemas kini |
+|---|---|
+| `doGet` (Sheets) | Dikira **semasa dibaca** — terus betul sebaik deploy |
+| `leaderboards/score` (Firebase) | Salinan yang **ditolak** oleh `firebaseSyncLeaderboards_()` |
+
+Firebase hanya ditolak semula apabila ada orang menyimpan markah, mendaftar, atau `sync`.
+Sebelum itu ia masih memegang papan markah LAMA — termasuk rekod bulan lepas — dan klien
+membaca Firebase dahulu kerana ia lebih pantas. Jadi selepas deploy, papan markah masih
+menunjukkan bulan lepas sehingga sesuatu mencetuskan penyegerakan.
+
+`firebaseSeedAll` menolak semula papan markah menggunakan kod baharu, jadi Firebase terus
+selaras. Ia selamat dijalankan bila-bila masa dan boleh diulang.
 
 ## Apa yang berlaku sebaik selepas deploy
 
