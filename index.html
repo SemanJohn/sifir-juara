@@ -332,6 +332,10 @@
   .lbRow{display:grid;grid-template-columns:32px 42px minmax(0,1fr) auto;align-items:center;
     gap:9px;padding:9px 5px;border-bottom:1.5px solid #eadfb9;color:var(--ink)}
   .lbRow:last-child{border-bottom:none}
+  /* kad pemain boleh ditekan untuk buka profil */
+  .lbTap{cursor:pointer;border-radius:13px;transition:background .15s,transform .1s}
+  .lbTap:hover{background:#00000008}
+  .lbTap:active{transform:scale(.985);background:#0000000f}
   .lbRow.own{margin:3px 0;border:none;border-radius:13px;background:linear-gradient(90deg,#dff8e9,#c9f3dd)}
   .lbRank{font-size:18px;text-align:center;font-family:'Fredoka',sans-serif;font-weight:600}
   .lbAvatar{width:40px;height:40px;border-radius:14px;overflow:hidden;background:#fff;
@@ -375,6 +379,15 @@
   .pfBadge{text-align:center;padding:2px}
   .pfBadge svg{width:100%;height:100%;display:block}
   .pfEmpty{color:#8a7fb5;font-weight:800;font-size:13px;text-align:center;padding:8px 0}
+  /* sejarah markah bulan lalu dalam profil */
+  .pfBulanan{display:flex;flex-direction:column;gap:6px}
+  .pfBulanRow{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:#f0ecfa;border-radius:12px;padding:8px 12px}
+  .pfBulanRow.kini{background:linear-gradient(90deg,#dff8e9,#c9f3dd)}
+  .pfBulanNama{font-weight:900;font-size:13px;color:var(--ink)}
+  .pfBulanMod{font-size:11px;font-weight:800;color:#8a7fb5;margin-top:1px}
+  .pfBulanMata{font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;color:var(--magenta);flex:none}
+  .lbBulan{color:var(--yellow);font-weight:900;font-size:13px;margin-top:2px}
 
   /* avatar bulatan di menu utama */
   .menuAva{display:flex;justify-content:center;margin-bottom:6px}
@@ -765,7 +778,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.4</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.5</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -789,6 +802,9 @@
 
       <div class="pfSection">Markah Tertinggi</div>
       <div class="pfHighs" id="pfHighs"></div>
+
+      <div class="pfSection" id="pfBulananTitle" style="display:none">Markah Mengikut Bulan</div>
+      <div class="pfBulanan" id="pfBulanan"></div>
 
       <div class="pfSection">Statistik</div>
       <div class="pfStats" id="pfStats"></div>
@@ -895,6 +911,7 @@
   <section class="screen" id="lbScreen">
     <div class="brand">
       <div class="tag">Papan Markah</div>
+      <div class="lbBulan" id="lbBulan"></div>
     </div>
     <div class="lbModeTabs">
       <button class="lbModeTab sel" data-lb-group="time"><span data-ik="jam"></span> TIME TRIAL</button>
@@ -1034,7 +1051,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "5.4";
+  var APP_VERSION = "5.5";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -2251,7 +2268,8 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     else if(p.nickname) profile.nickname = p.nickname;
     if(p.kelas) profile.kelas = p.kelas;
     reconcileVsProgress(rs);
-    if(p && p.highs){ stats.bestMode = stats.bestMode||{}; for(var hK in p.highs){ var hV=Number(p.highs[hK])||0; if(hV>(stats.bestMode[hK]||0)) stats.bestMode[hK]=hV; if(hV>(stats.bestScore||0)) stats.bestScore=hV; } }
+    var pHigh = (p && (p.highsAll || p.highs)) || null;
+    if(pHigh){ stats.bestMode = stats.bestMode||{}; for(var hK in pHigh){ var hV=Number(pHigh[hK])||0; if(hV>(stats.bestMode[hK]||0)) stats.bestMode[hK]=hV; if(hV>(stats.bestScore||0)) stats.bestScore=hV; } }
     saveMeta(); saveProfile(); try{ evalBadgesRetro(true); }catch(e){}
     syncUp();
   }
@@ -2446,7 +2464,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
           : ikT("raya")+" "+name+" — markah tertinggi baharu!";
         bl.className = "best";
       } else if(r && r.ok){
-        bl.textContent = "Markah terbaik anda: "+fmtNum(r.best)+" (kali ini "+fmtNum(state.score)+")";
+        bl.textContent = "Terbaik bulan ini: "+fmtNum(r.best)+" (kali ini "+fmtNum(state.score)+")";
         bl.className = "best dark";
       } else {
         bl.textContent = (r && r.err) ? r.err : "Markah disimpan setempat (luar talian)";
@@ -2561,7 +2579,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   var MODE_LABEL = { easy:ikT("benih")+" Mudah", mid:ikT("kilat")+" Sederhana", hard:ikT("api")+" Sukar", hero:ikT("hero")+" Hero" };
   var pfIsOwn = false;
   function pfClearAll(){
-    ["pfKelas","pfHighs","pfStats","pfVsRank","pfVsStats","pfBadges","pfXp"].forEach(function(id){
+    ["pfKelas","pfHighs","pfBulanan","pfStats","pfVsRank","pfVsStats","pfBadges","pfXp"].forEach(function(id){
       var el=$(id); if(el) el.innerHTML="";
     });
     var ap=$("pfAvaPick"); if(ap) ap.innerHTML="";
@@ -2635,9 +2653,13 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     ["easy","mid","hard","hero"].forEach(function(m){
       var d = document.createElement("div"); d.className = "pfHigh";
       var mm = document.createElement("span"); mm.className="m"; mm.innerHTML = MODE_LABEL[m];
-      var vv = document.createElement("span"); vv.className="v"; vv.textContent = (r.highs && r.highs[m]) || 0;
+      // highsAll = sepanjang masa (pelayan baharu); highs = bulan semasa.
+      // Pelayan lama hanya hantar highs, jadi ia jadi sandaran.
+      var semua = r.highsAll || r.highs || {};
+      var vv = document.createElement("span"); vv.className="v"; vv.textContent = semua[m] || 0;
       d.appendChild(mm); d.appendChild(vv); hg.appendChild(d);
     });
+    renderBulanan(r);
     // statistik
     var st = r.stats || {};
     var sg = $("pfStats"); sg.innerHTML = "";
@@ -2672,6 +2694,53 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     });
     if(got === 0) bg.innerHTML = "<p class='pfEmpty' style='grid-column:1/-1'>Belum ada lencana</p>";
   }
+  // Sejarah markah bulanan. Papan markah hanya tunjuk bulan semasa, jadi di sinilah
+  // murid masih boleh lihat pencapaian bulan-bulan lalu.
+  var BULAN_PENUH = ["Januari","Februari","Mac","April","Mei","Jun",
+    "Julai","Ogos","September","Oktober","November","Disember"];
+  function labelBulan(b){
+    var m = /^(\d{4})-(\d{2})$/.exec(String(b||""));
+    if(!m) return String(b||"");
+    return BULAN_PENUH[Number(m[2])-1] + " " + m[1];
+  }
+  function renderBulanan(r){
+    var box = $("pfBulanan"), tajuk = $("pfBulananTitle");
+    if(!box || !tajuk) return;
+    box.innerHTML = "";
+    var data = r && r.bulanan;
+    var kunci = [];
+    for(var k in data){ if(data[k]) kunci.push(k); }
+    if(!kunci.length){ tajuk.style.display = "none"; return; }
+    tajuk.style.display = "";
+    kunci.sort().reverse();   // terbaharu di atas
+    var bkini = (r && r.bulan) || "";
+    for(var i=0; i<kunci.length; i++){
+      var b = kunci[i], h = data[b] || {};
+      var terbaik = 0, modTerbaik = "";
+      ["easy","mid","hard","hero"].forEach(function(m){
+        var v = Number(h[m]) || 0;
+        if(v > terbaik){ terbaik = v; modTerbaik = m; }
+      });
+      if(terbaik <= 0) continue;
+      var row = document.createElement("div");
+      row.className = "pfBulanRow" + (b === bkini ? " kini" : "");
+      var kiri = document.createElement("div");
+      var nm = document.createElement("div");
+      nm.className = "pfBulanNama";
+      nm.textContent = labelBulan(b) + (b === bkini ? " · bulan ini" : "");
+      var sub = document.createElement("div");
+      sub.className = "pfBulanMod";
+      sub.innerHTML = "Terbaik: " + (MODE_LABEL[modTerbaik] || modTerbaik);
+      kiri.appendChild(nm); kiri.appendChild(sub);
+      var mata = document.createElement("div");
+      mata.className = "pfBulanMata";
+      mata.textContent = fmtNum(terbaik);
+      row.appendChild(kiri); row.appendChild(mata);
+      box.appendChild(row);
+    }
+    if(!box.children.length) tajuk.style.display = "none";
+  }
+
   function renderAvatarPicker(){
     var xp = myXP(), cur = myAvatarIdx(), lvl = levelOf(xp);
     var intoLevel = xp % XP_PER_LEVEL;
@@ -3181,10 +3250,23 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       own:own
     };
   }
+  // Jadikan seluruh kad pemain boleh ditekan untuk membuka profilnya.
+  // Tetamu (GUEST123) dilangkau kerana mereka tiada profil di pelayan.
   function lbOpenable(el, name){
-    if(!name || name === "TANPA NAMA") return;
-    el.style.cursor = "pointer";
-    el.addEventListener("click", function(){ openProfile(name, false); });
+    if(!name || name === "TANPA NAMA" || lbIsGuest(name)) return;
+    el.classList.add("lbTap");
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", "Lihat profil " + name);
+    function buka(){ openProfile(name, lbIsOwn(name)); }
+    el.addEventListener("click", buka);
+    // D-pad TV / papan kekunci: Enter atau Space
+    el.addEventListener("keydown", function(e){
+      var c = e.keyCode || e.which || 0;
+      if(e.key === "Enter" || e.key === " " || c === 13 || c === 32){
+        e.preventDefault(); buka();
+      }
+    });
   }
   function makeLbPodiumPlayer(e, rank, isVs){
     var info = lbInfo(e, isVs);
@@ -3201,7 +3283,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     var nm = document.createElement("div");
     nm.className = "lbPodiumName";
     nm.textContent = info.name;
-    lbOpenable(nm, info.name);
     var cls = document.createElement("div");
     cls.className = "lbPodiumClass";
     cls.textContent = info.kelas;
@@ -3216,6 +3297,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
 
     player.appendChild(medal); player.appendChild(av); player.appendChild(nm);
     player.appendChild(cls); player.appendChild(sc); player.appendChild(dt); player.appendChild(base);
+    lbOpenable(player, info.name);
     return player;
   }
   function makeLbRow(e, rank, isVs){
@@ -3240,7 +3322,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       n2.textContent = info.kelas;
       nm.appendChild(n2);
     }
-    lbOpenable(nm, info.name);
     var scoreWrap = document.createElement("span");
     scoreWrap.className = "lbScoreWrap";
     var sc = document.createElement("span");
@@ -3251,6 +3332,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     dt.textContent = info.date;
     scoreWrap.appendChild(sc); scoreWrap.appendChild(dt);
     row.appendChild(r); row.appendChild(av); row.appendChild(nm); row.appendChild(scoreWrap);
+    lbOpenable(row, info.name);
     return row;
   }
   function drawLbEntries(arr, isVs){
@@ -3317,6 +3399,8 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     document.querySelectorAll(".lbTab").forEach(function(t){
       t.classList.toggle("sel", t.dataset.lb === mode);
     });
+    var blv = $("lbBulan");
+    if(blv) blv.textContent = (mode !== "vs" && onlineLB && onlineLB.bulanLabel) ? onlineLB.bulanLabel : "";
     if(mode === "vs"){ drawVsBoardInLb(); return; }
     drawLB();
     refreshLB();
@@ -3355,6 +3439,8 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       clearLbView("Memuatkan papan markah…");
       return;
     }
+    var bl = $("lbBulan");
+    if(bl) bl.textContent = (onlineLB && onlineLB.bulanLabel) ? onlineLB.bulanLabel : "";
     var raw = (onlineLB && onlineLB[lbMode]) ? onlineLB[lbMode] : (lb[lbMode] || []);
     // ringkaskan: satu markah tertinggi sahaja per pemain (nama+kelas)
     var byKey = {};

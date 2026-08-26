@@ -2,7 +2,7 @@
 
 > **Dokumen rujukan untuk AI / agen kod.**
 > Baca fail ini sepenuhnya sebelum menyunting apa-apa dalam repo `SemanJohn/sifir-juara`.
-> Semua nombor baris merujuk kepada `index.html` pada **v5.4** (3,641 baris).
+> Semua nombor baris merujuk kepada `index.html` pada **v5.5** (3727 baris).
 > Bahasa kod, UI dan komen ialah **Bahasa Melayu** — kekalkan bahasa itu.
 
 ---
@@ -16,8 +16,8 @@
 | Jenis | PWA (offline-capable), dihoskan di GitHub Pages |
 | Bahasa UI | Bahasa Melayu (`<html lang="ms">`) |
 | Sasaran peranti | Telefon (utama), tablet, desktop, **Android TV / Smart TV (D-pad)** |
-| Versi semasa | `APP_VERSION = "5.4"` (baris 1037) |
-| Cache service worker | `sifir-juara-v71` (`sw.js` baris 2) |
+| Versi semasa | `APP_VERSION = "5.5"` (baris 1037) |
+| Cache service worker | `sifir-juara-v72` (`sw.js` baris 2) |
 | Backend markah | Google Apps Script Web App (sumber kebenaran / *source of truth*) |
 | Backend masa nyata | Firebase Realtime Database (baca sahaja, REST + SSE) |
 | Dependency luar | **Hanya Google Fonts** (Fredoka + Nunito). Tiada yang lain. |
@@ -44,8 +44,8 @@ Tiada fail lain. Tiada `package.json`, tiada CI, tiada folder `src/`.
 | 1–11 | `<head>`, meta viewport (no-zoom), pautan manifest, Google Fonts |
 | 12–~600 | `<style>` — semua CSS, bermula dengan token `:root` |
 | ~600–1030 | `<body>` — 17 elemen `<section class="screen">` + bar kemas kini |
-| 1034–3593 | IIFE utama (`(function(){ "use strict"; … })();`) — semua logik aplikasi |
-| 3596–3638 | IIFE kedua — "Pemeriksa versi" (**lihat §14, ada bug skop**) |
+| 1034–3610 | IIFE utama (`(function(){ "use strict"; … })();`) — semua logik aplikasi |
+| 3613–3655 | IIFE kedua — "Pemeriksa versi" (**lihat §14, ada bug skop**) |
 
 ---
 
@@ -95,90 +95,90 @@ Skrin ialah `<section class="screen">`; hanya satu ada kelas `.on` pada satu-sat
 ### Lapisan rangkaian & backend
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 1214 | `fetchTimeout(url, opts, ms)` | `fetch` dengan `AbortController` |
-| 1225 | `api(payload, cb)` | POST JSON ke Apps Script. **Semua panggilan backend melalui sini.** |
-| 1237 | `sendToSheets(rec)` | Pembalut `api` untuk `action:"score"` |
-| 1064 | `firebaseUrl(path)` | Bina URL REST Firebase |
-| 1067 | `firebaseGet(path)` | GET sekali sahaja |
-| 1071 | `firebaseWatch(path, cb)` | `EventSource` (SSE) + auto-cuba-semula |
-| 1096 | `sha256Hex(text)` | SHA-256 email → kunci node VS |
-| 1102 | `firebaseRefreshLeaderboards()` | Tarik `leaderboards` (nyahlantun) |
-| 1119 | `firebaseVsList(raw, prev)` | Normalisasi data VS mentah → `{incoming, active, done}` |
-| 1179 | `firebaseApplyVs(raw)` | Sapu data VS ke UI + toast |
-| 1202 | `ensureFirebaseVsWatch()` | Buka SSE pada `vsUsers/<sha256(email)>` |
+| 1231 | `fetchTimeout(url, opts, ms)` | `fetch` dengan `AbortController` |
+| 1242 | `api(payload, cb)` | POST JSON ke Apps Script. **Semua panggilan backend melalui sini.** |
+| 1254 | `sendToSheets(rec)` | Pembalut `api` untuk `action:"score"` |
+| 1081 | `firebaseUrl(path)` | Bina URL REST Firebase |
+| 1084 | `firebaseGet(path)` | GET sekali sahaja |
+| 1088 | `firebaseWatch(path, cb)` | `EventSource` (SSE) + auto-cuba-semula |
+| 1113 | `sha256Hex(text)` | SHA-256 email → kunci node VS |
+| 1119 | `firebaseRefreshLeaderboards()` | Tarik `leaderboards` (nyahlantun) |
+| 1136 | `firebaseVsList(raw, prev)` | Normalisasi data VS mentah → `{incoming, active, done}` |
+| 1196 | `firebaseApplyVs(raw)` | Sapu data VS ke UI + toast |
+| 1219 | `ensureFirebaseVsWatch()` | Buka SSE pada `vsUsers/<sha256(email)>` |
 
 ### Enjin permainan
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 1423 | `startGame(mode)` | Bina objek `state`, mula pemasa |
-| 1471 | `tick()` | Kira detik; kendalikan beku |
-| 1556 | `rnd(a,b)` | Integer rawak |
-| 1558 | `newQuestion()` | Jana soalan (§7) |
-| 1607 | `buildEq()` | Render persamaan dengan kotak `?` |
-| 1617 | `renderInput()` | Papar input pemain |
-| 1695 | `handleKey(k)` | Digit / `clear` / `enter` |
-| 1704 | `submit()` | **Teras pemarkahan** — mata, streak, beku, maklum balas |
-| 1779 | `nextIfPlaying()` | Soalan seterusnya, atau tamat awal jika VS sudah menang |
-| 1803 | `endGame()` | Kemas kini stats, nilai lencana, sync, pilih skrin akhir |
-| 1875 | `renderWeak()` | Kira sifir kejituan terendah (min 2 cubaan) |
-| 1495 | `startFreeze()` / 1503 `endFreeze()` | Bonus masa beku |
-| 1509 | `spawnFlakes(icon)` | Partikel raikan |
+| 1440 | `startGame(mode)` | Bina objek `state`, mula pemasa |
+| 1488 | `tick()` | Kira detik; kendalikan beku |
+| 1573 | `rnd(a,b)` | Integer rawak |
+| 1575 | `newQuestion()` | Jana soalan (§7) |
+| 1624 | `buildEq()` | Render persamaan dengan kotak `?` |
+| 1634 | `renderInput()` | Papar input pemain |
+| 1712 | `handleKey(k)` | Digit / `clear` / `enter` |
+| 1721 | `submit()` | **Teras pemarkahan** — mata, streak, beku, maklum balas |
+| 1796 | `nextIfPlaying()` | Soalan seterusnya, atau tamat awal jika VS sudah menang |
+| 1820 | `endGame()` | Kemas kini stats, nilai lencana, sync, pilih skrin akhir |
+| 1892 | `renderWeak()` | Kira sifir kejituan terendah (min 2 cubaan) |
+| 1512 | `startFreeze()` / 1520 `endFreeze()` | Bonus masa beku |
+| 1526 | `spawnFlakes(icon)` | Partikel raikan |
 
 ### Identiti, stats, kegigihan
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 2099 | `loadJSON(key, fallback)` | Baca localStorage selamat |
-| 2103 | `emptyStats()` | Bentuk stats lalai |
-| 2107 | `identitySuffix()` / 2113 `identityKey()` | Namespace localStorage ikut akaun |
-| 2119 | `cleanLegacyKeys()` | Migrasi sekali sahaja bagi kunci lama |
-| 2120 | `loadIdentityState(guest)` | Tukar antara tetamu ↔ akaun |
-| 2143 | `saveMeta()` | Simpan `badgeState` + `stats` |
-| 2180 | `syncUp(cb)` | Tolak stats/lencana/avatar ke Sheets |
-| 2187 | `requestGameSession(s)` | Dapatkan `sessionToken` sebelum bermain (anti-tipu) |
-| 2199 | `resultPayload(s, action)` | Bina muatan penghantaran markah |
-| 2216 | `applyAuthoritativeStats(rs)` | Gabung stats pelayan (sentiasa `Math.max`) |
-| 2229 | `reconcileVsProgress(src)` | Selaras kemenangan/mata VS → lencana |
-| 2245 | `applyRemote(p)` | Gabung penuh profil jauh selepas log masuk |
+| 2116 | `loadJSON(key, fallback)` | Baca localStorage selamat |
+| 2120 | `emptyStats()` | Bentuk stats lalai |
+| 2124 | `identitySuffix()` / 2130 `identityKey()` | Namespace localStorage ikut akaun |
+| 2136 | `cleanLegacyKeys()` | Migrasi sekali sahaja bagi kunci lama |
+| 2137 | `loadIdentityState(guest)` | Tukar antara tetamu ↔ akaun |
+| 2160 | `saveMeta()` | Simpan `badgeState` + `stats` |
+| 2197 | `syncUp(cb)` | Tolak stats/lencana/avatar ke Sheets |
+| 2204 | `requestGameSession(s)` | Dapatkan `sessionToken` sebelum bermain (anti-tipu) |
+| 2216 | `resultPayload(s, action)` | Bina muatan penghantaran markah |
+| 2233 | `applyAuthoritativeStats(rs)` | Gabung stats pelayan (sentiasa `Math.max`) |
+| 2246 | `reconcileVsProgress(src)` | Selaras kemenangan/mata VS → lencana |
+| 2262 | `applyRemote(p)` | Gabung penuh profil jauh selepas log masuk |
 
 ### Progresi & paparan
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 2273 | `earn(id)` | Tandakan lencana diperoleh |
-| 2281 | `evalBadges()` | Nilai semua syarat lencana |
-| 2345 | `evalBadgesRetro(quiet)` | Nilai semula selepas gabungan jauh |
-| 2372 | `renderBadges()` | Lukis grid lencana |
-| 2069 | `badgeSVG(b, unlocked)` | Jana SVG lencana ikut tier |
-| 2528 | `avatarSVG(i)` | Jana SVG avatar (20 avatar) |
-| 2537 | `levelOf(xp)` | `min(20, floor(xp/100)+1)` |
-| 2540 | `avatarUnlockLevel(i)` | 5 percuma; 15 lagi merata Level 2–20 |
-| 2595 | `openProfile(nick, own)` / 2619 `renderProfile(p)` | Skrin profil |
-| 1524 | `dailyGoalData()` / 1536 `recordDailyCorrect()` | Matlamat harian 30 betul |
+| 2291 | `earn(id)` | Tandakan lencana diperoleh |
+| 2299 | `evalBadges()` | Nilai semua syarat lencana |
+| 2363 | `evalBadgesRetro(quiet)` | Nilai semula selepas gabungan jauh |
+| 2390 | `renderBadges()` | Lukis grid lencana |
+| 2086 | `badgeSVG(b, unlocked)` | Jana SVG lencana ikut tier |
+| 2546 | `avatarSVG(i)` | Jana SVG avatar (20 avatar) |
+| 2555 | `levelOf(xp)` | `min(20, floor(xp/100)+1)` |
+| 2558 | `avatarUnlockLevel(i)` | 5 percuma; 15 lagi merata Level 2–20 |
+| 2613 | `openProfile(nick, own)` / 2637 `renderProfile(p)` | Skrin profil |
+| 1541 | `dailyGoalData()` / 1553 `recordDailyCorrect()` | Matlamat harian 30 betul |
 
 ### VS
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 2712 | `vsRand(seed, n)` | PRNG boleh ulang (mulberry32) |
-| 2720 | `vsQuestion(seed, idx)` | Soalan berbenih — **identik untuk kedua-dua pemain** |
-| 2733 | `startVS(match)` | Mula perlawanan VS |
-| 2762 | `vsFinish()` | Hantar `vs_submit` |
-| 2786 | `showVsResult(match, myScore, r)` | Menang / kalah / seri / menunggu |
-| 2837 | `openVs()` / 2841 `loadVsHub()` / 2873 `renderVsHub(d)` | Hab VS |
-| 2908 | `vsAct(action, id)` | Terima / tolak / mula |
-| 2994 | `sendVsInvite(p)` | Hantar jemputan |
+| 2781 | `vsRand(seed, n)` | PRNG boleh ulang (mulberry32) |
+| 2789 | `vsQuestion(seed, idx)` | Soalan berbenih — **identik untuk kedua-dua pemain** |
+| 2802 | `startVS(match)` | Mula perlawanan VS |
+| 2831 | `vsFinish()` | Hantar `vs_submit` |
+| 2855 | `showVsResult(match, myScore, r)` | Menang / kalah / seri / menunggu |
+| 2906 | `openVs()` / 2910 `loadVsHub()` / 2942 `renderVsHub(d)` | Hab VS |
+| 2977 | `vsAct(action, id)` | Terima / tolak / mula |
+| 3063 | `sendVsInvite(p)` | Hantar jemputan |
 
 ### Papan markah
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 1281 | `loadLB()` / 1289 `saveLB()` / 1298 `addScore()` | Cache papan markah tempatan |
-| 3295 | `refreshLB()` | Tarik data dari Firebase/Sheets |
-| 3189 | `makeLbPodiumPlayer()` / 3221 `makeLbRow()` | Baris papan markah |
-| 3142 | `requestLbAvatar()` / 3157 `hydrateLbAvatars()` | Muat avatar malas (*lazy*) |
+| 1298 | `loadLB()` / 1306 `saveLB()` / 1315 `addScore()` | Cache papan markah tempatan |
+| 3377 | `refreshLB()` | Tarik data dari Firebase/Sheets |
+| 3271 | `makeLbPodiumPlayer()` / 3303 `makeLbRow()` | Baris papan markah — seluruh kad boleh ditekan melalui `lbOpenable` |
+| 3211 | `requestLbAvatar()` / 3226 `hydrateLbAvatars()` | Muat avatar malas (*lazy*) |
 
 ### TV / kebolehcapaian
 | Baris | Fungsi | Peranan |
 |---|---|---|
-| 1630 | `visibleTvButtons()` | Elemen boleh fokus dalam skrin aktif |
-| 1641 | `moveTvFocus(dir)` | Navigasi arah geometri (`primary + cross*4.5`) |
+| 1647 | `visibleTvButtons()` | Elemen boleh fokus dalam skrin aktif |
+| 1658 | `moveTvFocus(dir)` | Navigasi arah geometri (`primary + cross*4.5`) |
 | 1669+ | Pendengar `keydown` | Anak panah, Enter/OK/Select, digit, Backspace |
 
 ---
@@ -337,7 +337,7 @@ Respons: JSON, sentiasa mengandungi { ok: true|false, err?: "..." }
 | `game_start` | `email, pass, nama, mod, matchId` | `{ok, sessionToken}` |
 | `game_end` | muatan keputusan + `sessionToken` | `{ok, stats, isBest, first, best}` |
 | `score` | muatan keputusan (fallback tanpa token) | `{ok, isBest, first, best}` |
-| `profile` | `nickname` | `{ok, …data profil}` |
+| `profile` | `nickname` | `{ok, nickname, kelas, stats, badges, highs, highsAll, bulanan, bulan}` |
 | `vs_players` | `email, pass` | `{ok, players:[…]}` |
 | `vs_invite` | `email, pass, oppNick` | `{ok}` |
 | `vs_list` | `email, pass` | `{ok, incoming, active, done}` |
@@ -362,7 +362,8 @@ https://sifir-juara-default-rtdb.asia-southeast1.firebasedatabase.app
 
 | Laluan | Isi | Cara akses |
 |---|---|---|
-| `leaderboards` | `{easy, mid, hard, hero, vs}` | `firebaseGet` + SSE |
+| `leaderboards/score` | `{easy, mid, hard, hero, bulan, bulanLabel}` — **bulan semasa sahaja** | `firebaseGet` + SSE |
+| `leaderboards/vs` | Ranking VS (sepanjang masa) | `firebaseGet` + SSE |
 | `vsUsers/<sha256(email huruf kecil)>` | Keadaan VS pemain | `firebaseGet` + SSE |
 
 Firebase **tidak pernah** menjadi sumber kebenaran. Sheets kekal berautoriti; Firebase hanya menjadikan ranking dan VS kelihatan serta-merta.
@@ -386,12 +387,40 @@ Firebase **tidak pernah** menjadi sumber kebenaran. Sheets kekal berautoriti; Fi
 
 ---
 
+### Papan markah bulanan
+
+Papan markah Time Trial **ditetapkan semula setiap bulan**. Semua logik itu berada di Apps Script,
+bukan di sini — klien hanya melukis apa yang diterima.
+
+- Helaian `Markah` menyimpan satu baris terbaik setiap **(pemain × mod × bulan)**, dengan lajur
+  `Bulan` (`"2026-08"`). Baris lama tanpa lajur itu dikira daripada lajur `Masa`.
+- `leaderboards/score` dan `doGet` hanya memulangkan bulan semasa. Kunci bulan dikira daripada
+  `new Date()` setiap panggilan, jadi peralihan bulan berlaku sendiri — **tiada trigger atau cron**.
+- Rekod pemain berdaftar disimpan 13 bulan supaya sejarah kekal boleh dilihat dalam profil.
+- Klien memapar `onlineLB.bulanLabel` dalam `#lbBulan`, dan `renderBulanan()` melukis
+  `r.bulanan` dalam profil.
+- **Serasi ke belakang**: jika pelayan belum dikemas kini, `bulanLabel`, `highsAll` dan `bulanan`
+  tiada, label bulan kekal kosong dan bahagian sejarah tersembunyi. Klien dan pelayan boleh
+  dipasang dalam mana-mana urutan.
+
+Butiran patch Apps Script ada dalam `APPS-SCRIPT-BULANAN.md`.
+
+### Membuka profil dari papan markah
+
+`lbOpenable(el, name)` menjadikan **seluruh kad pemain** (kad podium dan baris senarai) boleh ditekan untuk
+membuka `openProfile()`. Ia dipanggil sekali pada elemen bekas, selepas semua anak elemen dilampirkan.
+
+- Tetamu (`GUEST123`) dilangkau — mereka tiada profil di pelayan.
+- Kad sendiri membuka profil sendiri (`lbIsOwn`), jadi pemilih avatar turut muncul.
+- Kad diberi `role="button"` + `tabindex="0"` + pengendali Enter/Space supaya D-pad TV boleh mencapainya
+  (pendengar `keydown` global hanya mengklik elemen `<button>` sebenar).
+
 ## 11. PWA & kemas kini
 
 Terdapat **dua** mekanisme kemas kini bebas:
 
 1. **Melalui service worker** (baris 1243–1268, dalam IIFE utama) — daftar `sw.js?v=<APP_VERSION>`, panggil `reg.update()` semasa buka, selepas 3 saat, setiap 15 minit, pada `visibilitychange` dan pada `online`. Pendengar `controllerchange` melakukan satu `location.reload()`.
-2. **Pemeriksa versi dalam halaman** (baris 3596–3638) — `fetch` `index.html` mentah, cari `APP_VERSION`, papar `#updBar`, nyahdaftar SW + kosongkan cache + muat semula keras. **Kod ini kini tidak berfungsi — lihat §14, Isu 1.**
+2. **Pemeriksa versi dalam halaman** (baris 3613–3655) — `fetch` `index.html` mentah, cari `APP_VERSION`, papar `#updBar`, nyahdaftar SW + kosongkan cache + muat semula keras. **Kod ini kini tidak berfungsi — lihat §14, Isu 1.**
 
 `sw.js` menggunakan:
 - **navigate** → rangkaian dahulu, cache sebagai sandaran
@@ -440,9 +469,9 @@ Pengesanan TV (baris 1038–1043) melalui tiga isyarat: rentetan user-agent, heu
 ## 14. Isu & risiko yang diketahui
 
 ### Isu 1 — Pemeriksa versi ialah kod mati (BUG SEBENAR) 🔴
-IIFE utama ditutup di **baris 3593**. Pemeriksa versi bermula di **baris 3596**, di luar skop itu, tetapi merujuk `$` (ditakrif `var` di baris 1339), `APP_VERSION` (baris 1037) dan `curScreen` (baris 1346) — kesemuanya tersembunyi dalam IIFE utama.
+IIFE utama ditutup di **baris 3610**. Pemeriksa versi bermula di **baris 3613**, di luar skop itu, tetapi merujuk `$` (ditakrif `var` di baris 1339), `APP_VERSION` (baris 1037) dan `curScreen` (baris 1346) — kesemuanya tersembunyi dalam IIFE utama.
 
-Baris 3633, `var btn=$("updBtn");`, dijalankan serta-merta dan membaling `ReferenceError: $ is not defined`. Ini **membatalkan seluruh IIFE kedua** sebelum `setTimeout(check, 1200)` sempat didaftarkan. Kesannya: bar "Versi baharu tersedia" tidak pernah muncul, dan laluan muat-semula-keras tidak pernah berjalan.
+Baris 3650, `var btn=$("updBtn");`, dijalankan serta-merta dan membaling `ReferenceError: $ is not defined`. Ini **membatalkan seluruh IIFE kedua** sebelum `setTimeout(check, 1200)` sempat didaftarkan. Kesannya: bar "Versi baharu tersedia" tidak pernah muncul, dan laluan muat-semula-keras tidak pernah berjalan.
 
 Kemas kini masih sampai melalui laluan service worker (§11 mekanisme 1), jadi bug ini tersembunyi — tetapi sandaran hilang.
 
@@ -462,7 +491,7 @@ URL RTDB dibenamkan dalam klien dan dibaca melalui REST tanpa autentikasi. Sesia
 UI menyatakan "Sifir ×1 hingga ×5 / ×9 / ×12", tetapi `MODES` menetapkan `min:2`. Sifir 1 hanya muncul melalui laluan khas 1/30 dalam `newQuestion`. Teks dan kod bercanggah — betulkan salah satu, bukan kedua-duanya secara berasingan.
 
 ### Isu 5 — Versi berkod keras di dua tempat 🟡
-Versi ditulis di tiga tempat berasingan: `APP_VERSION` (baris 1037), teks lalai `#verLine` (baris 768) dan `CACHE` dalam `sw.js`. Ketiga-tiganya kini selaras (`5.4` / `5.4` / `v71`), tetapi tiada apa yang menguatkuasakan keselarasan itu — ia pernah terpesong (`#verLine` tersangkut pada `v4.4` sedangkan `APP_VERSION` sudah `5.3`). Sentiasa kemas kini ketiga-tiganya bersama.
+Versi ditulis di tiga tempat berasingan: `APP_VERSION` (baris 1037), teks lalai `#verLine` (baris 768) dan `CACHE` dalam `sw.js`. Ketiga-tiganya kini selaras (`5.5` / `5.5` / `v72`), tetapi tiada apa yang menguatkuasakan keselarasan itu — ia pernah terpesong (`#verLine` tersangkut pada `v4.4` sedangkan `APP_VERSION` sudah `5.3`). Sentiasa kemas kini ketiga-tiganya bersama.
 
 ### Isu 6 — Fail 213 KB / 3,629 baris 🟡
 Alat penyuntingan automatik mudah membaca fail ini secara separa dan menulis semula versi terpotong. **Sentiasa sunting melalui operasi setempat** (`sed -i`, ganti-rentetan, tampalan) — jangan sekali-kali menjana semula keseluruhan `index.html` daripada ingatan.
@@ -489,8 +518,8 @@ Tiada apa-apa yang menangkap regresi. Selepas apa-apa perubahan, uji manual: sat
 10. Jangan kira mata/kemenangan VS di klien — terima daripada pelayan.
 
 ### Selepas menyunting — senarai semak lepas landas
-11. **Naikkan `APP_VERSION`** di baris 1037 (cth. `"5.4"` → `"5.5"`).
-12. **Naikkan `CACHE`** dalam `sw.js` baris 2 (cth. `sifir-juara-v71` → `v72`). Jika terlupa, pengguna sedia ada akan tersekat pada versi lama.
+11. **Naikkan `APP_VERSION`** di baris 1037 (cth. `"5.5"` → `"5.6"`).
+12. **Naikkan `CACHE`** dalam `sw.js` baris 2 (cth. `sifir-juara-v72` → `v73`). Jika terlupa, pengguna sedia ada akan tersekat pada versi lama.
 13. Kemas kini `#verLine` lalai di baris 768 jika ia disunting.
 14. Jika aset baharu ditambah, tambahkannya ke tatasusunan `ASSETS` dalam `sw.js`.
 15. Uji manual: setiap mod, log masuk, VS, luar talian, D-pad.
@@ -528,4 +557,4 @@ Tiada apa-apa yang menangkap regresi. Selepas apa-apa perubahan, uji manual: sat
 
 ---
 
-*Blueprint ini menerangkan `index.html` v5.4 (3,641 baris), `sw.js` cache `v71`. Jika nombor baris tidak lagi sepadan, kod telah berubah — sahkan sebelum bergantung padanya.*
+*Blueprint ini menerangkan `index.html` v5.5 (3727 baris), `sw.js` cache `v72`. Jika nombor baris tidak lagi sepadan, kod telah berubah — sahkan sebelum bergantung padanya.*
