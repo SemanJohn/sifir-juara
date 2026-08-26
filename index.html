@@ -379,14 +379,6 @@
   .pfBadge{text-align:center;padding:2px}
   .pfBadge svg{width:100%;height:100%;display:block}
   .pfEmpty{color:#8a7fb5;font-weight:800;font-size:13px;text-align:center;padding:8px 0}
-  /* sejarah markah bulan lalu dalam profil */
-  .pfBulanan{display:flex;flex-direction:column;gap:6px}
-  .pfBulanRow{display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:#f0ecfa;border-radius:12px;padding:8px 12px}
-  .pfBulanRow.kini{background:linear-gradient(90deg,#dff8e9,#c9f3dd)}
-  .pfBulanNama{font-weight:900;font-size:13px;color:var(--ink)}
-  .pfBulanMod{font-size:11px;font-weight:800;color:#8a7fb5;margin-top:1px}
-  .pfBulanMata{font-family:'Fredoka',sans-serif;font-weight:700;font-size:19px;color:var(--magenta);flex:none}
   .lbBulan{color:var(--yellow);font-weight:900;font-size:13px;margin-top:2px}
 
   /* avatar bulatan di menu utama */
@@ -778,7 +770,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.6</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.7</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -802,9 +794,6 @@
 
       <div class="pfSection">Markah Tertinggi</div>
       <div class="pfHighs" id="pfHighs"></div>
-
-      <div class="pfSection" id="pfBulananTitle" style="display:none">Markah Mengikut Bulan</div>
-      <div class="pfBulanan" id="pfBulanan"></div>
 
       <div class="pfSection">Statistik</div>
       <div class="pfStats" id="pfStats"></div>
@@ -1051,7 +1040,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "5.6";
+  var APP_VERSION = "5.7";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -2607,7 +2596,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     try{ localStorage.setItem("sifirJuaraProfileFast2", JSON.stringify(pfFastCache)); }catch(e){}
   }
   function pfClearAll(){
-    ["pfKelas","pfHighs","pfBulanan","pfStats","pfVsRank","pfVsStats","pfBadges","pfXp"].forEach(function(id){
+    ["pfKelas","pfHighs","pfStats","pfVsRank","pfVsStats","pfBadges","pfXp"].forEach(function(id){
       var el=$(id); if(el) el.innerHTML="";
     });
     var ap=$("pfAvaPick"); if(ap) ap.innerHTML="";
@@ -2696,7 +2685,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       var vv = document.createElement("span"); vv.className="v"; vv.textContent = semua[m] || 0;
       d.appendChild(mm); d.appendChild(vv); hg.appendChild(d);
     });
-    renderBulanan(r);
     // statistik
     var st = r.stats || {};
     var sg = $("pfStats"); sg.innerHTML = "";
@@ -2731,53 +2719,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     });
     if(got === 0) bg.innerHTML = "<p class='pfEmpty' style='grid-column:1/-1'>Belum ada lencana</p>";
   }
-  // Sejarah markah bulanan. Papan markah hanya tunjuk bulan semasa, jadi di sinilah
-  // murid masih boleh lihat pencapaian bulan-bulan lalu.
-  var BULAN_PENUH = ["Januari","Februari","Mac","April","Mei","Jun",
-    "Julai","Ogos","September","Oktober","November","Disember"];
-  function labelBulan(b){
-    var m = /^(\d{4})-(\d{2})$/.exec(String(b||""));
-    if(!m) return String(b||"");
-    return BULAN_PENUH[Number(m[2])-1] + " " + m[1];
-  }
-  function renderBulanan(r){
-    var box = $("pfBulanan"), tajuk = $("pfBulananTitle");
-    if(!box || !tajuk) return;
-    box.innerHTML = "";
-    var data = r && r.bulanan;
-    var kunci = [];
-    for(var k in data){ if(data[k]) kunci.push(k); }
-    if(!kunci.length){ tajuk.style.display = "none"; return; }
-    tajuk.style.display = "";
-    kunci.sort().reverse();   // terbaharu di atas
-    var bkini = (r && r.bulan) || "";
-    for(var i=0; i<kunci.length; i++){
-      var b = kunci[i], h = data[b] || {};
-      var terbaik = 0, modTerbaik = "";
-      ["easy","mid","hard","hero"].forEach(function(m){
-        var v = Number(h[m]) || 0;
-        if(v > terbaik){ terbaik = v; modTerbaik = m; }
-      });
-      if(terbaik <= 0) continue;
-      var row = document.createElement("div");
-      row.className = "pfBulanRow" + (b === bkini ? " kini" : "");
-      var kiri = document.createElement("div");
-      var nm = document.createElement("div");
-      nm.className = "pfBulanNama";
-      nm.textContent = labelBulan(b) + (b === bkini ? " · bulan ini" : "");
-      var sub = document.createElement("div");
-      sub.className = "pfBulanMod";
-      sub.innerHTML = "Terbaik: " + (MODE_LABEL[modTerbaik] || modTerbaik);
-      kiri.appendChild(nm); kiri.appendChild(sub);
-      var mata = document.createElement("div");
-      mata.className = "pfBulanMata";
-      mata.textContent = fmtNum(terbaik);
-      row.appendChild(kiri); row.appendChild(mata);
-      box.appendChild(row);
-    }
-    if(!box.children.length) tajuk.style.display = "none";
-  }
-
   function renderAvatarPicker(){
     var xp = myXP(), cur = myAvatarIdx(), lvl = levelOf(xp);
     var intoLevel = xp % XP_PER_LEVEL;
