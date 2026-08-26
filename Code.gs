@@ -81,24 +81,112 @@ function labelBulan_(b) {
 // tersangkut dalam cache selepas bulan bertukar.
 function kunciCacheLb_() { return "leaderboard-" + bulanKini_(); }
 
+/* ---------- CACHE PANTAS ---------- */
+// CacheService sangat laju tetapi boleh dibuang oleh Google pada bila-bila masa.
+// ScriptProperties menjadi sandaran kekal supaya log masuk/profil tidak perlu
+// mengimbas seluruh helaian selepas setiap cold start.
+function hashCepat_(nilai) {
+  var bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(nilai || ""),
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(function(b){
+    var v = b < 0 ? b + 256 : b;
+    return ("0" + v.toString(16)).slice(-2);
+  }).join("");
+}
+
+function kunciAkaunCepat_(email) { return "acc2-" + hashCepat_(String(email || "").trim().toLowerCase()); }
+function kunciProfilCepat_(nick) { return "pf2-" + hashCepat_(up(nick)); }
+
+function bacaCepat_(kunci) {
+  var cache = CacheService.getScriptCache();
+  var teks = cache.get(kunci);
+  if (!teks) {
+    try { teks = PropertiesService.getScriptProperties().getProperty(kunci); } catch (e) {}
+    if (teks) try { cache.put(kunci, teks, 21600); } catch (ignore) {}
+  }
+  if (!teks) return null;
+  try { return JSON.parse(teks); } catch (err) { return null; }
+}
+
+function simpanCepat_(kunci, nilai) {
+  var teks = JSON.stringify(nilai);
+  try { CacheService.getScriptCache().put(kunci, teks, 21600); } catch (e) {}
+  // Had satu nilai ScriptProperties ialah 9 KB. Profil semasa jauh lebih kecil.
+  if (teks.length < 8500) {
+    try { PropertiesService.getScriptProperties().setProperty(kunci, teks); } catch (ignore) {}
+  }
+  return nilai;
+}
+
+function simpanBanyakCepat_(nilai) {
+  var cacheData = {}, propsData = {};
+  for (var k in nilai) {
+    var teks = JSON.stringify(nilai[k]);
+    cacheData[k] = teks;
+    if (teks.length < 8500) propsData[k] = teks;
+  }
+  try { CacheService.getScriptCache().putAll(cacheData, 21600); } catch (e) {}
+  try { PropertiesService.getScriptProperties().setProperties(propsData, false); } catch (ignore) {}
+}
+
+function bacaAkaunCepat_(email) { return bacaCepat_(kunciAkaunCepat_(email)); }
+function simpanAkaunCepat_(baris, row) {
+  var email = String(row && row[0] || "").trim().toLowerCase();
+  if (!email) return null;
+  return simpanCepat_(kunciAkaunCepat_(email), { r:baris, row:row });
+}
+
+function bacaProfilCepat_(nick) { return bacaCepat_(kunciProfilCepat_(nick)); }
+function simpanProfilCepat_(profil) {
+  return profil && profil.nickname ? simpanCepat_(kunciProfilCepat_(profil.nickname), profil) : profil;
+}
+
+function buangProfilCepat_(nick) {
+  var kunci = kunciProfilCepat_(nick);
+  try { CacheService.getScriptCache().remove(kunci); } catch (e) {}
+  try { PropertiesService.getScriptProperties().deleteProperty(kunci); } catch (ignore) {}
+}
+
+function kemasKiniProfilStatsCepat_(auth) {
+  if (!auth || !auth.row) return;
+  var profil = bacaProfilCepat_(auth.row[2]);
+  if (!profil || !profil.ok) return;
+  var stats = auth.stats || {}, badges = auth.badges || {};
+  profil.badges = badges;
+  profil.stats = profil.stats || {};
+  profil.stats.games = stats.games || 0;
+  profil.stats.totalCorrect = stats.totalCorrect || 0;
+  profil.stats.totalWrong = stats.totalWrong || 0;
+  profil.stats.bestStreak = stats.bestStreak || 0;
+  profil.stats.avatar = (typeof stats.avatar === "number") ? stats.avatar : 0;
+  profil.updatedAt = Date.now();
+  simpanProfilCepat_(profil);
+}
+
 // Papan markah untuk satu bulan. Dikongsi oleh doGet dan penyegerakan Firebase.
 function papanMarkahBulan_(bulan) {
   var sh = markahSheet();
   var out = { easy:[], mid:[], hard:[], hero:[] };
   var rows = sh.getDataRange().getValues();
+  var avatars = avatarMapCepat_();
   for (var i = 1; i < rows.length; i++) {
     var key = MODE_MAP[rows[i][C.MODE]];
     if (!key) continue;
     if (bulanOf_(rows[i]) !== bulan) continue;
     out[key].push({
       n:up(rows[i][C.NAMA]), k:up(rows[i][C.KELAS]),
-      s:scoreOf(rows[i]), d:fmtDate(rows[i][C.MASA])
+      s:scoreOf(rows[i]), d:fmtDate(rows[i][C.MASA]),
+      avatar:Number(avatars[up(rows[i][C.NAMA])]) || 0
     });
   }
   for (var m in out) out[m].sort(function(a, b){ return b.s - a.s; });
   out.bulan = bulan;
   out.bulanLabel = labelBulan_(bulan);
   out.updatedAt = Date.now();
+  try { CacheService.getScriptCache().put("leaderboard-" + bulan, JSON.stringify(out), 21600); } catch (e) {}
   return out;
 }
 
@@ -147,7 +235,7 @@ function startGameSession(d) {
   if (email) {
     var a = authVS(d);
     if (!a) return { ok:false, err:"Sesi akaun tidak sah" };
-    nama = up(a.sh.getRange(a.r, 3).getValue());
+    nama = up(a.row ? a.row[2] : a.sh.getRange(a.r, 3).getValue());
   } else if (!nama) {
     return { ok:false, err:"Nama pemain diperlukan" };
   }
@@ -390,12 +478,60 @@ function firebaseVsBoardData_() {
   return list;
 }
 
+function firebaseProfileUpdates_() {
+  var accRows = sheetAcc().getDataRange().getValues();
+  var mrows = markahSheet().getDataRange().getValues();
+  var updates = {}, avatars = {}, fast = {};
+  for (var i = 1; i < accRows.length; i++) {
+    var row = accRows[i], nick = up(row[2]);
+    if (!nick) continue;
+    var email = String(row[0] || "").trim().toLowerCase();
+    var profil = profilDariData_(row, email, mrows);
+    fast[kunciAkaunCepat_(email)] = {r:i + 1, row:row};
+    fast[kunciProfilCepat_(nick)] = profil;
+    updates["profiles/" + hashCepat_(nick)] = profil;
+    avatars[nick] = profil.stats.avatar || 0;
+  }
+  fast["avatar-map-v2"] = avatars;
+  simpanBanyakCepat_(fast);
+  return updates;
+}
+
 function firebaseSyncLeaderboards_() {
-  return firebasePatchRoot_({
+  var profiles = firebaseProfileUpdates_();
+  var updates = {
     "leaderboards/score": firebaseScoreBoardData_(),
     "leaderboards/vs": firebaseVsBoardData_(),
     "leaderboards/updatedAt": Date.now()
-  });
+  };
+  for (var k in profiles) updates[k] = profiles[k];
+  return firebasePatchRoot_(updates);
+}
+
+// Jangan tahan respons murid sementara Firebase disegerakkan. Semua tulis ke
+// Sheets selesai dahulu, kemudian trigger satu minit menghantar satu tampalan
+// berkelompok untuk semua perubahan yang berlaku serentak.
+function tandaFirebaseKotor_() {
+  try { PropertiesService.getScriptProperties().setProperty("firebaseDirty", "1"); } catch (e) {}
+}
+
+function firebaseFlushQueue() {
+  var props = PropertiesService.getScriptProperties();
+  if (props.getProperty("firebaseDirty") !== "1") return {ok:true, skipped:true};
+  var ok = firebaseSyncLeaderboards_();
+  if (ok) props.setProperty("firebaseDirty", "0");
+  return {ok:ok};
+}
+
+// Jalankan SEKALI selepas deploy. Fungsi ini juga membina cache login/profil.
+function pasangSifirPantas() {
+  var ada = false, triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "firebaseFlushQueue") { ada = true; break; }
+  }
+  if (!ada) ScriptApp.newTrigger("firebaseFlushQueue").timeBased().everyMinutes(1).create();
+  var seed = firebaseSeedAll();
+  return {ok:seed.ok, trigger:ada ? "sedia" : "dipasang", profiles:seed.profiles};
 }
 
 function firebaseVsView_(row, iAmC, accounts) {
@@ -445,25 +581,33 @@ function firebaseSyncVsMatch_(matchId) {
 }
 
 function firebaseSeedAll() {
+  var profiles = firebaseProfileUpdates_();
   var updates = {
     "leaderboards/score": firebaseScoreBoardData_(),
     "leaderboards/vs": firebaseVsBoardData_(),
     "leaderboards/updatedAt": Date.now()
   };
+  for (var p in profiles) updates[p] = profiles[p];
   var rows = sheetVS().getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     var extra = firebaseVsUpdates_(rows[i]);
     for (var k in extra) updates[k] = extra[k];
   }
   var ok = firebasePatchRoot_(updates);
-  return {ok:ok, matches:Math.max(0, rows.length - 1)};
+  if (ok) try { PropertiesService.getScriptProperties().setProperty("firebaseDirty", "0"); } catch (e) {}
+  return {ok:ok, matches:Math.max(0, rows.length - 1), profiles:Object.keys(profiles).length};
 }
 
 
 function findAcc(sh, email) {
+  var cepat = bacaAkaunCepat_(email);
+  if (cepat && cepat.r > 1 && cepat.row) return cepat.r;
   var rows = sh.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]).trim().toLowerCase() === email) return i + 1;
+    if (String(rows[i][0]).trim().toLowerCase() === email) {
+      simpanAkaunCepat_(i + 1, rows[i]);
+      return i + 1;
+    }
   }
   return -1;
 }
@@ -475,7 +619,7 @@ function doPost(e) {
     var d = JSON.parse(e.postData.contents);
     var a = d.action || "score";
     var locked = {
-      score:true, game_start:true, game_end:true, register:true, reset:true, sync:true,
+      score:true, game_end:true, register:true, reset:true, sync:true,
       vs_invite:true, vs_accept:true, vs_decline:true, vs_cancel:true, vs_submit:true
     };
     if (locked[a]) {
@@ -505,11 +649,9 @@ function doPost(e) {
   }
   try {
     if (out && out.ok) {
-      if ((a === "score" || a === "game_end") && out.saved) firebaseSyncLeaderboards_();
-      if (a === "register" || a === "sync") firebaseSyncLeaderboards_();
-      if (a === "vs_invite") firebaseSyncVsMatch_(out.matchId);
-      else if (a === "vs_accept" || a === "vs_decline" || a === "vs_cancel" || a === "vs_submit") {
-        firebaseSyncVsMatch_(d.matchId);
+      if (((a === "score" || a === "game_end") && out.saved) || a === "register" || a === "sync" ||
+          a === "vs_invite" || a === "vs_accept" || a === "vs_decline" || a === "vs_cancel" || a === "vs_submit") {
+        tandaFirebaseKotor_();
       }
     }
   } catch (firebaseErr) {
@@ -554,9 +696,11 @@ function deriveBadges(stats, badges, mode, score, betul, salah, streak) {
 function accountGameStats(email, mode, score, betul, salah, streak) {
   if (!email) return null;
   var sh = sheetAcc();
-  var r = findAcc(sh, email);
+  var cepat = bacaAkaunCepat_(email);
+  var r = cepat && cepat.r ? cepat.r : findAcc(sh, email);
   if (r < 0) return null;
-  var row = sh.getRange(r, 5, 1, 2).getValues()[0];
+  var penuh = cepat && cepat.row ? cepat.row : sh.getRange(r, 1, 1, 11).getValues()[0];
+  var row = [penuh[4], penuh[5]];
   var badges = {}, stats = {};
   try { badges = JSON.parse(row[0] || "{}"); } catch (e) {}
   try { stats = JSON.parse(row[1] || "{}"); } catch (e) {}
@@ -569,7 +713,9 @@ function accountGameStats(email, mode, score, betul, salah, streak) {
   if (key) stats.modes[key] = true;
   badges = deriveBadges(stats, badges, mode, score, betul, salah, streak);
   sh.getRange(r, 5, 1, 2).setValues([[JSON.stringify(badges), JSON.stringify(stats)]]);
-  return { stats:stats, badges:badges };
+  penuh[4] = JSON.stringify(badges); penuh[5] = JSON.stringify(stats);
+  simpanAkaunCepat_(r, penuh);
+  return { stats:stats, badges:badges, row:penuh, r:r };
 }
 
 function addScoreRow(d) {
@@ -583,6 +729,7 @@ function addScoreRow(d) {
   var auth = accountGameStats(email, mode, score, betul, salah, streak);
 
   if (mode === "Latihan" || mode === "VS") {
+    kemasKiniProfilStatsCepat_(auth);
     useGameSession(checked.session);
     return { ok:true, saved:false, practice:(mode === "Latihan"),
       stats:auth ? auth.stats : null, badges:auth ? auth.badges : null };
@@ -605,8 +752,10 @@ function addScoreRow(d) {
   var first = existingBest < 0;
   var isBest = score > existingBest;
   var newRow = [new Date(), nama, kelas, mode, score, betul, salah, streak, email, bulanTeks_(bkini)];
-  if (first) sh.appendRow(newRow);
-  else if (isBest) sh.getRange(bestRow, 1, 1, 10).setValues([newRow]);
+  if (first) { sh.appendRow(newRow); rows.push(newRow); }
+  else if (isBest) { sh.getRange(bestRow, 1, 1, 10).setValues([newRow]); rows[bestRow - 1] = newRow; }
+
+  if (auth && auth.row) simpanProfilCepat_(profilDariData_(auth.row, email, rows));
 
   useGameSession(checked.session);
   CacheService.getScriptCache().remove(kunciCacheLb_());
@@ -690,16 +839,24 @@ function regAcc(d) {
   var sh = sheetAcc();
   if (findAcc(sh, email) > 0) return { ok:false, err:"Email ini sudah didaftarkan" };
   if (nickTaken(sh, nick, -1)) return { ok:false, err:"Nickname sudah digunakan" };
-  sh.appendRow([email, "'" + pass, nick, kelas, "{}", "{}", new Date()]);
+  var row = [email, "'" + pass, nick, kelas, "{}", "{}", new Date(), "", "", "", ""];
+  sh.appendRow(row);
+  simpanAkaunCepat_(sh.getLastRow(), row);
+  CacheService.getScriptCache().remove("avatar-map-v2");
   return { ok:true, nickname:nick, kelas:kelas };
 }
 
 function loginAcc(d) {
   var email = String(d.email || "").trim().toLowerCase();
-  var sh = sheetAcc();
-  var r = findAcc(sh, email);
-  if (r < 0) return { ok:false, err:"Email belum didaftarkan" };
-  var row = sh.getRange(r, 1, 1, 11).getValues()[0];
+  var cepat = bacaAkaunCepat_(email);
+  var row = cepat && cepat.row;
+  if (!row) {
+    var sh = sheetAcc();
+    var r = findAcc(sh, email);
+    if (r < 0) return { ok:false, err:"Email belum didaftarkan" };
+    row = sh.getRange(r, 1, 1, 11).getValues()[0];
+    simpanAkaunCepat_(r, row);
+  }
   if (String(row[1]).replace(/^'/, "") !== String(d.pass || "")) return { ok:false, err:"PIN salah" };
   var badges = {}, stats = {};
   try { badges = JSON.parse(row[4] || "{}"); } catch (e) {}
@@ -713,10 +870,16 @@ function loginAcc(d) {
 
 function resetAcc(d) {
   var email = String(d.email || "").trim().toLowerCase();
-  var sh = sheetAcc();
-  var r = findAcc(sh, email);
-  if (r < 0) return { ok:false, err:"Email belum didaftarkan" };
-  var pin = String(sh.getRange(r, 2).getValue()).replace(/^'/, "");
+  var cepat = bacaAkaunCepat_(email), pin = "";
+  if (cepat && cepat.row) pin = String(cepat.row[1]).replace(/^'/, "");
+  else {
+    var sh = sheetAcc();
+    var r = findAcc(sh, email);
+    if (r < 0) return { ok:false, err:"Email belum didaftarkan" };
+    var row = sh.getRange(r, 1, 1, 11).getValues()[0];
+    simpanAkaunCepat_(r, row);
+    pin = String(row[1]).replace(/^'/, "");
+  }
   MailApp.sendEmail(email, "Sifir Juara — PIN anda",
     "Salam,\n\nPIN akaun Sifir Juara anda ialah: " + pin + "\n\nSelamat bermain!");
   return { ok:true };
@@ -727,7 +890,9 @@ function syncAcc(d) {
   var sh = sheetAcc();
   var r = findAcc(sh, email);
   if (r < 0) return { ok:false, err:"Email belum didaftarkan" };
-  var pin = String(sh.getRange(r, 2).getValue()).replace(/^'/, "");
+  var cepat = bacaAkaunCepat_(email);
+  var pin = cepat && cepat.row ? String(cepat.row[1]).replace(/^'/, "")
+    : String(sh.getRange(r, 2).getValue()).replace(/^'/, "");
   if (pin !== String(d.pass || "")) return { ok:false, err:"PIN salah" };
 
   var old = sh.getRange(r, 3, 1, 4).getValues()[0];
@@ -742,6 +907,20 @@ function syncAcc(d) {
   var avatar = Number(d.avatar);
   if (isFinite(avatar) && Math.floor(avatar) === avatar && avatar >= 0 && avatar <= 19) stats.avatar = avatar;
   sh.getRange(r, 3, 1, 4).setValues([[nick, kelas, JSON.stringify(badges), JSON.stringify(stats)]]);
+  var penuh = bacaAkaunCepat_(email);
+  penuh = penuh && penuh.row ? penuh.row : sh.getRange(r, 1, 1, 11).getValues()[0];
+  penuh[2] = nick; penuh[3] = kelas; penuh[4] = JSON.stringify(badges); penuh[5] = JSON.stringify(stats);
+  simpanAkaunCepat_(r, penuh);
+  CacheService.getScriptCache().remove("avatar-map-v2");
+  var profil = bacaProfilCepat_(oldNick);
+  if (nick !== oldNick) buangProfilCepat_(oldNick);
+  if (profil && profil.ok) {
+    profil.nickname = nick; profil.kelas = kelas; profil.badges = badges;
+    profil.stats = profil.stats || {};
+    profil.stats.avatar = (typeof stats.avatar === "number") ? stats.avatar : 0;
+    profil.updatedAt = Date.now();
+    simpanProfilCepat_(profil);
+  }
 
   if (nick !== oldNick || kelas !== oldKelas) {
     var msh = markahSheet();
@@ -755,29 +934,17 @@ function syncAcc(d) {
 }
 
 /* ---------- PROFIL ---------- */
-function getProfile(d) {
-  var nick = up(d.nickname);
-  if (!nick) return { ok:false, err:"Nickname diperlukan" };
-  var acc = sheetAcc();
-  var rows = acc.getDataRange().getValues();
-  var found = null, email = "";
-  for (var i = 1; i < rows.length; i++) {
-    if (up(rows[i][2]) === nick) { found = rows[i]; email = String(rows[i][0]).trim().toLowerCase(); break; }
-  }
-  if (!found) return { ok:false, err:"Profil tidak dijumpai (pemain tetamu tiada profil)" };
-
+function profilDariData_(found, email, mrows) {
   var badges = {}, stats = {};
   try { badges = JSON.parse(found[4] || "{}"); } catch (e) {}
   try { stats = JSON.parse(found[5] || "{}"); } catch (e) {}
 
-  // markah tertinggi: bulan semasa, sepanjang masa, dan pecahan setiap bulan
+  var nick = up(found[2]);
   var bkini = bulanKini_();
-  var highs = { easy:0, mid:0, hard:0, hero:0 };      // bulan ini
-  var highsAll = { easy:0, mid:0, hard:0, hero:0 };   // semua bulan yang masih disimpan
-  var bulanan = {};                                    // "2026-07": {easy:.., mid:.., ..}
+  var highs = { easy:0, mid:0, hard:0, hero:0 };
+  var highsAll = { easy:0, mid:0, hard:0, hero:0 };
+  var bulanan = {};
   var maxStreak = 0;
-  var msh = markahSheet();
-  var mrows = msh.getDataRange().getValues();
   for (var j = 1; j < mrows.length; j++) {
     var e = emailOf(mrows[j]), nm = up(mrows[j][C.NAMA]);
     if ((email && e === email) || nm === nick) {
@@ -796,25 +963,35 @@ function getProfile(d) {
   }
 
   return {
-    ok: true,
-    nickname: up(found[2]),
-    kelas: up(found[3]),
-    badges: badges,
-    stats: {
-      games: stats.games || 0,
-      totalCorrect: stats.totalCorrect || 0,        // dari Akaun (dikumpul aplikasi)
-      totalWrong: stats.totalWrong || 0,            // dari Akaun
-      bestStreak: Math.max(stats.bestStreak || 0, maxStreak),
-      avatar: (typeof stats.avatar === "number") ? stats.avatar : 0,
-      vsMenang: Number(found[7]) || 0,
-      vsKalah: Number(found[8]) || 0,
-      vsMata: Number(found[10]) || 0
+    ok:true, nickname:nick, kelas:up(found[3]), badges:badges,
+    stats:{
+      games:stats.games || 0, totalCorrect:stats.totalCorrect || 0,
+      totalWrong:stats.totalWrong || 0,
+      bestStreak:Math.max(stats.bestStreak || 0, maxStreak),
+      avatar:(typeof stats.avatar === "number") ? stats.avatar : 0,
+      vsMenang:Number(found[7]) || 0, vsKalah:Number(found[8]) || 0,
+      vsMata:Number(found[10]) || 0
     },
-    highs: highs,
-    highsAll: highsAll,
-    bulanan: bulanan,
-    bulan: bkini
+    highs:highs, highsAll:highsAll, bulanan:bulanan, bulan:bkini,
+    updatedAt:Date.now()
   };
+}
+
+function getProfile(d) {
+  var nick = up(d.nickname);
+  if (!nick) return { ok:false, err:"Nickname diperlukan" };
+  var cepat = bacaProfilCepat_(nick);
+  if (cepat && cepat.ok) return cepat;
+  var acc = sheetAcc();
+  var rows = acc.getDataRange().getValues();
+  var found = null, email = "";
+  for (var i = 1; i < rows.length; i++) {
+    if (up(rows[i][2]) === nick) { found = rows[i]; email = String(rows[i][0]).trim().toLowerCase(); break; }
+  }
+  if (!found) return { ok:false, err:"Profil tidak dijumpai (pemain tetamu tiada profil)" };
+  var msh = markahSheet();
+  var mrows = msh.getDataRange().getValues();
+  return simpanProfilCepat_(profilDariData_(found, email, mrows));
 }
 
 /* ================= MOD VS (async jemputan) ================= */
@@ -825,11 +1002,14 @@ function levelFromXP(xp){ return Math.min(20, Math.floor((xp || 0) / 100) + 1); 
 function authVS(d){
   var email = String(d.email || "").trim().toLowerCase();
   var sh = sheetAcc();
-  var r = findAcc(sh, email);
+  var cepat = bacaAkaunCepat_(email);
+  var r = cepat && cepat.r ? cepat.r : findAcc(sh, email);
   if (r < 0) return null;
-  var pin = String(sh.getRange(r, 2).getValue()).replace(/^'/, "");
+  var row = cepat && cepat.row ? cepat.row : sh.getRange(r, 1, 1, 11).getValues()[0];
+  var pin = String(row[1]).replace(/^'/, "");
   if (pin !== String(d.pass || "")) return null;
-  return { sh: sh, r: r, email: email };
+  simpanAkaunCepat_(r, row);
+  return { sh:sh, r:r, email:email, row:row };
 }
 
 // peta akaun: email -> {nick, kelas, avatar, level}
@@ -845,6 +1025,21 @@ function accMap(sh){
       level: levelFromXP(stats.totalCorrect || 0) };
   }
   return m;
+}
+
+function avatarMapCepat_() {
+  var cepat = bacaCepat_("avatar-map-v2");
+  if (cepat) return cepat;
+  var rows = sheetAcc().getDataRange().getValues();
+  var map = {};
+  for (var i = 1; i < rows.length; i++) {
+    var stats = {};
+    try { stats = JSON.parse(rows[i][5] || "{}"); } catch (e) {}
+    var nick = up(rows[i][2]);
+    if (nick) map[nick] = (typeof stats.avatar === "number") ? stats.avatar : 0;
+    simpanAkaunCepat_(i + 1, rows[i]);
+  }
+  return simpanCepat_("avatar-map-v2", map);
 }
 
 function vsPlayers(d){
@@ -901,25 +1096,38 @@ function vsInvite(d){
 
 
 function readVsStats(sh, email) {
-  var r = findAcc(sh, String(email || "").trim().toLowerCase());
+  email = String(email || "").trim().toLowerCase();
+  var cepat = bacaAkaunCepat_(email);
+  var r = cepat && cepat.r ? cepat.r : findAcc(sh, email);
   if (r < 0) return { menang:0, kalah:0, seri:0, mata:0 };
-  var v = sh.getRange(r, AV.MENANG, 1, 4).getValues()[0];
+  var v = cepat && cepat.row ? cepat.row.slice(AV.MENANG - 1, AV.MATA)
+    : sh.getRange(r, AV.MENANG, 1, 4).getValues()[0];
   return { menang:Number(v[0]) || 0, kalah:Number(v[1]) || 0,
     seri:Number(v[2]) || 0, mata:Number(v[3]) || 0 };
 }
 
 function deriveVsBadges(sh, email) {
-  var r = findAcc(sh, email);
+  var cepat = bacaAkaunCepat_(email);
+  var r = cepat && cepat.r ? cepat.r : findAcc(sh, email);
   if (r < 0) return;
   var badges = {};
-  try { badges = JSON.parse(sh.getRange(r, 5).getValue() || "{}"); } catch (e) {}
+  var row = cepat && cepat.row ? cepat.row : sh.getRange(r, 1, 1, 11).getValues()[0];
+  try { badges = JSON.parse(row[4] || "{}"); } catch (e) {}
   var v = readVsStats(sh, email);
   if (v.menang >= 1) badges.vsWin1 = true;
   if (v.menang >= 10) badges.vsWin10 = true;
   if (v.mata >= 1) badges.vsPejuang = true;
   if (v.mata >= 50) badges.vsPerwira = true; if (v.mata >= 150) badges.vsJaguh = true; if (v.mata >= 350) badges.vsHulubalang = true;
   if (v.mata >= 700) badges.vsLegenda = true;
-  sh.getRange(r, 5).setValue(JSON.stringify(badges));
+  row[4] = JSON.stringify(badges);
+  sh.getRange(r, 5).setValue(row[4]);
+  simpanAkaunCepat_(r, row);
+  var profil = bacaProfilCepat_(row[2]);
+  if (profil && profil.ok) {
+    profil.badges = badges; profil.stats = profil.stats || {};
+    profil.stats.vsMenang = v.menang; profil.stats.vsKalah = v.kalah; profil.stats.vsMata = v.mata;
+    profil.updatedAt = Date.now(); simpanProfilCepat_(profil);
+  }
 }
 
 function finishVsMatch(vs, rowNum, row, acc) {
@@ -1005,9 +1213,11 @@ function vsCancel(d){
 }
 
 function addVsPoints(sh, email, kind){
-  var r = findAcc(sh, email);
+  var cepat = bacaAkaunCepat_(email);
+  var r = cepat && cepat.r ? cepat.r : findAcc(sh, email);
   if (r < 0) return;
-  var vals = sh.getRange(r, AV.MENANG, 1, 4).getValues()[0];
+  var row = cepat && cepat.row ? cepat.row : sh.getRange(r, 1, 1, 11).getValues()[0];
+  var vals = row.slice(AV.MENANG - 1, AV.MATA);
   var menang = Number(vals[0]) || 0, kalah = Number(vals[1]) || 0, seri = Number(vals[2]) || 0, mata = Number(vals[3]) || 0;
   if (kind === "win"){ menang++; mata += 10; }
   else if (kind === "draw"){ seri++; mata += 5; }
@@ -1017,6 +1227,9 @@ function addVsPoints(sh, email, kind){
     else mata += 2;                                  // bawah Jaguh: mata penyertaan
   }
   sh.getRange(r, AV.MENANG, 1, 4).setValues([[menang, kalah, seri, mata]]);
+  row[AV.MENANG - 1] = menang; row[AV.KALAH - 1] = kalah;
+  row[AV.SERI - 1] = seri; row[AV.MATA - 1] = mata;
+  simpanAkaunCepat_(r, row);
 }
 
 function vsSubmit(d){

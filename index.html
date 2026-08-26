@@ -778,7 +778,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.5</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.6</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -1051,7 +1051,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "5.5";
+  var APP_VERSION = "5.6";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -1121,7 +1121,10 @@
     firebaseLbTimer = setTimeout(function(){
       firebaseGet("leaderboards").then(function(d){
         if(!d) return;
-        if(d.score){ onlineLB = d.score; lbLoadFailed = false; }
+        if(d.score){
+          onlineLB = d.score; lbLoadFailed = false;
+          try{ localStorage.setItem("sifirJuaraOnlineLB2", JSON.stringify({t:Date.now(), d:onlineLB})); }catch(e){}
+        }
         if(Array.isArray(d.vs)) firebaseVsBoard = d.vs;
         if(curScreen === "lb") drawLB();
         else if(curScreen === "vsBoard" && firebaseVsBoard) renderVsBoard(firebaseVsBoard);
@@ -2454,7 +2457,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     addScore(state.mode, state.score, name, kelas);  // simpanan tempatan (offline)
 
     var bl = $("bestLine");
-    bl.textContent = "Menyimpan markah...";
+    bl.textContent = "Markah selamat pada peranti — sedang menyelaras...";
     bl.className = "best dark";
 
     var action = state.sessionToken ? "game_end" : "score";
@@ -2585,7 +2588,24 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
 
   // ----- profil pengguna -----
   var MODE_LABEL = { easy:ikT("benih")+" Mudah", mid:ikT("kilat")+" Sederhana", hard:ikT("api")+" Sukar", hero:ikT("hero")+" Hero" };
-  var pfIsOwn = false;
+  var pfIsOwn = false, pfRequestId = 0;
+  var pfFastCache = (function(){
+    try{
+      var raw = JSON.parse(localStorage.getItem("sifirJuaraProfileFast2") || "{}");
+      return raw && typeof raw === "object" ? raw : {};
+    }catch(e){ return {}; }
+  })();
+  function pfFastGet(nick){
+    var hit = pfFastCache[String(nick || "").toUpperCase()];
+    return hit && hit.p && Date.now() - Number(hit.t || 0) < 24*60*60*1000 ? hit.p : null;
+  }
+  function pfFastPut(p){
+    if(!p || !p.ok || !p.nickname) return;
+    pfFastCache[String(p.nickname).toUpperCase()] = {t:Date.now(), p:p};
+    var keys = Object.keys(pfFastCache).sort(function(a,b){ return (pfFastCache[b].t||0)-(pfFastCache[a].t||0); });
+    for(var i=20; i<keys.length; i++) delete pfFastCache[keys[i]];
+    try{ localStorage.setItem("sifirJuaraProfileFast2", JSON.stringify(pfFastCache)); }catch(e){}
+  }
   function pfClearAll(){
     ["pfKelas","pfHighs","pfBulanan","pfStats","pfVsRank","pfVsStats","pfBadges","pfXp"].forEach(function(id){
       var el=$(id); if(el) el.innerHTML="";
@@ -2621,6 +2641,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   function openProfile(nick, isOwn){
     nick = (nick||"").trim();
     if(!nick) return;
+    var req = ++pfRequestId, keyNick = nick.toUpperCase();
     pfIsOwn = !!(isOwn && account && nick.toUpperCase() === (profile.nickname||"").toUpperCase());
     // avatar & nama serta-merta
     $("pfAva").innerHTML = avatarSVG(pfIsOwn ? myAvatarIdx() : 0);
@@ -2628,19 +2649,27 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     $("pfKelas").textContent = "";
     $("pfLvl").textContent = pfIsOwn ? ("Lv " + levelOf(myXP())) : "…";
     pfClearAll();
-    if(pfIsOwn){ pfBusy(false); try{ renderProfile(localProfileData()); }catch(e){} } else { pfBusy(true); }
-    if(pfIsOwn){ try{ renderProfile(localProfileData()); }catch(e){} }
     $("pfStats").innerHTML = "";
     $("pfBadges").innerHTML = "";
     $("pfAvaPickWrap").style.display = "none";
+    var cached = pfIsOwn ? localProfileData() : pfFastGet(keyNick);
+    if(cached){ pfBusy(false); try{ renderProfile(cached); }catch(e){} }
+    else pfBusy(true);
     show("profile");
-    api({action:"profile", nickname:nick}, function(r){
+    function siap(r){
+      if(req !== pfRequestId) return;
       if(!r || !r.ok){
-        $("pfHighs").innerHTML = "<p class='pfEmpty'>" + ((r&&r.err)||"Profil tidak dijumpai") + "</p>";
+        if(!cached){ pfBusy(false); $("pfHighs").innerHTML = "<p class='pfEmpty'>" + ((r&&r.err)||"Profil tidak dijumpai") + "</p>"; }
         return;
       }
-      renderProfile(r);
-    });
+      pfFastPut(r); renderProfile(r);
+    }
+    if(pfIsOwn){ api({action:"profile", nickname:keyNick}, siap); return; }
+    // Laluan pantas: profil awam kecil terus dari Firebase. Apps Script hanya
+    // menjadi fallback jika data belum disemai atau rangkaian Firebase gagal.
+    sha256Hex(keyNick).then(function(hash){ return firebaseGet("profiles/"+hash); })
+      .then(function(r){ if(r && r.ok) siap(r); else api({action:"profile", nickname:keyNick}, siap); })
+      .catch(function(){ api({action:"profile", nickname:keyNick}, siap); });
   }
   function renderProfile(r){ pfBusy(false); ["pfHighs","pfStats","pfBadges"].forEach(function(pid){ var el=$(pid); if(el){ el.classList.remove("pfFade"); void el.offsetWidth; el.classList.add("pfFade"); } });
     $("pfName").textContent = (r.nickname||"").toUpperCase();
@@ -3153,14 +3182,18 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   $("vsSearch").addEventListener("input", function(){ drawPlayers(this.value); });
 
   // ----- papan markah: paparan (dalam talian dari Google Sheets, fallback tempatan) -----
-  var onlineLB = null;
+  var onlineLB = (function(){
+    try{
+      var x = JSON.parse(localStorage.getItem("sifirJuaraOnlineLB2") || "null");
+      return x && x.d && Date.now() - Number(x.t || 0) < 6*60*60*1000 ? x.d : null;
+    }catch(e){ return null; }
+  })();
   var lbMode = "easy";
   var lbTimeMode = "easy";
   var lbShown = 10;
   var lbFetching = false;
   var lbLoadFailed = false;
   var lbAvatarCache = {};
-  var lbAvatarPending = {};
   function rankLabel(i){
     return i===0 ? ikT("emas") : i===1 ? ikT("perak") : i===2 ? ikT("gangsa") : (i+1)+".";
   }
@@ -3216,21 +3249,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     }
     return validAvatarIndex(lbAvatarCache[key]) ? lbAvatarCache[key] : 0;
   }
-  function requestLbAvatar(name){
-    var key = lbNameKey(name);
-    if(!key || lbIsOwn(key) || lbIsGuest(key) || validAvatarIndex(lbAvatarCache[key]) || lbAvatarPending[key]) return;
-    var fromVs = lbAvatarFromVs(key);
-    if(validAvatarIndex(fromVs)){ lbAvatarCache[key] = fromVs; return; }
-    lbAvatarPending[key] = true;
-    api({action:"profile", nickname:key}, function(r){
-      delete lbAvatarPending[key];
-      var idx = r && r.ok && r.stats ? r.stats.avatar : null;
-      if(!validAvatarIndex(idx)) return;
-      if(lbAvatarCache[key] === idx) return;
-      lbAvatarCache[key] = idx;
-      if(curScreen === "lb" && lbMode !== "vs") drawLB();
-    });
-  }
   function hydrateLbAvatars(arr, isVs){
     if(isVs) return;
     var limit = Math.min(arr.length, Math.max(10, lbShown));
@@ -3238,7 +3256,6 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
       var e = arr[i] || {};
       var name = e.n || e.nick || "";
       lbAvatarFor(name, e);
-      requestLbAvatar(name);
     }
   }
   function lbInfo(e, isVs){
@@ -3385,15 +3402,28 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   function refreshLB(){
     if(lbMode === "vs"){ drawVsBoardInLb(true); return; }
     ensureFirebaseLeaderboardWatch();
+    var selesai = false;
+    function fallbackSheets(){
+      if(selesai || !SHEETS_URL || lbFetching) return;
+      lbFetching = true;
+      fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
+        lbFetching = false;
+        if(d && typeof d === "object"){
+          onlineLB = d; lbLoadFailed = false; selesai = true;
+          try{ localStorage.setItem("sifirJuaraOnlineLB2", JSON.stringify({t:Date.now(), d:onlineLB})); }catch(e){}
+          drawLB();
+        }
+      }).catch(function(){ lbFetching = false; lbLoadFailed = true; drawLB(); });
+    }
     firebaseGet("leaderboards/score").then(function(d){
-      if(d && typeof d === "object"){ onlineLB = d; lbLoadFailed = false; drawLB(); }
-    }).catch(function(){});
-    if(!SHEETS_URL || lbFetching) return;
-    lbFetching = true;
-    fetchTimeout(SHEETS_URL, {}, 12000).then(function(r){ return r.json(); }).then(function(d){
-      lbFetching = false;
-      if(d && typeof d === "object"){ onlineLB = d; lbLoadFailed = false; drawLB(); }
-    }).catch(function(){ lbFetching = false; lbLoadFailed = true; drawLB(); });
+      if(d && typeof d === "object"){
+        selesai = true; onlineLB = d; lbLoadFailed = false;
+        try{ localStorage.setItem("sifirJuaraOnlineLB2", JSON.stringify({t:Date.now(), d:onlineLB})); }catch(e){}
+        drawLB();
+      } else fallbackSheets();
+    }).catch(fallbackSheets);
+    // Hanya sentuh Apps Script jika Firebase benar-benar lambat/tiada.
+    setTimeout(function(){ if(!selesai && !onlineLB) fallbackSheets(); }, 900);
   }
   function renderLB(mode){
     lbMode = mode;
@@ -3463,14 +3493,13 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
   }
   document.querySelectorAll(".lbModeTab").forEach(function(t){
     t.addEventListener("click", function(){
-      onlineLB = null;
       renderLB(t.dataset.lbGroup === "vs" ? "vs" : lbTimeMode);
     });
   });
   document.querySelectorAll(".lbTab").forEach(function(t){
-    t.addEventListener("click", function(){ onlineLB = null; renderLB(t.dataset.lb); });
+    t.addEventListener("click", function(){ renderLB(t.dataset.lb); });
   });
-  $("lbBtn").addEventListener("click", function(){ onlineLB = null; renderLB("easy"); show("lb"); });
+  $("lbBtn").addEventListener("click", function(){ renderLB("easy"); show("lb"); });
   $("resLbBtn").addEventListener("click", function(){
     onlineLB = null;
     var resultMode = state && !state.practice ? state.mode : "easy";
@@ -3684,10 +3713,16 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
     });
   }
 
+  // Diguna oleh pemeriksa versi di bawah tanpa mendedahkan keadaan lain.
+  window.SJRuntime = {$:$, version:APP_VERSION, getScreen:function(){ return curScreen; }};
+
 })();
 
   /* ===== Pemeriksa versi (pintas cache PWA) ===== */
   (function(){
+    var rt=window.SJRuntime||{};
+    var $=rt.$||function(id){ return document.getElementById(id); };
+    var APP_VERSION=rt.version||"";
     var busy=false;
     function hardReload(){
       var go=function(){ location.replace(location.pathname + "?r=" + Date.now()); };
@@ -3719,7 +3754,7 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
           if(!txt) return;
           var m = txt.match(/APP_VERSION\s*=\s*"([^"]+)"/);
           if(!m || m[1] === APP_VERSION) return;
-          var inGame = (typeof curScreen !== "undefined" && curScreen === "game");
+          var inGame = rt.getScreen && rt.getScreen() === "game";
           if(inGame) showBar(m[1]);
           else { showBar(m[1]); setTimeout(function(){ if(!busy) applyUpdate(); }, 1500); }
         }).catch(function(){});

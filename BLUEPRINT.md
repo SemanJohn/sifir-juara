@@ -16,8 +16,8 @@
 | Jenis | PWA (offline-capable), dihoskan di GitHub Pages |
 | Bahasa UI | Bahasa Melayu (`<html lang="ms">`) |
 | Sasaran peranti | Telefon (utama), tablet, desktop, **Android TV / Smart TV (D-pad)** |
-| Versi semasa | `APP_VERSION = "5.5"` (baris 1037) |
-| Cache service worker | `sifir-juara-v72` (`sw.js` baris 2) |
+| Versi semasa | `APP_VERSION = "5.6"` |
+| Cache service worker | `sifir-juara-v73` (`sw.js` baris 2) |
 | Backend markah | Google Apps Script Web App (sumber kebenaran / *source of truth*) |
 | Backend masa nyata | Firebase Realtime Database (baca sahaja, REST + SSE) |
 | Dependency luar | **Hanya Google Fonts** (Fredoka + Nunito). Tiada yang lain. |
@@ -172,7 +172,7 @@ Skrin ialah `<section class="screen">`; hanya satu ada kelas `.on` pada satu-sat
 | 1298 | `loadLB()` / 1306 `saveLB()` / 1315 `addScore()` | Cache papan markah tempatan |
 | 3377 | `refreshLB()` | Tarik data dari Firebase/Sheets |
 | 3271 | `makeLbPodiumPlayer()` / 3303 `makeLbRow()` | Baris papan markah — seluruh kad boleh ditekan melalui `lbOpenable` |
-| 3211 | `requestLbAvatar()` / 3226 `hydrateLbAvatars()` | Muat avatar malas (*lazy*) |
+| 3211 | `lbAvatarFor()` / `hydrateLbAvatars()` | Guna avatar yang sudah dibenamkan dalam data papan markah |
 
 ### TV / kebolehcapaian
 | Baris | Fungsi | Peranan |
@@ -364,9 +364,18 @@ https://sifir-juara-default-rtdb.asia-southeast1.firebasedatabase.app
 |---|---|---|
 | `leaderboards/score` | `{easy, mid, hard, hero, bulan, bulanLabel}` — **bulan semasa sahaja** | `firebaseGet` + SSE |
 | `leaderboards/vs` | Ranking VS (sepanjang masa) | `firebaseGet` + SSE |
+| `profiles/<sha256(nickname)>` | Profil awam siap papar (tanpa email/PIN) | `firebaseGet` ketika profil dibuka |
 | `vsUsers/<sha256(email huruf kecil)>` | Keadaan VS pemain | `firebaseGet` + SSE |
 
 Firebase **tidak pernah** menjadi sumber kebenaran. Sheets kekal berautoriti; Firebase hanya menjadikan ranking dan VS kelihatan serta-merta.
+
+Sejak v5.6, avatar dibenamkan terus dalam entri papan markah; klien tidak lagi
+membuat satu permintaan Apps Script bagi setiap pemain. Login dan profil turut
+menggunakan cache pantas Apps Script dengan ScriptProperties sebagai sandaran.
+Perubahan Firebase dikumpulkan oleh `firebaseFlushQueue` setiap minit supaya
+respons tulis tidak menunggu panggilan rangkaian Firebase. Jalankan
+`pasangSifirPantas` sekali selepas deploy untuk membina cache, menyemai profil,
+dan memasang trigger tersebut.
 
 ### 10.3 Kunci localStorage
 
@@ -468,7 +477,7 @@ Pengesanan TV (baris 1038–1043) melalui tiga isyarat: rentetan user-agent, heu
 
 ## 14. Isu & risiko yang diketahui
 
-### Isu 1 — Pemeriksa versi ialah kod mati (BUG SEBENAR) 🔴
+### Isu 1 — Pemeriksa versi ialah kod mati (DIBETULKAN v5.6) ✅
 IIFE utama ditutup di **baris 3610**. Pemeriksa versi bermula di **baris 3613**, di luar skop itu, tetapi merujuk `$` (ditakrif `var` di baris 1339), `APP_VERSION` (baris 1037) dan `curScreen` (baris 1346) — kesemuanya tersembunyi dalam IIFE utama.
 
 Baris 3650, `var btn=$("updBtn");`, dijalankan serta-merta dan membaling `ReferenceError: $ is not defined`. Ini **membatalkan seluruh IIFE kedua** sebelum `setTimeout(check, 1200)` sempat didaftarkan. Kesannya: bar "Versi baharu tersedia" tidak pernah muncul, dan laluan muat-semula-keras tidak pernah berjalan.
@@ -477,7 +486,9 @@ Kemas kini masih sampai melalui laluan service worker (§11 mekanisme 1), jadi b
 
 **Disahkan**: memuatkan `index.html` dalam Chromium tanpa kepala menghasilkan `PAGEERROR: $ is not defined` sebaik sahaja halaman dimuatkan.
 
-**Pembetulan:** dedahkan yang diperlukan pada `window` di hujung IIFE utama (`window.SJ = {$:$, APP_VERSION:APP_VERSION, getScreen:function(){return curScreen;}};`), atau alihkan blok pemeriksa versi ke dalam IIFE utama. Jangan sekadar `try/catch` — itu menyembunyikan masalah.
+**Pembetulan v5.6:** IIFE utama mendedahkan antara muka minimum `window.SJRuntime`
+untuk `$`, versi dan skrin semasa. Pemeriksa versi tidak lagi membaling
+`ReferenceError`.
 
 ### Isu 2 — PIN disimpan dan dihantar sebagai teks biasa 🟠
 `account = {email, pass}` disimpan tidak berenkripsi dalam localStorage, dan PIN 4 angka dihantar dalam setiap muatan `api()`. Untuk permainan sifir sekolah rendah risikonya rendah dan reka bentuknya disengajakan (murid perlu boleh log masuk semula dengan mudah), tetapi:
