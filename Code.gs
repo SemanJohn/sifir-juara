@@ -31,23 +31,39 @@ var BULAN = ["Jan","Feb","Mac","Apr","Mei","Jun","Jul","Ogo","Sep","Okt","Nov","
 /* ---------- BULANAN ---------- */
 var BULAN_PENUH = ["Januari","Februari","Mac","April","Mei","Jun",
   "Julai","Ogos","September","Oktober","November","Disember"];
-var TZ = "Asia/Singapore";     // sama zon waktu dengan Malaysia (UTC+8)
+// Malaysia/Singapura = UTC+8 tetap, tiada waktu musim panas, jadi aritmetik biasa
+// sudah cukup tepat.
+var TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
 var SIMPAN_BULAN = 13;         // bulan ini + 12 bulan lalu disimpan untuk profil
 
-function bulanKini_() {
-  return Utilities.formatDate(new Date(), TZ, "yyyy-MM");
+// PENTING: JANGAN guna Utilities.formatDate di sini. Ia panggilan perkhidmatan;
+// dipanggil sekali bagi setiap baris ia menjadikan setiap operasi helaian
+// mengambil masa berbelas saat dan permintaan murid akan tamat masa.
+function bulanDariTarikh_(dt) {
+  var u = new Date(dt.getTime() + TZ_OFFSET_MS);
+  var m = u.getUTCMonth() + 1;
+  return u.getUTCFullYear() + "-" + (m < 10 ? "0" : "") + m;
 }
 
-// Bulan bagi satu baris. Kalau lajur Bulan masih kosong (baris lama), ia dikira
-// daripada lajur Masa — jadi TIADA migrasi manual diperlukan.
+function bulanKini_() { return bulanDariTarikh_(new Date()); }
+
+// Bulan bagi satu baris. Kalau lajur Bulan kosong (baris lama), ia dikira daripada
+// lajur Masa — jadi TIADA migrasi manual diperlukan. Google Sheets kadang-kadang
+// menukar "2026-08" menjadi objek Date, jadi kes itu turut dikendalikan.
 function bulanOf_(row) {
-  var b = String(row[C.BULAN] == null ? "" : row[C.BULAN]).trim();
+  var v = row[C.BULAN];
+  if (v instanceof Date) return bulanDariTarikh_(v);
+  var b = String(v == null ? "" : v).trim().replace(/^'/, "");
   if (/^\d{4}-\d{2}$/.test(b)) return b;
   var m = row[C.MASA];
   var dt = (m instanceof Date) ? m : new Date(Date.parse(m));
   if (!dt || isNaN(dt.getTime())) return "";
-  return Utilities.formatDate(dt, TZ, "yyyy-MM");
+  return bulanDariTarikh_(dt);
 }
+
+// Simpan sebagai TEKS. Tanpa apostrof, Sheets menukar "2026-08" jadi tarikh,
+// dan purge akan menulis semula seluruh helaian setiap 30 minit tanpa henti.
+function bulanTeks_(b) { return "'" + b; }
 
 function bulanTolak_(b, n) {
   var y = Number(b.slice(0, 4)), m = Number(b.slice(5, 7));
@@ -229,6 +245,7 @@ function markahSheet() {
   }
   if (sh.getLastColumn() < 10 || String(sh.getRange(1, 10).getValue()) !== "Bulan") {
     sh.getRange(1, 10).setValue("Bulan");
+    try { sh.getRange(1, 10, sh.getMaxRows(), 1).setNumberFormat("@"); } catch (e) {}
   }
   return sh;
 }
@@ -587,7 +604,7 @@ function addScoreRow(d) {
 
   var first = existingBest < 0;
   var isBest = score > existingBest;
-  var newRow = [new Date(), nama, kelas, mode, score, betul, salah, streak, email, bkini];
+  var newRow = [new Date(), nama, kelas, mode, score, betul, salah, streak, email, bulanTeks_(bkini)];
   if (first) sh.appendRow(newRow);
   else if (isBest) sh.getRange(bestRow, 1, 1, 10).setValues([newRow]);
 
@@ -624,7 +641,10 @@ function purge(sh) {
   for (var i = 1; i < data.length; i++) {
     var b = bulanOf_(data[i]);
     if (!b) { takTentu.push(data[i]); continue; }   // bulan tak terbaca: JANGAN buang
-    if (String(data[i][C.BULAN]).trim() !== b) { data[i][C.BULAN] = b; perluTulis = true; }
+    var asal = data[i][C.BULAN];
+    var sudahTeks = (typeof asal === "string" && asal.trim().replace(/^'/, "") === b);
+    if (!sudahTeks) { perluTulis = true; }
+    data[i][C.BULAN] = bulanTeks_(b);
     var id = identity(emailOf(data[i]), data[i][C.NAMA], data[i][C.KELAS])
       + "|" + String(data[i][C.MODE]) + "|" + b;
     if (!bestRow[id] || scoreOf(data[i]) > scoreOf(bestRow[id])) bestRow[id] = data[i];
@@ -632,7 +652,7 @@ function purge(sh) {
 
   var kept = [header];
   for (var k in bestRow) {
-    var row = bestRow[k], b2 = String(row[C.BULAN]);
+    var row = bestRow[k], b2 = String(row[C.BULAN]).replace(/^'/, "");
     if (emailOf(row)) {
       if (b2 >= hadBulan) kept.push(row);                        // berdaftar
     } else if (b2 === bkini && (now - timeOf(row)) <= GUEST_MS) {

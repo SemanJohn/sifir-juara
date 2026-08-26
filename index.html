@@ -1242,7 +1242,10 @@
   function api(payload, cb){
     cb = cb || function(){};
     if(!SHEETS_URL){ cb({ok:false, network:true, err:"Tiada sambungan"}); return; }
-    var timeoutMs = payload && payload.action === "vs_submit" ? 22000 : 12000;
+    // Hantar keputusan permainan perlu masa lebih: pelayan mengimbas helaian,
+    // membersih rekod lama, dan menyegerak ke Firebase sebelum menjawab.
+    var lambat = { vs_submit:1, score:1, game_end:1 };
+    var timeoutMs = (payload && lambat[payload.action]) ? 25000 : 12000;
     try{
       fetchTimeout(SHEETS_URL, {method:"POST",
         headers:{"Content-Type":"text/plain"}, body:JSON.stringify(payload)}, timeoutMs)
@@ -2465,6 +2468,11 @@ daily:'<circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="4"
         bl.className = "best";
       } else if(r && r.ok){
         bl.textContent = "Terbaik bulan ini: "+fmtNum(r.best)+" (kali ini "+fmtNum(state.score)+")";
+        bl.className = "best dark";
+      } else if(r && r.network){
+        // Pelayan selalunya sudah menyimpan markah walaupun jawapan lambat sampai,
+        // jadi jangan beritahu murid markahnya hilang.
+        bl.textContent = "Sambungan lambat — markah mungkin sudah disimpan. Semak papan markah.";
         bl.className = "best dark";
       } else {
         bl.textContent = (r && r.err) ? r.err : "Markah disimpan setempat (luar talian)";
