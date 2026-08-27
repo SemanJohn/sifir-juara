@@ -770,7 +770,7 @@
       <button class="btn ghost" id="setBack">Kembali</button>
     </div>
     <button class="btn" id="setExit" style="display:none;width:100%;margin-top:10px;background:linear-gradient(180deg,#ff5a6e,#e23b52);color:#fff;box-shadow:0 5px 0 #a51328">Keluar dari permainan</button>
-    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.7</p>
+    <p style="text-align:center;color:var(--muted);font-weight:700;font-size:11px;margin-top:16px;opacity:.8" id="verLine">Sifir × Juara v5.8</p>
   </section>
 
   <!-- PROFIL PENGGUNA -->
@@ -1040,7 +1040,7 @@
 (function(){
   "use strict";
 
-  var APP_VERSION = "5.7";
+  var APP_VERSION = "5.8";
   var tvAgent = navigator.userAgent || "";
   var tvByAgent = /SMART-TV|SmartTV|Tizen|Web0S|WebOS|NetCast|HbbTV|CrKey|AFT|Android TV|BRAVIA|Viera|DTV/i.test(tvAgent);
   var tvByAndroid = /Android/i.test(tvAgent) && !/Mobile/i.test(tvAgent) &&
@@ -1722,7 +1722,9 @@
 
     if(val === q.ans){
       // markah: asas 10 + bonus ikut betul berturut
-      var pts = 10 + state.run*2;
+      // Markah: 1 mata untuk betul pertama, +1 bagi setiap betul berturut selepasnya.
+      // (dahulu 10 + run*2 — angka jadi terlalu besar untuk dibaca murid)
+      var pts = 1 + state.run;
       state.score += pts;
       if(state.score > 9999999) state.score = 9999999;
       state.correct++;
@@ -1854,9 +1856,9 @@
 
     // medal + tajuk
     var medal="trofi", title="Hebat!";
-    if(state.score < 60){ medal="benih"; title="Bagus, teruskan berlatih!"; }
-    else if(state.score < 140){ medal="bintang"; title="Kerja yang bagus!"; }
-    else if(state.score < 240){ medal="emas"; title="Hebat sekali!"; }
+    if(state.score < 20){ medal="benih"; title="Bagus, teruskan berlatih!"; }
+    else if(state.score < 45){ medal="bintang"; title="Kerja yang bagus!"; }
+    else if(state.score < 80){ medal="emas"; title="Hebat sekali!"; }
     else { medal="mahkota"; title="Juara Sifir!"; }
 
     $("medal").innerHTML = ikSVG(medal);

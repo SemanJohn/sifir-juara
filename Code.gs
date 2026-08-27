@@ -297,7 +297,16 @@ function validateGameResult(d) {
   if (total > 5000 || total > Math.floor(checked.session.age / 120) + 3) {
     return { ok:false, err:"Kadar jawapan tidak munasabah" };
   }
-  if (score < betul * 10 || score > betul * (betul + 9) || streak > Math.floor(betul / 3)) {
+  // Julat markah yang sah bergantung pada sistem pemarkahan klien:
+  //   lama   pts = 10 + run*2  ->  minimum 10*n , maksimum n*(n+9)
+  //   baharu pts = 1  + run    ->  minimum    n , maksimum n*(n+1)/2
+  // Semasa peralihan, murid yang PWA-nya belum dikemas kini masih menghantar
+  // markah sistem lama. Terima kedua-duanya, jika tidak markah mereka DITOLAK.
+  // Selepas seminggu semua peranti dikemas kini, ketatkan maksimum kepada
+  // betul * (betul + 1) / 2.
+  var minMata = betul;                        // sempadan bawah sistem baharu
+  var maxMata = betul * (betul + 9);          // sempadan atas sistem lama
+  if (score < minMata || score > maxMata || streak > Math.floor(betul / 3)) {
     return { ok:false, err:"Markah permainan tidak sepadan" };
   }
   checked.score = score; checked.betul = betul; checked.salah = salah; checked.streak = streak;
